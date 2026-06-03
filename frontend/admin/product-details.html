@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Assessment - GreenEra Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-wrapper">
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-brand"><h5><i class="bi bi-recycle"></i> GreenEra</h5></div>
+      <div class="nav-section">Main</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a class="nav-link" href="staff-management.html"><i class="bi bi-people"></i> Staff Management</a>
+        <a class="nav-link active" href="reusability-center.html"><i class="bi bi-arrow-repeat"></i> Reusability Center</a>
+        <a class="nav-link" href="analytics.html"><i class="bi bi-graph-up"></i> Reusability Analytics</a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Forecasting</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="forecasting/dashboard.html"><i class="bi bi-graph-up-arrow"></i> Forecasting Dashboard</a>
+        <a class="nav-link" href="forecasting/upload-data.html"><i class="bi bi-upload"></i> Upload Forecast Data</a>
+        <a class="nav-link" href="forecasting/forecast-results.html"><i class="bi bi-bar-chart"></i> Forecast Results</a>
+        <a class="nav-link" href="forecasting/regions.html"><i class="bi bi-geo-alt"></i> Region Management</a>
+        <a class="nav-link" href="forecasting/facilities.html"><i class="bi bi-building"></i> Facility Management</a>
+        <a class="nav-link" href="forecasting/logistics.html"><i class="bi bi-truck"></i> Logistics Management</a>
+        <a class="nav-link" href="forecasting/data-upload.html"><i class="bi bi-database"></i> Data Upload Center</a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Business Intelligence</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="bi/sustainability-dashboard.html"><i class="bi bi-leaf"></i> Sustainability Dashboard</a>
+        <a class="nav-link" href="bi/profit-optimization.html"><i class="bi bi-cash-stack"></i> Profit Optimization</a>
+        <a class="nav-link" href="bi/scenario-simulation.html"><i class="bi bi-diagram-3"></i> Scenario Simulation</a>
+        <a class="nav-link" href="bi/recommendation-center.html"><i class="bi bi-lightbulb"></i> Recommendation Center</a>
+        <a class="nav-link" href="bi/sustainability-reports.html"><i class="bi bi-file-earmark-text"></i> Sustainability Reports</a>
+        <a class="nav-link" href="bi/profitability-reports.html"><i class="bi bi-bar-chart"></i> Profitability Reports</a>
+        <a class="nav-link" href="bi/executive-reports.html"><i class="bi bi-clipboard-data"></i> Executive Reports</a>
+      </nav>
+    </aside>
+
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <div class="d-flex align-items-center gap-3">
+          <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+          <div><h5 class="page-title">Product Assessment <small id="pdProductName">Loading...</small></h5></div>
+        </div>
+        <div class="admin-topbar-right">
+          <a href="reusability-center.html" class="btn btn-sm btn-outline-green"><i class="bi bi-arrow-left me-1"></i> Back</a>
+          <div class="dropdown">
+            <div class="admin-avatar dropdown-toggle" role="button" data-bs-toggle="dropdown" id="adminAvatar">SA</div>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item text-danger" href="#" onclick="adminLogout()"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-content">
+        <div class="row g-3">
+          <!-- Left: Images & Basic Info -->
+          <div class="col-lg-5">
+            <div class="admin-card mb-3">
+              <div class="admin-card-header"><h6>Product Images</h6></div>
+              <div class="admin-card-body">
+                <div class="row g-2" id="pdImages">
+                  <div class="col-6"><div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="height:150px"><i class="bi bi-image fs-1 text-muted"></i></div></div>
+                  <div class="col-6"><div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="height:150px"><i class="bi bi-image fs-1 text-muted"></i></div></div>
+                  <div class="col-6"><div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="height:150px"><i class="bi bi-image fs-1 text-muted"></i></div></div>
+                  <div class="col-6"><div class="bg-light rounded-3 d-flex align-items-center justify-content-center" style="height:150px"><i class="bi bi-image fs-1 text-muted"></i></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="admin-card">
+              <div class="admin-card-body">
+                <h6 class="mb-3">Basic Information</h6>
+                <table class="admin-table">
+                  <tbody>
+                    <tr><td class="fw-semibold" style="width:120px">Product</td><td id="pdProd">-</td></tr>
+                    <tr><td class="fw-semibold">Type</td><td id="pdType">-</td></tr>
+                    <tr><td class="fw-semibold">Brand</td><td id="pdBrand">-</td></tr>
+                    <tr><td class="fw-semibold">Model</td><td id="pdModel">-</td></tr>
+                    <tr><td class="fw-semibold">Year</td><td id="pdYear">-</td></tr>
+                    <tr><td class="fw-semibold">Weight</td><td id="pdWeight">-</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Analysis -->
+          <div class="col-lg-7">
+            <div class="admin-card mb-3">
+              <div class="admin-card-header"><h6><i class="bi bi-robot text-green me-1"></i> CV Analysis Results</h6></div>
+              <div class="admin-card-body">
+                <div class="row g-3">
+                  <div class="col-md-3 col-6 text-center"><div class="score-ring high" id="pdScore" style="width:70px;height:70px;font-size:1.1rem">82</div><small class="text-muted d-block mt-1">Reusability</small></div>
+                  <div class="col-md-3 col-6"><small class="text-muted d-block">Condition Score</small><strong id="pdConditionScore">78/100</strong></div>
+                  <div class="col-md-3 col-6"><small class="text-muted d-block">Classification</small><strong id="pdClassification">Reusable</strong></div>
+                  <div class="col-md-3 col-6"><small class="text-muted d-block">Est. Value</small><strong class="text-green fs-5" id="pdEstValue">₹26,500</strong></div>
+                </div>
+                <hr>
+                <h6 class="small fw-bold mb-2">CV Detection Details</h6>
+                <div class="d-flex flex-wrap gap-2" id="pdCvDetails">
+                  <span class="detail-tag green">Screen: 95%</span>
+                  <span class="detail-tag green">Casing: 88%</span>
+                  <span class="detail-tag yellow">Cables: 65%</span>
+                  <span class="detail-tag green">Ports: 92%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-card mb-3">
+              <div class="admin-card-header"><h6><i class="bi bi-clipboard-check text-green me-1"></i> Manual Assessment</h6></div>
+              <div class="admin-card-body" id="pdManualAssessment">
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                  <span class="badge bg-green">✓ Casing intact</span>
+                  <span class="badge bg-green">✓ Screen intact</span>
+                  <span class="badge bg-warning text-dark">○ Scratches on bezel</span>
+                  <span class="badge bg-green">✓ Ports functional</span>
+                  <span class="badge bg-danger">✗ Remote missing</span>
+                </div>
+                <p class="small text-muted mb-0"><strong>Notes:</strong> <span id="pdManualNotes">Minor scratches on bezel, but overall good condition. Remote control missing.</span></p>
+              </div>
+            </div>
+
+            <div class="admin-card">
+              <div class="admin-card-header"><h6><i class="bi bi-bar-chart text-green me-1"></i> Condition Analysis</h6></div>
+              <div class="admin-card-body">
+                <canvas id="pdConditionChart" height="200"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script>
+    (function () {
+      const admin = JSON.parse(localStorage.getItem('greenera_admin') || 'null');
+      if (!admin || !localStorage.getItem('greenera_admin_token')) { window.location.href = 'login.html'; return; }
+      const initials = (admin.full_name || 'Admin').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      document.getElementById('adminAvatar').textContent = initials || 'A';
+      window.adminLogout = function () { localStorage.removeItem('greenera_admin_token'); localStorage.removeItem('greenera_admin'); window.location.href = 'login.html'; };
+      window.toggleSidebar = function () { document.getElementById('adminSidebar').classList.toggle('show'); };
+
+      const products = [
+        { id: 1, name: 'Samsung QLED 55"', type: 'TV', brand: 'Samsung', model: 'QLED Q60', year: '2022', weight: '16.5 kg', score: 82, condScore: '78/100', classification: 'Reusable', value: 26500 },
+        { id: 2, name: 'Dell XPS 15 Laptop', type: 'Laptop', brand: 'Dell', model: 'XPS 15 9530', year: '2023', weight: '1.8 kg', score: 45, condScore: '55/100', classification: 'Repairable', value: 15000 },
+        { id: 3, name: 'iPhone 14 Pro', type: 'Mobile', brand: 'Apple', model: 'A2650', year: '2022', weight: '0.2 kg', score: 78, condScore: '82/100', classification: 'Reusable', value: 29000 },
+        { id: 4, name: 'LG Double Door Fridge', type: 'Fridge', brand: 'LG', model: 'GL-D242', year: '2020', weight: '68 kg', score: 30, condScore: '38/100', classification: 'Recyclable', value: 10000 },
+        { id: 5, name: 'Daikin 1.5T AC', type: 'AC', brand: 'Daikin', model: 'FTKM50', year: '2021', weight: '12 kg', score: 68, condScore: '65/100', classification: 'Repairable', value: 20000 },
+        { id: 6, name: 'Whirlpool WM 7kg', type: 'Washing Machine', brand: 'Whirlpool', model: '7Ace', year: '2019', weight: '65 kg', score: 15, condScore: '20/100', classification: 'Scrap', value: 3300 },
+        { id: 7, name: 'MacBook Pro M3', type: 'Laptop', brand: 'Apple', model: 'MacBook Pro 14"', year: '2024', weight: '1.6 kg', score: 90, condScore: '95/100', classification: 'Reusable', value: 54000 },
+        { id: 20, name: 'ASUS ZenBook 14', type: 'Laptop', brand: 'ASUS', model: 'UX3402', year: '2022', weight: '1.4 kg', score: 10, condScore: '15/100', classification: 'Scrap', value: 2500 },
+      ];
+
+      const params = new URLSearchParams(window.location.search);
+      const prodId = parseInt(params.get('id'));
+      const prod = products.find(p => p.id === prodId) || products[0];
+
+      document.getElementById('pdProductName').textContent = prod.name;
+      document.getElementById('pdProd').textContent = prod.name;
+      document.getElementById('pdType').textContent = prod.type;
+      document.getElementById('pdBrand').textContent = prod.brand;
+      document.getElementById('pdModel').textContent = prod.model;
+      document.getElementById('pdYear').textContent = prod.year;
+      document.getElementById('pdWeight').textContent = prod.weight;
+      document.getElementById('pdScore').textContent = prod.score;
+      document.getElementById('pdScore').className = `score-ring ${prod.score >= 70 ? 'high' : prod.score >= 40 ? 'medium' : 'low'}`;
+      document.getElementById('pdConditionScore').textContent = prod.condScore;
+      document.getElementById('pdClassification').textContent = prod.classification;
+      document.getElementById('pdClassification').className = prod.classification === 'Reusable' ? 'text-green fw-bold' : prod.classification === 'Repairable' ? 'text-info fw-bold' : prod.classification === 'Recyclable' ? 'text-warning fw-bold' : 'text-danger fw-bold';
+      document.getElementById('pdEstValue').textContent = '₹' + Number(prod.value).toLocaleString('en-IN');
+
+      // Condition chart (radar)
+      new Chart(document.getElementById('pdConditionChart'), {
+        type: 'radar',
+        data: {
+          labels: ['Screen', 'Casing', 'Ports', 'Battery', 'Audio', 'Connectivity'],
+          datasets: [
+            { label: 'Condition', data: [92, 85, 78, 65, 80, 72], borderColor: '#16A34A', backgroundColor: 'rgba(22,163,74,0.15)', pointBackgroundColor: '#16A34A', fill: true },
+            { label: 'Threshold', data: [60, 60, 60, 60, 60, 60], borderColor: '#EF4444', borderDash: [4, 4], pointRadius: 0, borderWidth: 1.5, fill: false }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, animation: false,
+          scales: { r: { min: 0, max: 100, ticks: { stepSize: 20, font: { size: 9 } } } },
+          plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } } } }
+      });
+    })();
+  </script>
+</body>
+</html>

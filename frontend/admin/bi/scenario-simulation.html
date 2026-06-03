@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scenario Simulation - GreenEra</title>
+  <link rel="icon" type="image/svg+xml" href="../../assets/images/favicon.svg">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../../assets/css/style.css">
+  <link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-wrapper d-flex">
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="sidebar-brand"><i class="bi bi-arrow-repeat me-2"></i>GreenEra</div>
+      <div class="sidebar-divider"></div>
+      <nav class="nav flex-column mb-3">
+        <a class="nav-link" href="../dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a class="nav-link" href="../staff-management.html"><i class="bi bi-people"></i> Staff Management</a>
+        <a class="nav-link" href="../reusability-center.html"><i class="bi bi-box-seam"></i> Reusability Center</a>
+        <a class="nav-link" href="../analytics.html"><i class="bi bi-bar-chart"></i> Analytics</a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Forecasting</div>
+      <nav class="nav flex-column mb-3">
+        <a class="nav-link" href="../forecasting/dashboard.html"><i class="bi bi-graph-up-arrow"></i> Forecasting Dashboard</a>
+        <a class="nav-link" href="../forecasting/upload-data.html"><i class="bi bi-upload"></i> Upload Forecast Data</a>
+        <a class="nav-link" href="../forecasting/forecast-results.html"><i class="bi bi-bar-chart"></i> Forecast Results</a>
+        <a class="nav-link" href="../forecasting/regions.html"><i class="bi bi-geo-alt"></i> Region Management</a>
+        <a class="nav-link" href="../forecasting/facilities.html"><i class="bi bi-building"></i> Facility Management</a>
+        <a class="nav-link" href="../forecasting/logistics.html"><i class="bi bi-truck"></i> Logistics Management</a>
+        <a class="nav-link" href="../forecasting/data-upload.html"><i class="bi bi-database"></i> Data Upload Center</a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Business Intelligence</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="sustainability-dashboard.html"><i class="bi bi-leaf"></i> Sustainability Dashboard</a>
+        <a class="nav-link" href="profit-optimization.html"><i class="bi bi-cash-stack"></i> Profit Optimization</a>
+        <a class="nav-link active" href="scenario-simulation.html"><i class="bi bi-diagram-3"></i> Scenario Simulation</a>
+        <a class="nav-link" href="recommendation-center.html"><i class="bi bi-lightbulb"></i> Recommendation Center</a>
+        <a class="nav-link" href="sustainability-reports.html"><i class="bi bi-file-earmark-text"></i> Sustainability Reports</a>
+        <a class="nav-link" href="profitability-reports.html"><i class="bi bi-bar-chart"></i> Profitability Reports</a>
+        <a class="nav-link" href="executive-reports.html"><i class="bi bi-clipboard-data"></i> Executive Reports</a>
+      </nav>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-sm d-lg-none text-white" onclick="toggleSidebar()"><i class="bi bi-list fs-5"></i></button>
+          <h5 class="mb-0 fw-bold">Scenario Simulation Center</h5>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+          <span class="badge bg-light text-dark px-3 py-2 rounded-pill"><i class="bi bi-calendar3 me-1"></i> <span id="currentDate"></span></span>
+          <div class="dropdown">
+            <button class="btn btn-sm text-white dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-person-circle me-1"></i> Admin</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="../../profile.html"><i class="bi bi-person me-2"></i>Profile</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+
+      <div class="p-4">
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <div class="scenario-card active" onclick="selectScenario('A', this)" id="scA">
+              <div class="scenario-icon" style="background:#E0E7FF;color:#4F46E5"><i class="bi bi-building"></i></div>
+              <h6>Scenario A: Current Infrastructure</h6>
+              <p>Baseline — Coimbatore hub with 4 collection centers</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="scenario-card" onclick="selectScenario('B', this)" id="scB">
+              <div class="scenario-icon" style="background:#DCFCE7;color:#16A34A"><i class="bi bi-plus-circle"></i></div>
+              <h6>Scenario B: New Collection Center</h6>
+              <p>Add a collection center in Madurai</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="scenario-card" onclick="selectScenario('C', this)" id="scC">
+              <div class="scenario-icon" style="background:#CCFBF1;color:#14B8A6"><i class="bi bi-gear"></i></div>
+              <h6>Scenario C: New Preprocessing Unit</h6>
+              <p>Add preprocessing capability at Coimbatore hub</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="scenario-card" onclick="selectScenario('D', this)" id="scD">
+              <div class="scenario-icon" style="background:#FEF3C7;color:#D97706"><i class="bi bi-arrows-expand"></i></div>
+              <h6>Scenario D: Facility Expansion</h6>
+              <p>Expand all centers to 2x current capacity</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="scenario-card" onclick="selectScenario('E', this)" id="scE">
+              <div class="scenario-icon" style="background:#EDE9FE;color:#8B5CF6"><i class="bi bi-signpost-2"></i></div>
+              <h6>Scenario E: Route Optimization</h6>
+              <p>AI-optimized collection routes</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-lg-7">
+            <div class="bi-card">
+              <h6 class="fw-bold mb-3"><i class="bi bi-graph-up me-2 text-primary"></i>Scenario Comparison</h6>
+              <div id="scenarioChart" class="scenario-bars"></div>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="bi-card" id="scenarioDetails">
+              <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2 text-success"></i>Scenario Details</h6>
+              <div id="scenarioDetailContent"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../../assets/js/main.js"></script>
+  <script src="../../assets/js/bi-scenario.js"></script>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Assessment - GreenEra</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="dashboard-body">
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand" href="dashboard.html"><i class="bi bi-recycle"></i> GreenEra</a>
+      <div class="d-flex align-items-center gap-3">
+        <span class="text-muted d-none d-md-inline">New Assessment</span>
+        <div class="dropdown">
+          <a class="text-dark text-decoration-none d-flex align-items-center gap-2 dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle fs-5 text-green"></i>
+            <span id="userName">Staff</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person me-2"></i>Profile</a></li>
+            <li><a class="dropdown-item" href="dashboard.html"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-4 py-4">
+    <div class="row">
+      <div class="col-lg-2 col-md-3 mb-4">
+        <div class="list-group shadow-sm rounded-3 overflow-hidden">
+          <a href="dashboard.html" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <i class="bi bi-speedometer2 text-green"></i> Dashboard
+          </a>
+          <a href="assessment-new.html" class="list-group-item list-group-item-action active bg-green border-green d-flex align-items-center gap-3">
+            <i class="bi bi-plus-circle"></i> New Assessment
+          </a>
+          <a href="assessment-history.html" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <i class="bi bi-clock-history text-green"></i> Assessment History
+          </a>
+          <a href="profile.html" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <i class="bi bi-person text-green"></i> My Profile
+          </a>
+        </div>
+      </div>
+
+      <div class="col-lg-10 col-md-9">
+        <div class="wizard-container">
+          <div class="wizard-header">
+            <div class="d-flex justify-content-between align-items-center">
+              <h4><i class="bi bi-clipboard-plus me-2"></i>New Assessment Wizard</h4>
+              <span class="badge bg-light text-dark" id="stepIndicator">Step 1 of 8</span>
+            </div>
+          </div>
+
+          <!-- Progress Steps -->
+          <div class="wizard-progress">
+            <div class="wizard-steps">
+              <div class="wizard-step active" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Customer</div>
+              </div>
+              <div class="wizard-step" data-step="2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Product Type</div>
+              </div>
+              <div class="wizard-step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Upload</div>
+              </div>
+              <div class="wizard-step" data-step="4">
+                <div class="step-circle">4</div>
+                <div class="step-label">AI Analysis</div>
+              </div>
+              <div class="wizard-step" data-step="5">
+                <div class="step-circle">5</div>
+                <div class="step-label">Details</div>
+              </div>
+              <div class="wizard-step" data-step="6">
+                <div class="step-circle">6</div>
+                <div class="step-label">Verify</div>
+              </div>
+              <div class="wizard-step" data-step="7">
+                <div class="step-circle">7</div>
+                <div class="step-label">Value</div>
+              </div>
+              <div class="wizard-step" data-step="8">
+                <div class="step-circle">8</div>
+                <div class="step-label">Submit</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wizard Body -->
+          <div class="wizard-body">
+            <!-- Step 1: Customer Details -->
+            <div class="wizard-step-content" data-step="1">
+              <h5 class="fw-bold mb-3"><i class="bi bi-person text-green me-2"></i>Customer Details</h5>
+              <p class="text-muted mb-4">Enter the customer's personal information to begin the assessment.</p>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" id="custName" placeholder="Full Name" required>
+                    <label for="custName">Full Name</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="email" class="form-control" id="custEmail" placeholder="Email">
+                    <label for="custEmail">Email Address</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="tel" class="form-control" id="custPhone" placeholder="Phone" required>
+                    <label for="custPhone">Phone Number</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" id="custAddress" placeholder="Address">
+                    <label for="custAddress">Address</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Product Type -->
+            <div class="wizard-step-content d-none" data-step="2">
+              <h5 class="fw-bold mb-3"><i class="bi bi-devices text-green me-2"></i>Select Product Type</h5>
+              <p class="text-muted mb-4">Choose the type of electronic waste to assess.</p>
+              <div class="product-type-grid" id="productTypeGrid">
+                <div class="product-type-item" data-type="TV" data-icon="bi-tv">
+                  <i class="bi bi-tv"></i><span>TV</span>
+                </div>
+                <div class="product-type-item" data-type="AC" data-icon="bi-snow">
+                  <i class="bi bi-snow"></i><span>AC</span>
+                </div>
+                <div class="product-type-item" data-type="Fridge" data-icon="bi-thermometer-snow">
+                  <i class="bi bi-thermometer-snow"></i><span>Fridge</span>
+                </div>
+                <div class="product-type-item" data-type="Washing Machine" data-icon="bi-droplet">
+                  <i class="bi bi-droplet"></i><span>Washing Machine</span>
+                </div>
+                <div class="product-type-item" data-type="Fan" data-icon="bi-wind">
+                  <i class="bi bi-wind"></i><span>Fan</span>
+                </div>
+                <div class="product-type-item" data-type="Laptop" data-icon="bi-laptop">
+                  <i class="bi bi-laptop"></i><span>Laptop</span>
+                </div>
+                <div class="product-type-item" data-type="Mobile" data-icon="bi-phone">
+                  <i class="bi bi-phone"></i><span>Mobile</span>
+                </div>
+                <div class="product-type-item" data-type="Monitor" data-icon="bi-display">
+                  <i class="bi bi-display"></i><span>Monitor</span>
+                </div>
+                <div class="product-type-item" data-type="Keyboard" data-icon="bi-keyboard">
+                  <i class="bi bi-keyboard"></i><span>Keyboard</span>
+                </div>
+                <div class="product-type-item" data-type="Mouse" data-icon="bi-mouse">
+                  <i class="bi bi-mouse"></i><span>Mouse</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Image Upload -->
+            <div class="wizard-step-content d-none" data-step="3">
+              <h5 class="fw-bold mb-3"><i class="bi bi-images text-green me-2"></i>Upload Product Images</h5>
+              <p class="text-muted mb-4">Upload images of the product. Our AI will extract brand, model, and analyze the condition from the images.</p>
+              <div class="upload-area" id="uploadArea">
+                <i class="bi bi-cloud-arrow-up"></i>
+                <p class="fw-semibold">Click to upload or drag and drop</p>
+                <small class="text-muted">Supported: JPG, PNG, WebP (Max 5MB each)</small>
+                <input type="file" id="fileInput" accept="image/*" multiple class="d-none">
+              </div>
+              <div class="upload-preview" id="uploadPreview"></div>
+            </div>
+
+            <!-- Step 4: AI Analysis Result (includes brand/model extraction) -->
+            <div class="wizard-step-content d-none" data-step="4">
+              <h5 class="fw-bold mb-3"><i class="bi bi-robot text-green me-2"></i>AI Analysis Result</h5>
+              <p class="text-muted mb-4">Our AI has analyzed the images and extracted the following information.</p>
+              <div class="ai-result-card" id="aiResultCard">
+                <div class="ai-icon"><i class="bi bi-cpu"></i></div>
+                <h6 class="fw-bold">AI Extraction Complete</h6>
+                <div id="aiResultContent">
+                  <div class="ai-analysis-item"><span class="label">Detected Brand</span><span class="value fw-bold text-green" id="aiExtractedBrand">Scanning...</span></div>
+                  <div class="ai-analysis-item"><span class="label">Detected Model</span><span class="value fw-bold text-green" id="aiExtractedModel">Scanning...</span></div>
+                  <div class="ai-analysis-item"><span class="label">Product Type</span><span class="value" id="aiProductType">-</span></div>
+                  <div class="ai-analysis-item"><span class="label">Condition Score</span><span class="value" id="aiConditionScore">-</span></div>
+                  <div class="ai-analysis-item"><span class="label">Estimated Category</span><span class="value" id="aiCategory">-</span></div>
+                  <div class="ai-analysis-item"><span class="label">Recyclability</span><span class="value" id="aiRecyclability">-</span></div>
+                  <div class="ai-analysis-item"><span class="label">Data Risk</span><span class="value" id="aiDataRisk">-</span></div>
+                </div>
+              </div>
+              <div class="alert alert-info mt-3 mb-0">
+                <i class="bi bi-info-circle me-1"></i> Brand and model were extracted from image analysis. You can review and edit them in the next step.
+              </div>
+            </div>
+
+            <!-- Step 5: Product Details (pre-filled from AI, editable) -->
+            <div class="wizard-step-content d-none" data-step="5">
+              <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-green me-2"></i>Product Details</h5>
+              <p class="text-muted mb-4">Review and edit the AI-extracted details. Fields marked with <span class="badge bg-green-light text-green">AI</span> were detected from your images.</p>
+              <input type="hidden" id="selectedProductType" value="">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" id="productBrand" placeholder="Brand">
+                    <label for="productBrand">Brand <span class="badge bg-green-light text-green" id="brandBadge" style="font-size:0.65rem;display:none">AI</span></label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" id="productModel" placeholder="Model">
+                    <label for="productModel">Model <span class="badge bg-green-light text-green" id="modelBadge" style="font-size:0.65rem;display:none">AI</span></label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-floating">
+                    <select class="form-select" id="productYear">
+                      <option value="">Select Year</option>
+                    </select>
+                    <label for="productYear">Year of Manufacture</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-floating">
+                    <select class="form-select" id="productCondition">
+                      <option value="excellent">Excellent</option>
+                      <option value="good" selected>Good</option>
+                      <option value="fair">Fair</option>
+                      <option value="poor">Poor</option>
+                      <option value="not-working">Not Working</option>
+                    </select>
+                    <label for="productCondition">Condition</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-floating">
+                    <input type="number" class="form-control" id="productWeight" placeholder="Weight" step="0.1" min="0">
+                    <label for="productWeight">Weight (kg)</label>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="form-floating">
+                    <textarea class="form-control" id="productNotes" placeholder="Notes" style="height: 80px"></textarea>
+                    <label for="productNotes">Additional Notes</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 6: Manual Verification -->
+            <div class="wizard-step-content d-none" data-step="6">
+              <h5 class="fw-bold mb-3"><i class="bi bi-check2-square text-green me-2"></i>Manual Verification</h5>
+              <p class="text-muted mb-4">Review the AI analysis and make manual adjustments as needed.</p>
+              <div id="verificationQuestions" class="row g-3"></div>
+            </div>
+
+            <!-- Step 7: Value Estimation -->
+            <div class="wizard-step-content d-none" data-step="7">
+              <h5 class="fw-bold mb-3"><i class="bi bi-currency-rupee text-green me-2"></i>Value Estimation</h5>
+              <p class="text-muted mb-4">Estimated value based on product type, condition, and market data.</p>
+              <div class="value-estimate mb-4" id="valueEstimateCard">
+                <h6>Estimated Value</h6>
+                <h2 id="estimatedValue">₹0.00</h2>
+                <p>Based on current market rates and product condition</p>
+              </div>
+              <div class="row g-3">
+                <div class="col-sm-6">
+                  <div class="d-flex justify-content-between p-3 bg-light rounded-3">
+                    <span class="text-muted">Base Price</span>
+                    <span class="fw-bold" id="basePrice">₹0.00</span>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="d-flex justify-content-between p-3 bg-light rounded-3">
+                    <span class="text-muted">Condition Multiplier</span>
+                    <span class="fw-bold" id="conditionMultiplier">1.0x</span>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="d-flex justify-content-between p-3 bg-light rounded-3">
+                    <span class="text-muted">Weight Adjustment</span>
+                    <span class="fw-bold" id="weightAdjustment">₹0.00</span>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="d-flex justify-content-between p-3 bg-light rounded-3">
+                    <span class="text-muted">Market Factor</span>
+                    <span class="fw-bold" id="marketFactor">1.0x</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 8: Submit -->
+            <div class="wizard-step-content d-none" data-step="8">
+              <h5 class="fw-bold mb-3"><i class="bi bi-check-circle text-green me-2"></i>Review &amp; Submit</h5>
+              <p class="text-muted mb-4">Please review the assessment details before final submission.</p>
+              <div class="bg-light rounded-3 p-4 mb-4" id="summaryContent">
+                <div class="row g-3">
+                  <div class="col-sm-6"><strong>Customer:</strong><br><span id="summaryName">-</span></div>
+                  <div class="col-sm-6"><strong>Phone:</strong><br><span id="summaryPhone">-</span></div>
+                  <div class="col-sm-6"><strong>Product:</strong><br><span id="summaryProduct">-</span></div>
+                  <div class="col-sm-6"><strong>Brand/Model:</strong><br><span id="summaryBrandModel">-</span></div>
+                  <div class="col-sm-6"><strong>Condition:</strong><br><span id="summaryCondition">-</span></div>
+                  <div class="col-sm-6"><strong>Estimated Value:</strong><br><span class="text-green fw-bold" id="summaryValue">₹0.00</span></div>
+                </div>
+              </div>
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>By submitting, you confirm that all provided information is accurate and verified.
+              </div>
+            </div>
+          </div>
+
+          <!-- Wizard Footer -->
+          <div class="wizard-footer">
+            <button class="btn btn-outline-secondary" id="prevBtn" onclick="navigateStep(-1)" disabled>
+              <i class="bi bi-chevron-left me-1"></i> Previous
+            </button>
+            <div>
+              <button class="btn btn-outline-danger me-2" onclick="resetWizard()">
+                <i class="bi bi-x-circle me-1"></i> Cancel
+              </button>
+              <button class="btn btn-primary-green" id="nextBtn" onclick="navigateStep(1)">
+                Next <i class="bi bi-chevron-right ms-1"></i>
+              </button>
+              <button class="btn btn-primary-green d-none" id="submitBtn" onclick="submitAssessment()">
+                <i class="bi bi-check-lg me-1"></i> Submit Assessment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/assessment.js"></script>
+</body>
+</html>

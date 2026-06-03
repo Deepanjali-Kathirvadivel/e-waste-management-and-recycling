@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staff Management - GreenEra Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-wrapper">
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-sidebar-brand"><h5><i class="bi bi-recycle"></i> GreenEra</h5></div>
+      <div class="nav-section">Main</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a class="nav-link active" href="staff-management.html"><i class="bi bi-people"></i> Staff Management</a>
+        <a class="nav-link" href="reusability-center.html"><i class="bi bi-arrow-repeat"></i> Reusability Center</a>
+        <a class="nav-link" href="analytics.html"><i class="bi bi-graph-up"></i> Reusability Analytics</a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Forecasting</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="forecasting/dashboard.html"><i class="bi bi-graph-up-arrow"></i> Forecasting Dashboard</a>
+        <a class="nav-link" href="forecasting/upload-data.html"><i class="bi bi-upload"></i> Upload Forecast Data</a>
+        <a class="nav-link" href="forecasting/forecast-results.html"><i class="bi bi-bar-chart"></i> Forecast Results</a>
+        <a class="nav-link" href="forecasting/regions.html"><i class="bi bi-geo-alt"></i> Region Management</a>
+        <a class="nav-link" href="forecasting/facilities.html"><i class="bi bi-building"></i> Facility Management</a>
+        <a class="nav-link" href="forecasting/logistics.html"><i class="bi bi-truck"></i> Logistics Management</a>
+        <a class="nav-link" href="forecasting/data-upload.html"><i class="bi bi-database"></i> Data Upload Center</a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Business Intelligence</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="bi/sustainability-dashboard.html"><i class="bi bi-leaf"></i> Sustainability Dashboard</a>
+        <a class="nav-link" href="bi/profit-optimization.html"><i class="bi bi-cash-stack"></i> Profit Optimization</a>
+        <a class="nav-link" href="bi/scenario-simulation.html"><i class="bi bi-diagram-3"></i> Scenario Simulation</a>
+        <a class="nav-link" href="bi/recommendation-center.html"><i class="bi bi-lightbulb"></i> Recommendation Center</a>
+        <a class="nav-link" href="bi/sustainability-reports.html"><i class="bi bi-file-earmark-text"></i> Sustainability Reports</a>
+        <a class="nav-link" href="bi/profitability-reports.html"><i class="bi bi-bar-chart"></i> Profitability Reports</a>
+        <a class="nav-link" href="bi/executive-reports.html"><i class="bi bi-clipboard-data"></i> Executive Reports</a>
+      </nav>
+      <div class="nav-section mt-3">Quick Links</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="../dashboard.html" target="_blank"><i class="bi bi-person-badge"></i> Staff Portal</a>
+        <a class="nav-link" href="../index.html" target="_blank"><i class="bi bi-globe"></i> Public Site</a>
+      </nav>
+    </aside>
+
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <div class="d-flex align-items-center gap-3">
+          <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+          <div><h5 class="page-title">Staff Management <small>Manage all staff accounts</small></h5></div>
+        </div>
+        <div class="admin-topbar-right">
+          <div class="dropdown">
+            <div class="admin-avatar dropdown-toggle" role="button" data-bs-toggle="dropdown" id="adminAvatar">SA</div>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item text-danger" href="#" onclick="adminLogout()"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div><span class="text-muted small" id="staffCount">24 total staff</span></div>
+          <button class="btn btn-primary-green btn-sm" data-bs-toggle="modal" data-bs-target="#staffModal"><i class="bi bi-plus-lg me-1"></i> Add Staff</button>
+        </div>
+
+        <!-- Staff Grid -->
+        <div class="row g-3" id="staffGrid"></div>
+
+        <!-- Staff Table -->
+        <div class="admin-card mt-3">
+          <div class="admin-card-header"><h6>All Staff Members</h6>
+            <div class="d-flex gap-2">
+              <input type="text" class="form-control form-control-sm" placeholder="Search..." style="width:200px" id="staffSearch" oninput="filterStaffTable()">
+            </div>
+          </div>
+          <div class="admin-card-body p-0">
+            <table class="admin-table">
+              <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Region</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="staffTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Staff Modal (Create / Edit) -->
+  <div class="modal fade" id="staffModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title fw-bold" id="staffModalTitle"><i class="bi bi-person-plus text-green me-1"></i> Add Staff</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <form id="staffForm">
+          <div class="modal-body">
+            <input type="hidden" id="editStaffId">
+            <div class="row g-3">
+              <div class="col-md-6"><div class="form-floating"><input type="text" class="form-control" id="sName" placeholder="Full Name" required><label for="sName">Full Name</label></div></div>
+              <div class="col-md-6"><div class="form-floating"><input type="text" class="form-control" id="sUsername" placeholder="Username" required><label for="sUsername">Username</label></div></div>
+              <div class="col-md-6"><div class="form-floating"><input type="email" class="form-control" id="sEmail" placeholder="Email"><label for="sEmail">Email</label></div></div>
+              <div class="col-md-6"><div class="form-floating"><input type="tel" class="form-control" id="sPhone" placeholder="Phone"><label for="sPhone">Phone</label></div></div>
+              <div class="col-md-6"><div class="form-floating"><select class="form-select" id="sRole"><option value="Collector">Collector</option><option value="Assessor">Assessor</option><option value="Verifier">Verifier</option><option value="Manager">Manager</option></select><label for="sRole">Role</label></div></div>
+              <div class="col-md-6"><div class="form-floating"><select class="form-select" id="sRegion"><option value="North">North</option><option value="South">South</option><option value="East">East</option><option value="West">West</option><option value="Central">Central</option></select><label for="sRegion">Region</label></div></div>
+              <div class="col-12" id="passwordField"><div class="form-floating"><input type="password" class="form-control" id="sPassword" placeholder="Password" minlength="6"><label for="sPassword">Password</label></div></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary-green" id="staffModalSubmit"><i class="bi bi-check-lg me-1"></i> Save Staff</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-header"><h6 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-triangle me-1"></i> Confirm Delete</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body"><p id="deleteConfirmText">Delete this staff member?</p></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger-custom btn-sm" id="confirmDeleteBtn"><i class="bi bi-trash me-1"></i> Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset Password Modal -->
+  <div class="modal fade" id="resetPwdModal" tabindex="-1">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-header"><h6 class="modal-title fw-bold"><i class="bi bi-key text-green me-1"></i> Reset Password</h6><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <p class="small text-muted" id="resetPwdStaffName">Reset password for:</p>
+          <input type="password" class="form-control" id="resetNewPwd" placeholder="New password" minlength="6">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary-green btn-sm" id="confirmResetBtn"><i class="bi bi-arrow-repeat me-1"></i> Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="../assets/js/admin-staff.js"></script>
+</body>
+</html>
