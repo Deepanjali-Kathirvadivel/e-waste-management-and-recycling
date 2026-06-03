@@ -38,7 +38,7 @@
           <span id="loginBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
         </button>
         <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
-        <div class="text-center mt-3"><small class="text-muted">Demo: <code>admin</code> / <code>admin123</code></small></div>
+        <div class="text-center mt-3"><small class="text-muted">Demo: <code>staff</code> / <code>Admin@123</code></small></div>
       </form>
 
       <div class="text-center mt-4">
@@ -74,85 +74,18 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="assets/js/main.js"></script>
+  <script src="assets/js/login.js"></script>
   <script>
-    (function() {
-      const loginForm = document.getElementById('loginForm');
-      const loginBtn = document.getElementById('loginBtn');
-      const btnText = document.getElementById('loginBtnText');
-      const btnSpinner = document.getElementById('loginBtnSpinner');
-      const loginError = document.getElementById('loginError');
-
-      // Redirect if already logged in
-      if (localStorage.getItem('greenera_token')) {
-        window.location.href = 'dashboard.html';
-        return;
-      }
-
-      loginForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        loginError.classList.add('d-none');
-        btnText.classList.add('d-none');
-        btnSpinner.classList.remove('d-none');
-        loginBtn.disabled = true;
-
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value;
-
-        try {
-          // Simulate API call — replace with actual backend URL
-          const res = await fetch('http://localhost:5000/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password })
-          });
-
-          if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.message || 'Invalid credentials');
-          }
-
-          const data = await res.json();
-          localStorage.setItem('greenera_token', data.token);
-          localStorage.setItem('greenera_user', JSON.stringify(data.user));
-          window.location.href = 'dashboard.html';
-        } catch (err) {
-          // Fallback demo login for testing without backend
-          if (username === 'admin' && password === 'admin123') {
-            localStorage.setItem('greenera_token', 'demo_token_' + Date.now());
-            localStorage.setItem('greenera_user', JSON.stringify({
-              id: 1,
-              username: 'admin',
-              full_name: 'Admin User',
-              email: 'admin@greenera.com',
-              role: 'admin'
-            }));
-            window.location.href = 'dashboard.html';
-            return;
-          }
-
-          loginError.textContent = err.message || 'Invalid username or password. Please try again.';
-          loginError.classList.remove('d-none');
-          btnText.classList.remove('d-none');
-          btnSpinner.classList.add('d-none');
-          loginBtn.disabled = false;
-        }
-      });
-
-      // Forgot Password
-      document.getElementById('forgotPasswordForm').addEventListener('submit', async function(e) {
+    const forgotForm = document.getElementById('forgotPasswordForm');
+    if (forgotForm) {
+      forgotForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const email = document.getElementById('resetEmail').value;
-        try {
-          await fetch('http://localhost:5000/api/auth/forgot-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-          });
-        } catch (_) { /* offline fallback */ }
+        try { await fetch('/api/auth/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) }); } catch (_) { }
         document.getElementById('resetSuccess').classList.remove('d-none');
         document.getElementById('resetEmail').value = '';
       });
-    })();
+    }
   </script>
 </body>
 </html>
