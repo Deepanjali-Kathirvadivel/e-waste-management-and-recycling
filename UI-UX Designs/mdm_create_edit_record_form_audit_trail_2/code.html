@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Add New Employee - E-Waste OS</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+    </style>
+<!-- Tailwind CSS & Configuration -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-surface": "#191c1e",
+                        "primary-fixed-dim": "#95d3ba",
+                        "on-background": "#191c1e",
+                        "warning-amber": "#F59E0B",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#0b513d",
+                        "on-secondary-fixed": "#0d1c2f",
+                        "on-primary-container": "#80bea6",
+                        "tertiary-fixed-dim": "#ffb4a9",
+                        "on-tertiary": "#ffffff",
+                        "value-success": "#10B981",
+                        "on-tertiary-fixed": "#380d08",
+                        "emerald-deep": "#064E3B",
+                        "on-tertiary-container": "#ea9e93",
+                        "forest-heavy": "#065F46",
+                        "outline": "#707974",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "surface-container-high": "#e6e8ea",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#002117",
+                        "on-tertiary-fixed-variant": "#6e372f",
+                        "depletion-danger": "#EF4444",
+                        "tertiary": "#4f1f19",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-bright": "#f7f9fb",
+                        "primary-container": "#064e3b",
+                        "outline-variant": "#bfc9c3",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "surface-container-low": "#f2f4f6",
+                        "background": "#f7f9fb",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2d3133",
+                        "surface-dim": "#d8dadc",
+                        "secondary": "#515f74",
+                        "secondary-fixed": "#d5e3fd",
+                        "surface": "#f7f9fb",
+                        "tertiary-fixed": "#ffdad5",
+                        "on-surface-variant": "#404944",
+                        "inverse-primary": "#95d3ba",
+                        "secondary-container": "#d5e3fd",
+                        "secondary-fixed-dim": "#b9c7e0",
+                        "on-secondary-container": "#57657b",
+                        "primary-fixed": "#b0f0d6",
+                        "slate-industrial": "#334155",
+                        "primary": "#003527",
+                        "surface-tint": "#2b6954",
+                        "data-blue": "#0EA5E9",
+                        "tertiary-container": "#6b342d",
+                        "on-primary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "margin-desktop": "32px",
+                        "base": "4px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased min-h-screen flex">
+<!-- Shared Component: SideNavBar -->
+<!-- active state applied to "Operations Control" based on task intent -->
+<nav class="h-screen w-64 fixed left-0 top-0 bg-surface-container-low border-r border-outline-variant flex flex-col h-full py-6 px-4 z-50">
+<div class="mb-8 px-2 flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-emerald-deep flex items-center justify-center text-on-primary font-bold shadow-sm">EI</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-emerald-deep">Command Center</h1>
+<p class="font-label-sm text-label-sm text-secondary">Admin Strategy</p>
+</div>
+</div>
+<button class="mb-8 w-full bg-emerald-deep text-on-primary font-label-sm text-label-sm py-3 px-4 rounded hover:bg-forest-heavy transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+            New Global Audit
+        </button>
+<ul class="flex-1 space-y-1">
+<li>
+<a class="flex items-center gap-3 px-3 py-3 rounded text-secondary hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">dashboard</span>
+<span class="font-body-md text-body-md">Executive Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-3 rounded text-secondary hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">analytics</span>
+<span class="font-body-md text-body-md">Forecasting Center</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-3 rounded text-secondary hover:bg-surface-container-high transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">eco</span>
+<span class="font-body-md text-body-md">Sustainability Planner</span>
+</a>
+</li>
+<li>
+<!-- ACTIVE NAV ITEM -->
+<a class="flex items-center gap-3 px-3 py-3 rounded bg-secondary-container text-on-secondary-container font-semibold translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">engineering</span>
+<span class="font-body-md text-body-md font-semibold">Operations Control</span>
+</a>
+</li>
+</ul>
+<div class="mt-auto border-t border-outline-variant pt-4">
+<ul class="space-y-1">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 rounded text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">help</span>
+<span class="font-label-sm text-label-sm">Support</span>
+</a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-64 flex flex-col min-h-screen">
+<!-- Shared Component: TopNavBar -->
+<header class="docked full-width top-0 sticky z-40 bg-surface border-b border-outline-variant flex justify-between items-center w-full px-8 py-4">
+<div class="flex items-center gap-8">
+<div class="font-headline-lg text-headline-lg font-black text-emerald-deep">E-Waste OS</div>
+<nav class="hidden lg:flex items-center gap-6">
+<a class="text-slate-industrial font-body-md text-body-md hover:text-emerald-deep transition-all py-2" href="#">Global View</a>
+<a class="text-slate-industrial font-body-md text-body-md hover:text-emerald-deep transition-all py-2" href="#">Regional Nodes</a>
+<a class="text-slate-industrial font-body-md text-body-md hover:text-emerald-deep transition-all py-2" href="#">Archives</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<button class="bg-emerald-deep text-on-primary px-4 py-2 rounded font-label-sm text-label-sm hover:bg-forest-heavy transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">description</span>
+                    Generate Report
+                </button>
+<div class="flex items-center gap-4 border-l border-outline-variant pl-6">
+<button class="text-slate-industrial hover:text-emerald-deep transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-slate-industrial hover:text-emerald-deep transition-all">
+<span class="material-symbols-outlined">cloud_upload</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline flex justify-center items-center overflow-hidden">
+<span class="material-symbols-outlined text-secondary">person</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Canvas Area -->
+<main class="flex-1 p-8 lg:p-12 overflow-y-auto">
+<div class="max-w-container-max mx-auto">
+<!-- Header -->
+<div class="mb-8 flex items-center gap-4">
+<button aria-label="Go back" class="w-10 h-10 flex items-center justify-center rounded-full border border-outline-variant text-slate-industrial hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div>
+<div class="flex items-center gap-2 text-secondary font-label-sm text-label-sm mb-1">
+<span>Operations Control</span>
+<span class="material-symbols-outlined" style="font-size: 14px;">chevron_right</span>
+<span>Personnel Directory</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Add New Employee</h2>
+</div>
+</div>
+<!-- Form Layout Grid -->
+<form class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Left Column: Personal Information -->
+<div class="lg:col-span-6 flex flex-col gap-6">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 shadow-sm">
+<h3 class="font-headline-md text-headline-md text-emerald-deep border-b border-outline-variant pb-4 mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">badge</span>
+                                Personal Information
+                            </h3>
+<div class="space-y-6">
+<!-- Name Input -->
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant mb-2 block" for="fullName">Full Legal Name</label>
+<input class="w-full border border-outline-variant bg-surface-bright px-4 py-3 rounded-none font-body-md text-body-md text-on-surface placeholder:text-secondary focus:outline-none focus:ring-2 focus:ring-emerald-deep focus:border-transparent transition-all" id="fullName" name="fullName" placeholder="e.g. Jane Doe" type="text"/>
+</div>
+<!-- Email Input (Validation Error State) -->
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant mb-2 block flex justify-between" for="email">
+<span>Corporate Email Address</span>
+<span class="text-depletion-danger">Required</span>
+</label>
+<div class="relative">
+<input class="w-full border border-depletion-danger bg-surface-bright px-4 py-3 rounded-none font-body-md text-body-md text-depletion-danger focus:outline-none focus:ring-2 focus:ring-depletion-danger focus:border-transparent transition-all pr-10" id="email" name="email" type="email" value="jane.doe@ewaste"/>
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-depletion-danger">
+<span class="material-symbols-outlined">error</span>
+</div>
+</div>
+<p class="font-label-sm text-label-sm text-depletion-danger mt-2 flex items-center gap-1">
+                                        Invalid domain format. Must belong to an authorized regional node.
+                                    </p>
+</div>
+<!-- Role Select -->
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant mb-2 block" for="role">System Role &amp; Clearance</label>
+<div class="relative">
+<select class="w-full border border-outline-variant bg-surface-bright px-4 py-3 rounded-none font-body-md text-body-md text-on-surface appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-deep focus:border-transparent transition-all cursor-pointer" id="role" name="role">
+<option disabled="" selected="" value="">Select clearance level...</option>
+<option value="assessor">L1 - Material Assessor</option>
+<option value="supervisor">L2 - Facility Supervisor</option>
+<option value="admin">L3 - Regional Administrator</option>
+</select>
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-secondary">
+<span class="material-symbols-outlined">arrow_drop_down</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Operational Assignment -->
+<div class="lg:col-span-6 flex flex-col gap-6">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 shadow-sm h-full">
+<h3 class="font-headline-md text-headline-md text-emerald-deep border-b border-outline-variant pb-4 mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">my_location</span>
+                                Operational Assignment
+                            </h3>
+<div class="space-y-6">
+<!-- Region Select -->
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant mb-2 block" for="region">Geographic Region</label>
+<div class="relative">
+<select class="w-full border border-outline-variant bg-surface-bright px-4 py-3 rounded-none font-body-md text-body-md text-on-surface appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-deep focus:border-transparent transition-all cursor-pointer" id="region" name="region">
+<option disabled="" selected="" value="">Select region...</option>
+<option value="na">North America (NA-Core)</option>
+<option value="eu">Europe (EU-Central)</option>
+<option value="apac">Asia Pacific (APAC-Hub)</option>
+</select>
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-secondary">
+<span class="material-symbols-outlined">arrow_drop_down</span>
+</div>
+</div>
+</div>
+<!-- Primary Center Select -->
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant mb-2 block" for="center">Primary Processing Center</label>
+<div class="relative">
+<select class="w-full border border-outline-variant bg-surface-container px-4 py-3 rounded-none font-body-md text-body-md text-secondary appearance-none cursor-not-allowed" disabled="" id="center" name="center">
+<option value="">Select region first...</option>
+</select>
+<div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-outline-variant">
+<span class="material-symbols-outlined">arrow_drop_down</span>
+</div>
+</div>
+<p class="font-label-sm text-label-sm text-secondary mt-2">Available centers will populate based on region selection.</p>
+</div>
+<!-- Decorative Data Element to fill space and look industrial -->
+<div class="mt-8 p-4 border border-dashed border-outline-variant bg-surface-bright flex items-center justify-center min-h-[120px]">
+<div class="text-center">
+<span class="material-symbols-outlined text-outline-variant mb-2" style="font-size: 32px;">fingerprint</span>
+<p class="font-data-mono text-data-mono text-secondary">Awaiting Biometric Registration</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Audit Trail (Bottom Full Width) -->
+<div class="col-span-1 lg:col-span-12 mt-4">
+<div class="bg-surface-container border-l-4 border-slate-industrial px-6 py-4 flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-industrial">history</span>
+<span class="font-data-mono text-data-mono text-slate-industrial">Audit Trail: Created by Admin (CBE-HO) on Oct 24</span>
+</div>
+<span class="font-data-mono text-data-mono text-secondary text-xs">ID: REQ-8824-A</span>
+</div>
+</div>
+<!-- Action Bar -->
+<div class="col-span-1 lg:col-span-12 mt-8 pt-6 border-t border-outline-variant flex flex-col-reverse sm:flex-row justify-end gap-4 items-center">
+<button class="w-full sm:w-auto px-6 py-3 border border-slate-industrial text-slate-industrial font-label-sm text-label-sm hover:bg-surface-container-low transition-colors rounded-none text-center" type="button">
+                            Cancel
+                        </button>
+<button class="w-full sm:w-auto px-6 py-3 border border-slate-industrial text-slate-industrial font-label-sm text-label-sm hover:bg-surface-container-low transition-colors rounded-none text-center" type="button">
+                            Save
+                        </button>
+<button class="w-full sm:w-auto px-8 py-3 bg-emerald-deep text-on-primary font-label-sm text-label-sm hover:bg-forest-heavy transition-colors flex items-center justify-center gap-2 rounded-none shadow-sm" type="submit">
+<span class="material-symbols-outlined" style="font-size: 18px;">save</span>
+                            Save &amp; Continue
+                        </button>
+</div>
+</form>
+</div>
+</main>
+</div>
+</body></html>

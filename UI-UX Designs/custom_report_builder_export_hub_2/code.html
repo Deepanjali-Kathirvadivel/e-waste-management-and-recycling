@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Custom Report Builder - Eco-Genesis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "outline": "#707974",
+                      "on-error-container": "#93000a",
+                      "primary-container": "#064e3b",
+                      "background": "#f7f9fb",
+                      "depletion-danger": "#EF4444",
+                      "surface-container-low": "#f2f4f6",
+                      "slate-industrial": "#334155",
+                      "on-secondary-fixed-variant": "#3a485c",
+                      "on-secondary": "#ffffff",
+                      "surface-container-high": "#e6e8ea",
+                      "tertiary-fixed": "#ffdad5",
+                      "surface-container": "#eceef0",
+                      "on-background": "#191c1e",
+                      "surface-container-highest": "#e0e3e5",
+                      "on-tertiary-fixed": "#380d08",
+                      "surface-bright": "#f7f9fb",
+                      "primary-fixed": "#b0f0d6",
+                      "secondary": "#515f74",
+                      "surface-dim": "#d8dadc",
+                      "on-secondary-fixed": "#0d1c2f",
+                      "outline-variant": "#bfc9c3",
+                      "surface": "#f7f9fb",
+                      "error-container": "#ffdad6",
+                      "on-surface": "#191c1e",
+                      "on-secondary-container": "#57657b",
+                      "on-tertiary-fixed-variant": "#6e372f",
+                      "inverse-primary": "#95d3ba",
+                      "tertiary-container": "#6b342d",
+                      "on-primary-fixed": "#002117",
+                      "secondary-fixed": "#d5e3fd",
+                      "inverse-on-surface": "#eff1f3",
+                      "surface-tint": "#2b6954",
+                      "on-tertiary": "#ffffff",
+                      "primary": "#003527",
+                      "primary-fixed-dim": "#95d3ba",
+                      "data-blue": "#0EA5E9",
+                      "tertiary": "#4f1f19",
+                      "on-primary-container": "#80bea6",
+                      "on-primary-fixed-variant": "#0b513d",
+                      "tertiary-fixed-dim": "#ffb4a9",
+                      "on-surface-variant": "#404944",
+                      "on-tertiary-container": "#ea9e93",
+                      "forest-heavy": "#065F46",
+                      "inverse-surface": "#2d3133",
+                      "error": "#ba1a1a",
+                      "surface-variant": "#e0e3e5",
+                      "secondary-container": "#d5e3fd",
+                      "surface-container-lowest": "#ffffff",
+                      "value-success": "#10B981",
+                      "emerald-deep": "#064E3B",
+                      "secondary-fixed-dim": "#b9c7e0",
+                      "on-error": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "warning-amber": "#F59E0B"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "gutter": "24px",
+                      "container-max": "1440px",
+                      "margin-mobile": "16px",
+                      "base": "4px",
+                      "margin-desktop": "32px"
+              },
+              "fontFamily": {
+                      "display-lg": ["Inter"],
+                      "headline-md": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "body-lg": ["Inter"],
+                      "headline-lg": ["Inter"],
+                      "data-mono": ["JetBrains Mono"]
+              },
+              "fontSize": {
+                      "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                      "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                      "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                      "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                      "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                      "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                      "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        /* Custom scrollbar for industrial feel */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f7f9fb; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #bfc9c3; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #707974; 
+        }
+        .bg-grid-pattern {
+            background-image: linear-gradient(to right, #e0e3e5 1px, transparent 1px),
+                              linear-gradient(to bottom, #e0e3e5 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen overflow-hidden flex">
+<!-- SideNavBar Component -->
+<nav class="bg-surface-container-low h-screen w-64 fixed left-0 top-0 border-r border-outline-variant flex flex-col h-full py-spacing-gutter px-4 z-50">
+<!-- Brand -->
+<div class="mb-8 px-2 flex items-center gap-3">
+<div class="w-8 h-8 bg-emerald-deep rounded-DEFAULT flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-[20px]">recycling</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-emerald-deep">Eco-Genesis</h1>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Industrial Portal</p>
+</div>
+</div>
+<!-- Navigation Tabs -->
+<div class="flex-1 flex flex-col gap-1 overflow-y-auto">
+<!-- Inactive -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-secondary-fixed-variant font-medium hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">recycling</span>
+<span>Collection</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-secondary-fixed-variant font-medium hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-secondary-fixed-variant font-medium hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">fact_check</span>
+<span>Assessments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-secondary-fixed-variant font-medium hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">local_shipping</span>
+<span>Shipments</span>
+</a>
+<!-- Active State: Forecasting (closest to Report Builder) -->
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT bg-surface-container-highest text-on-primary-fixed-variant font-bold border-r-4 border-primary opacity-80 duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+<span>Forecasting</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-secondary-fixed-variant font-medium hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">eco</span>
+<span>Sustainability</span>
+</a>
+</div>
+<!-- Bottom Section -->
+<div class="mt-auto flex flex-col gap-4 pt-4 border-t border-outline-variant">
+<button class="w-full py-2 px-4 bg-emerald-deep text-on-primary font-label-sm text-label-sm rounded-DEFAULT hover:opacity-90 transition-opacity flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                Export Report
+            </button>
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-secondary-fixed-variant font-medium hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-on-secondary-fixed-variant font-medium hover:bg-surface-container-highest transition-colors" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Support</span>
+</a>
+</div>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 ml-64 flex flex-col h-screen">
+<!-- TopNavBar Component -->
+<header class="bg-surface fixed top-0 right-0 w-[calc(100%-16rem)] h-16 border-b border-outline-variant flex justify-between items-center px-spacing-margin-desktop z-40">
+<div class="flex items-center gap-8">
+<h2 class="font-headline-md text-headline-md font-black text-emerald-deep">Analytics Dashboard</h2>
+<!-- Navigation Links -->
+<nav class="hidden lg:flex items-center gap-6 mt-1">
+<a class="font-label-sm text-label-sm text-on-surface-variant font-medium hover:text-primary transition-all" href="#">Overview</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant font-medium hover:text-primary transition-all" href="#">Real-time</a>
+<!-- Active Link -->
+<a class="font-label-sm text-label-sm text-emerald-deep font-bold border-b-2 border-emerald-deep pb-1 scale-95 duration-100" href="#">History</a>
+</nav>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">apps</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-variant border border-outline-variant overflow-hidden ml-2">
+<!-- Placeholder for profile image to avoid external URLs without data-alt, using a solid color/icon instead as requested to avoid image gen if not needed, but prompt allows placeholders. Using icon for simplicity. -->
+<span class="material-symbols-outlined w-full h-full flex items-center justify-center text-slate-industrial">person</span>
+</div>
+</div>
+</header>
+<!-- Page Canvas: Report Builder Grid -->
+<main class="mt-16 p-spacing-gutter flex-1 overflow-y-auto">
+<div class="mb-6 flex justify-between items-end">
+<div>
+<h3 class="font-headline-lg text-headline-lg text-on-background">Custom Report Builder</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Configure parameters and preview your analytical extract.</p>
+</div>
+</div>
+<!-- 12-Column Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-spacing-gutter items-start h-[calc(100%-80px)] min-h-[600px]">
+<!-- Left Panel: Metrics Selection (Col 1-3) -->
+<section class="lg:col-span-3 bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col h-full overflow-hidden shadow-sm">
+<div class="p-4 border-b border-outline-variant bg-surface-container-low">
+<h4 class="font-label-sm text-label-sm text-emerald-deep uppercase tracking-wider">1. Select Metrics</h4>
+</div>
+<div class="p-4 overflow-y-auto flex-1 flex flex-col gap-6">
+<!-- Category: Collection -->
+<div class="flex flex-col gap-2">
+<h5 class="font-label-sm text-label-sm text-on-secondary-container mb-1 border-b border-outline-variant pb-1">Collection Data</h5>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded-DEFAULT border-outline-variant text-emerald-deep focus:ring-emerald-deep bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-emerald-deep transition-colors">Total Volume Collected (kg)</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded-DEFAULT border-outline-variant text-emerald-deep focus:ring-emerald-deep bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-emerald-deep transition-colors">Intake Frequency</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded-DEFAULT border-outline-variant text-emerald-deep focus:ring-emerald-deep bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-emerald-deep transition-colors">Source Demographics</span>
+</label>
+</div>
+<!-- Category: Inventory Processing -->
+<div class="flex flex-col gap-2">
+<h5 class="font-label-sm text-label-sm text-on-secondary-container mb-1 border-b border-outline-variant pb-1">Inventory Processing</h5>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded-DEFAULT border-outline-variant text-emerald-deep focus:ring-emerald-deep bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-emerald-deep transition-colors">Processed vs Raw Ratio</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded-DEFAULT border-outline-variant text-emerald-deep focus:ring-emerald-deep bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-emerald-deep transition-colors">Component Extraction Yield</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded-DEFAULT border-outline-variant text-emerald-deep focus:ring-emerald-deep bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-emerald-deep transition-colors">Hazardous Material Isolated</span>
+</label>
+</div>
+<!-- Category: Sustainability -->
+<div class="flex flex-col gap-2">
+<h5 class="font-label-sm text-label-sm text-on-secondary-container mb-1 border-b border-outline-variant pb-1">Sustainability Impact</h5>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-4 h-4 rounded-DEFAULT border-outline-variant text-emerald-deep focus:ring-emerald-deep bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-emerald-deep transition-colors">Carbon Offset (CO2e)</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-4 h-4 rounded-DEFAULT border-outline-variant text-emerald-deep focus:ring-emerald-deep bg-surface-container-lowest" type="checkbox"/>
+<span class="font-body-md text-body-md text-on-surface group-hover:text-emerald-deep transition-colors">Landfill Diversion Rate</span>
+</label>
+</div>
+</div>
+</section>
+<!-- Center Panel: Live Preview (Col 4-9) -->
+<section class="lg:col-span-6 bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col h-full overflow-hidden shadow-sm relative group">
+<div class="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<h4 class="font-label-sm text-label-sm text-emerald-deep uppercase tracking-wider">Live Data Preview</h4>
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">sync</span> Auto-updating
+                        </span>
+</div>
+<div class="flex-1 p-6 flex flex-col gap-6 overflow-y-auto bg-surface">
+<!-- Chart Area Placeholder (Stylized with CSS to match industrial theme) -->
+<div class="h-64 border border-outline-variant rounded-DEFAULT bg-surface-container-lowest flex flex-col p-4 relative overflow-hidden">
+<div class="absolute inset-0 bg-grid-pattern opacity-50 z-0"></div>
+<div class="relative z-10 flex justify-between items-start mb-4">
+<div>
+<h6 class="font-label-sm text-label-sm text-on-surface">Volume &amp; Impact Trends</h6>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Q3 Trajectory</p>
+</div>
+<div class="flex gap-3">
+<div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-industrial"></span><span class="font-label-sm text-[10px] text-on-surface-variant">Volume</span></div>
+<div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-value-success"></span><span class="font-label-sm text-[10px] text-on-surface-variant">Offset</span></div>
+</div>
+</div>
+<!-- Mock Line Chart structure -->
+<div class="flex-1 flex items-end gap-2 mt-auto relative z-10 border-b border-l border-outline-variant pb-1 pl-1">
+<!-- Bars/Lines representation -->
+<div class="w-full flex justify-between items-end h-full px-2">
+<div class="w-[10%] h-[40%] bg-slate-industrial opacity-80 rounded-t-sm relative"><div class="absolute bottom-0 w-full h-[60%] bg-value-success opacity-90 rounded-t-sm transform translate-x-1/2 -translate-y-2"></div></div>
+<div class="w-[10%] h-[55%] bg-slate-industrial opacity-80 rounded-t-sm relative"><div class="absolute bottom-0 w-full h-[70%] bg-value-success opacity-90 rounded-t-sm transform translate-x-1/2 -translate-y-4"></div></div>
+<div class="w-[10%] h-[45%] bg-slate-industrial opacity-80 rounded-t-sm relative"><div class="absolute bottom-0 w-full h-[65%] bg-value-success opacity-90 rounded-t-sm transform translate-x-1/2 -translate-y-3"></div></div>
+<div class="w-[10%] h-[70%] bg-slate-industrial opacity-80 rounded-t-sm relative"><div class="absolute bottom-0 w-full h-[85%] bg-value-success opacity-90 rounded-t-sm transform translate-x-1/2 -translate-y-6"></div></div>
+<div class="w-[10%] h-[85%] bg-slate-industrial opacity-80 rounded-t-sm relative"><div class="absolute bottom-0 w-full h-[95%] bg-value-success opacity-90 rounded-t-sm transform translate-x-1/2 -translate-y-8"></div></div>
+</div>
+</div>
+<div class="flex justify-between px-3 mt-1 relative z-10">
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[10px]">Aug 01</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[10px]">Aug 15</span>
+<span class="font-data-mono text-data-mono text-on-surface-variant text-[10px]">Aug 31</span>
+</div>
+</div>
+<!-- Data Table Preview -->
+<div class="border border-outline-variant rounded-DEFAULT bg-surface-container-lowest overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low border-b border-outline-variant">
+<tr>
+<th class="p-3 font-label-sm text-label-sm text-on-surface-variant">Date</th>
+<th class="p-3 font-label-sm text-label-sm text-on-surface-variant">Region</th>
+<th class="p-3 font-label-sm text-label-sm text-on-surface-variant text-right">Vol (kg)</th>
+<th class="p-3 font-label-sm text-label-sm text-on-surface-variant text-right">CO2e Offset</th>
+<th class="p-3 font-label-sm text-label-sm text-on-surface-variant text-center">Status</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono text-on-surface">
+<tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors">
+<td class="p-3">2023-10-24</td>
+<td class="p-3">North Hub</td>
+<td class="p-3 text-right text-slate-industrial">1,240.5</td>
+<td class="p-3 text-right text-value-success">+450.2</td>
+<td class="p-3 text-center"><span class="inline-block px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded-DEFAULT">Verified</span></td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-container-low transition-colors">
+<td class="p-3">2023-10-25</td>
+<td class="p-3">East Sector</td>
+<td class="p-3 text-right text-slate-industrial">890.0</td>
+<td class="p-3 text-right text-value-success">+310.8</td>
+<td class="p-3 text-center"><span class="inline-block px-2 py-1 bg-surface-container-highest text-on-surface text-[10px] rounded-DEFAULT">Verified</span></td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-3">2023-10-26</td>
+<td class="p-3">South Hub</td>
+<td class="p-3 text-right text-slate-industrial">2,100.2</td>
+<td class="p-3 text-right text-value-success">+780.0</td>
+<td class="p-3 text-center"><span class="inline-block px-2 py-1 bg-secondary-fixed text-on-secondary-fixed text-[10px] rounded-DEFAULT">Pending</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Right Panel: Configuration (Col 10-12) -->
+<section class="lg:col-span-3 bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col h-full shadow-sm">
+<div class="p-4 border-b border-outline-variant bg-surface-container-low">
+<h4 class="font-label-sm text-label-sm text-emerald-deep uppercase tracking-wider">2. Configuration</h4>
+</div>
+<div class="p-4 flex-1 flex flex-col gap-6 overflow-y-auto">
+<!-- Date Range -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface">Date Range</label>
+<div class="grid grid-cols-2 gap-2">
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-DEFAULT px-3 py-2 font-data-mono text-data-mono text-on-surface focus:border-emerald-deep focus:ring-1 focus:ring-emerald-deep outline-none" type="date" value="2023-10-01"/>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-DEFAULT px-3 py-2 font-data-mono text-data-mono text-on-surface focus:border-emerald-deep focus:ring-1 focus:ring-emerald-deep outline-none" type="date" value="2023-10-31"/>
+</div>
+</div>
+<!-- Region Filter -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface">Operating Regions</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-DEFAULT px-3 py-2 font-body-md text-body-md text-on-surface focus:border-emerald-deep focus:ring-1 focus:ring-emerald-deep outline-none appearance-none">
+<option>All Regions (Global)</option>
+<option>North America Sector</option>
+<option>EU Operations Hub</option>
+<option>APAC Centers</option>
+</select>
+</div>
+<!-- Facility Status Filter -->
+<div class="flex flex-col gap-2">
+<label class="font-label-sm text-label-sm text-on-surface">Facility Status</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-3 py-1 border border-emerald-deep bg-primary-fixed text-on-primary-fixed-variant rounded-full font-label-sm text-label-sm">Active</button>
+<button class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">Maintenance</button>
+<button class="px-3 py-1 border border-outline-variant text-on-surface-variant rounded-full font-label-sm text-label-sm hover:bg-surface-container-high transition-colors">Offline</button>
+</div>
+</div>
+<!-- Format Selection -->
+<div class="flex flex-col gap-2 mt-4">
+<label class="font-label-sm text-label-sm text-on-surface border-b border-outline-variant pb-2">Output Format</label>
+<div class="grid grid-cols-3 gap-2 mt-2">
+<label class="cursor-pointer">
+<input checked="" class="peer sr-only" name="format" type="radio"/>
+<div class="border border-outline-variant rounded-DEFAULT p-3 flex flex-col items-center gap-1 text-on-surface-variant peer-checked:border-emerald-deep peer-checked:bg-surface-container-low peer-checked:text-emerald-deep transition-all hover:bg-surface-container-lowest">
+<span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+<span class="font-label-sm text-[10px] font-bold">PDF</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="format" type="radio"/>
+<div class="border border-outline-variant rounded-DEFAULT p-3 flex flex-col items-center gap-1 text-on-surface-variant peer-checked:border-emerald-deep peer-checked:bg-surface-container-low peer-checked:text-emerald-deep transition-all hover:bg-surface-container-lowest">
+<span class="material-symbols-outlined text-[24px]">table_chart</span>
+<span class="font-label-sm text-[10px] font-bold">EXCEL</span>
+</div>
+</label>
+<label class="cursor-pointer">
+<input class="peer sr-only" name="format" type="radio"/>
+<div class="border border-outline-variant rounded-DEFAULT p-3 flex flex-col items-center gap-1 text-on-surface-variant peer-checked:border-emerald-deep peer-checked:bg-surface-container-low peer-checked:text-emerald-deep transition-all hover:bg-surface-container-lowest">
+<span class="material-symbols-outlined text-[24px]">csv</span>
+<span class="font-label-sm text-[10px] font-bold">CSV</span>
+</div>
+</label>
+</div>
+</div>
+</div>
+<!-- Generate CTA -->
+<div class="p-4 border-t border-outline-variant bg-surface-container-lowest mt-auto">
+<button class="w-full py-3 px-4 bg-emerald-deep text-on-primary font-headline-md text-body-md rounded-DEFAULT hover:bg-forest-heavy transition-colors flex justify-center items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined">analytics</span>
+                            Generate Report
+                        </button>
+</div>
+</section>
+</div>
+</main>
+</div>
+</body></html>

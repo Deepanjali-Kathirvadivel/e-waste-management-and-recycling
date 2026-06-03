@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>E-Waste OS - Employee Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "value-success": "#10B981",
+                        "on-primary-container": "#80bea6",
+                        "surface-tint": "#2b6954",
+                        "secondary-fixed": "#d5e3fd",
+                        "data-blue": "#0EA5E9",
+                        "background": "#f7f9fb",
+                        "secondary": "#515f74",
+                        "on-secondary-container": "#57657b",
+                        "inverse-primary": "#95d3ba",
+                        "warning-amber": "#F59E0B",
+                        "surface": "#f7f9fb",
+                        "tertiary-fixed-dim": "#ffb4a9",
+                        "emerald-deep": "#064E3B",
+                        "on-background": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#404944",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#b0f0d6",
+                        "error": "#ba1a1a",
+                        "depletion-danger": "#EF4444",
+                        "on-tertiary-fixed": "#380d08",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#6e372f",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container-high": "#e6e8ea",
+                        "on-surface": "#191c1e",
+                        "inverse-on-surface": "#eff1f3",
+                        "inverse-surface": "#2d3133",
+                        "primary": "#003527",
+                        "surface-dim": "#d8dadc",
+                        "primary-container": "#064e3b",
+                        "surface-container-low": "#f2f4f6",
+                        "on-primary-fixed": "#002117",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-container": "#ea9e93",
+                        "slate-industrial": "#334155",
+                        "tertiary-fixed": "#ffdad5",
+                        "secondary-container": "#d5e3fd",
+                        "on-secondary-fixed": "#0d1c2f",
+                        "surface-container": "#eceef0",
+                        "secondary-fixed-dim": "#b9c7e0",
+                        "tertiary-container": "#6b342d",
+                        "forest-heavy": "#065F46",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-error": "#ffffff",
+                        "outline-variant": "#bfc9c3",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "surface-bright": "#f7f9fb",
+                        "outline": "#707974",
+                        "primary-fixed-dim": "#95d3ba",
+                        "tertiary": "#4f1f19",
+                        "on-primary-fixed-variant": "#0b513d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "base": "4px",
+                        "margin-desktop": "32px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md text-body-md antialiased min-h-screen flex selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- SideNavBar (Shared Component) -->
+<nav class="bg-surface-container-low dark:bg-inverse-surface border-r border-outline-variant dark:border-outline h-screen w-64 fixed left-0 top-0 flex flex-col h-full py-6 px-4 z-50">
+<div class="mb-8 px-2 flex items-center space-x-3">
+<div class="w-10 h-10 rounded-DEFAULT bg-primary-container flex items-center justify-center shrink-0">
+<img alt="Eco-Industrial Logo" class="w-8 h-8 rounded-DEFAULT object-cover" data-alt="A minimalist, geometric logo featuring interlocking metallic shapes suggesting a recycling symbol or technical node. The style is modern industrial, set against a pristine white background. High contrast, sharp edges, communicating precision and sustainability." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3ylZH3UWnw4a7Ftc4B8TnfYDa_J2I7jNkhnfcZWTl2bkNdvx9KaJK8JFXqbhSvJ-5kMQ9fhbR1ka2H3KeVCQQGq4bwpF1sLs_kZzRCxHU_OEI23TT1z5hTwj8Px8doK8kdY7eY2lgqWkgMfmkRsz_FnOmZRklVnFpY-yRPiiKK-GvERTCTjR4WfI7N-GMy97vjuEByStnBm8fcl25EQVjQ6AGnF7NsvKigjJzWVfripQdg7Hu3PcavTIVLk-GEr4ASEAvsncu3QwB"/>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md font-bold text-emerald-deep dark:text-primary-fixed-dim truncate">Command Center</h2>
+<p class="font-label-sm text-label-sm text-secondary">Admin Strategy</p>
+</div>
+</div>
+<div class="flex-1 space-y-1">
+<a class="flex items-center px-3 py-2.5 rounded-DEFAULT text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px] group-hover:text-emerald-deep transition-colors">dashboard</span>
+<span class="font-label-sm text-label-sm">Executive Dashboard</span>
+</a>
+<a class="flex items-center px-3 py-2.5 rounded-DEFAULT text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px] group-hover:text-emerald-deep transition-colors">analytics</span>
+<span class="font-label-sm text-label-sm">Forecasting Center</span>
+</a>
+<a class="flex items-center px-3 py-2.5 rounded-DEFAULT text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors duration-200 group" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px] group-hover:text-emerald-deep transition-colors">eco</span>
+<span class="font-label-sm text-label-sm">Sustainability Planner</span>
+</a>
+<a class="flex items-center px-3 py-2.5 rounded-DEFAULT bg-secondary-container dark:bg-primary-container text-on-secondary-container dark:text-on-primary-container font-semibold group translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined mr-3 text-[20px] text-emerald-deep">engineering</span>
+<span class="font-label-sm text-label-sm">Operations Control</span>
+</a>
+</div>
+<div class="mt-8 px-2">
+<button class="w-full py-2 px-4 bg-emerald-deep hover:bg-primary text-white rounded-DEFAULT font-label-sm text-label-sm font-semibold transition-colors flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined mr-2 text-[18px]">add</span>
+                New Global Audit
+            </button>
+</div>
+<div class="mt-6 pt-6 border-t border-outline-variant space-y-1">
+<a class="flex items-center px-3 py-2 rounded-DEFAULT text-secondary hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+<a class="flex items-center px-3 py-2 rounded-DEFAULT text-secondary hover:bg-surface-container-high transition-colors group" href="#">
+<span class="material-symbols-outlined mr-3 text-[18px]">help</span>
+<span class="font-label-sm text-label-sm">Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-64 flex flex-col min-h-screen">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-surface dark:bg-background border-b border-outline-variant dark:border-outline docked full-width top-0 sticky z-40 flex justify-between items-center w-full px-8 py-4">
+<div class="flex items-center space-x-8">
+<h1 class="font-headline-lg text-headline-lg font-black text-emerald-deep dark:text-primary-fixed-dim tracking-tight">E-Waste OS</h1>
+<nav class="hidden md:flex items-center space-x-6">
+<a class="text-slate-industrial dark:text-on-surface-variant font-label-sm text-label-sm hover:text-emerald-deep dark:hover:text-primary-fixed transition-all pb-1" href="#">Global View</a>
+<a class="text-emerald-deep dark:text-primary-fixed-dim font-label-sm text-label-sm font-semibold border-b-2 border-emerald-deep pb-1 scale-95 opacity-80" href="#">Regional Nodes</a>
+<a class="text-slate-industrial dark:text-on-surface-variant font-label-sm text-label-sm hover:text-emerald-deep dark:hover:text-primary-fixed transition-all pb-1" href="#">Archives</a>
+</nav>
+</div>
+<div class="flex items-center space-x-6">
+<!-- Search -->
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[18px]">search</span>
+<input class="pl-9 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded-DEFAULT font-body-md text-body-md text-on-surface focus:outline-none focus:border-emerald-deep focus:ring-1 focus:ring-emerald-deep w-64 transition-all placeholder:text-secondary/70" placeholder="Search operations..." type="text"/>
+</div>
+<div class="flex items-center space-x-3 text-secondary">
+<button class="hover:bg-surface-container-high p-1.5 rounded-full transition-colors relative">
+<span class="material-symbols-outlined text-[22px]">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-warning-amber rounded-full"></span>
+</button>
+<button class="hover:bg-surface-container-high p-1.5 rounded-full transition-colors">
+<span class="material-symbols-outlined text-[22px]">cloud_upload</span>
+</button>
+</div>
+<button class="hidden lg:flex items-center justify-center px-4 py-1.5 border border-emerald-deep text-emerald-deep font-label-sm text-label-sm font-semibold rounded-DEFAULT hover:bg-emerald-deep hover:text-white transition-colors">
+                    Generate Report
+                </button>
+<img alt="User Administrator Portrait" class="w-9 h-9 rounded-full object-cover border border-outline-variant" data-alt="A professional headshot of a mature female executive of Indian descent. She is wearing a structured navy blazer over a light blouse. The background is a slightly blurred modern industrial office space with cool lighting. Her expression is serious but approachable, conveying authority and competence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCuqkCfcbvnFThtkg-g8YUVCNnSDDvRleV1sKxwMUAJkEQ9xMAGXRyOFrnruSql_HmDbLbYOD0DB0mwpBCOUAnHdtna_AHgwdSV1wUx01jQCjqhLP51xnGTRgp0TIrHGmxgYlEEKTrt1wtpI-Dq5L4lkQL4NaA4l5RczuPeyvsdkn0ZR8cNyyLcjbcb81DAXQa1X-gdfhiojb-9jPdyYzYLIJQHUo5hGNoBjjbk0Ta-xNtrGLwpgcgQKj2qYIgNhDjMnUuTkZwC6WRT"/>
+</div>
+</header>
+<!-- Page Content -->
+<div class="flex-1 p-8 max-w-container-max mx-auto w-full space-y-8">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Node: Trichy, TN (IND)</span>
+<span class="w-1 h-1 bg-outline rounded-full"></span>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Workforce Management</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg font-bold text-on-surface">Operations Roster</h2>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 border border-slate-industrial text-slate-industrial rounded-DEFAULT font-label-sm text-label-sm font-semibold hover:bg-surface-container-low transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                        Export Manifest
+                    </button>
+<button class="px-4 py-2 bg-emerald-deep text-white rounded-DEFAULT font-label-sm text-label-sm font-semibold hover:bg-primary transition-colors flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">person_add</span>
+                        Add Employee
+                    </button>
+</div>
+</div>
+<!-- Bento Top Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Accuracy Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 relative overflow-hidden">
+<div class="absolute -right-4 -top-4 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[120px] font-variation-[FILL_1]">verified</span>
+</div>
+<h3 class="font-label-sm text-label-sm text-secondary mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">fact_check</span>
+                        Center Accuracy Average
+                    </h3>
+<div class="flex items-end gap-3">
+<span class="font-display-lg text-display-lg text-on-surface">94.2%</span>
+<span class="font-label-sm text-label-sm text-value-success flex items-center mb-2 bg-value-success/10 px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px]">trending_up</span>
+                            +1.8% WoW
+                        </span>
+</div>
+<div class="mt-4 w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-value-success h-full rounded-full" style="width: 94.2%"></div>
+</div>
+<p class="mt-3 font-label-sm text-label-sm text-secondary">Target: 95.0% by EOQ</p>
+</div>
+<!-- Productivity Card -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 relative overflow-hidden">
+<div class="absolute -right-4 -top-4 opacity-5 pointer-events-none">
+<span class="material-symbols-outlined text-[120px] font-variation-[FILL_1]">speed</span>
+</div>
+<h3 class="font-label-sm text-label-sm text-secondary mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+                        Center Productivity Avg
+                    </h3>
+<div class="flex items-end gap-3">
+<span class="font-display-lg text-display-lg text-on-surface">42.5</span>
+<span class="font-label-sm text-label-sm text-secondary mb-2">Units/hr</span>
+</div>
+<!-- Sparkline placeholder -->
+<div class="mt-4 h-[40px] flex items-end gap-1 px-1">
+<div class="w-full bg-slate-200 h-[30%] rounded-t-sm"></div>
+<div class="w-full bg-slate-200 h-[45%] rounded-t-sm"></div>
+<div class="w-full bg-slate-200 h-[40%] rounded-t-sm"></div>
+<div class="w-full bg-slate-200 h-[60%] rounded-t-sm"></div>
+<div class="w-full bg-slate-200 h-[55%] rounded-t-sm"></div>
+<div class="w-full bg-slate-200 h-[70%] rounded-t-sm"></div>
+<div class="w-full bg-emerald-deep h-[85%] rounded-t-sm"></div>
+</div>
+</div>
+<!-- Top Performer Card -->
+<div class="bg-primary-container text-on-primary border border-primary-container rounded-lg p-6 flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<h3 class="font-label-sm text-label-sm text-inverse-primary mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">workspace_premium</span>
+                            Top Performer (Week)
+                        </h3>
+<span class="bg-surface-tint/50 px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider text-primary-fixed">Assessments</span>
+</div>
+<div class="flex items-center gap-4 mt-2">
+<img alt="Top Performer Portrait" class="w-14 h-14 rounded-full border-2 border-primary-fixed object-cover" data-alt="A portrait of a young Indian male employee in his late 20s. He is wearing a high-visibility yellow safety vest over a dark polo shirt. The background is an industrial setting with blurred metal shelving. The lighting is bright and functional. He looks focused and professional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEdiLo1XkWTqzcbvN7Nt2xXQWeGkcePE9-2_YB315bmF6VBRybyffJnRCIHpTQoclPx8g-Vy1oGhTnm1w0zjWC5cThvTRbZVHrBHFNpCwLOdPbAUNIKLTPPfNrvRkMMmGjdnOYMF3p8gsQMA54nqQv9b0EN3K1ab77EZKomowHUKnfQ-DL_cXFQUUxqd61BIFQCLQwDAcaOQKRkMV_4L1hcmzlGxDRYk9QCNQbH11iey77rTOYpN1mBV2HRC3uxuWcMzPl_B_Yhacm"/>
+<div>
+<div class="font-headline-md text-headline-md font-bold">Karthik R.</div>
+<div class="font-data-mono text-data-mono text-inverse-primary mt-1">ID: TRC-8492</div>
+</div>
+</div>
+<div class="mt-4 grid grid-cols-2 gap-4 border-t border-surface-tint pt-4">
+<div>
+<div class="font-label-sm text-label-sm text-inverse-primary mb-1">Accuracy</div>
+<div class="font-data-mono text-data-mono font-bold">98.8%</div>
+</div>
+<div>
+<div class="font-label-sm text-label-sm text-inverse-primary mb-1">Productivity</div>
+<div class="font-data-mono text-data-mono font-bold">58 U/h</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Employee Data Table -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<!-- Table Toolbar -->
+<div class="p-4 border-b border-outline-variant bg-surface-bright flex flex-col sm:flex-row justify-between items-center gap-4">
+<div class="relative w-full sm:w-72">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[18px]">search</span>
+<input class="w-full pl-9 pr-4 py-2 bg-surface border border-outline-variant rounded-DEFAULT font-body-md text-body-md focus:outline-none focus:border-emerald-deep focus:ring-1 focus:ring-emerald-deep transition-all placeholder:text-secondary/70" placeholder="Search by name or ID..." type="text"/>
+</div>
+<div class="flex items-center gap-3 w-full sm:w-auto">
+<button class="px-3 py-1.5 border border-outline-variant rounded-DEFAULT font-label-sm text-label-sm flex items-center gap-2 hover:bg-surface-container-low transition-colors text-secondary">
+<span class="material-symbols-outlined text-[16px]">filter_list</span>
+                            Filter
+                        </button>
+<select class="px-3 py-1.5 border border-outline-variant rounded-DEFAULT font-label-sm text-label-sm bg-surface-container-lowest text-on-surface focus:outline-none focus:border-emerald-deep">
+<option>Status: Active</option>
+<option>Status: Disabled</option>
+<option>Status: All</option>
+</select>
+</div>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant">
+<th class="p-4 font-label-sm text-label-sm text-secondary font-semibold">Employee</th>
+<th class="p-4 font-label-sm text-label-sm text-secondary font-semibold">Status</th>
+<th class="p-4 font-label-sm text-label-sm text-secondary font-semibold">Assessments (MTD)</th>
+<th class="p-4 font-label-sm text-label-sm text-secondary font-semibold">Accuracy</th>
+<th class="p-4 font-label-sm text-label-sm text-secondary font-semibold">Prod. (U/h)</th>
+<th class="p-4 font-label-sm text-label-sm text-secondary font-semibold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-sm shrink-0">KR</div>
+<div>
+<div class="font-body-md text-body-md font-semibold text-on-surface">Karthik R.</div>
+<div class="font-data-mono text-[11px] text-secondary">TRC-8492</div>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-value-success/10 text-value-success font-label-sm text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-value-success"></span>
+                                        Active
+                                    </span>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface">1,245</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<span class="font-data-mono text-data-mono text-on-surface">98.8%</span>
+<div class="w-16 h-1 bg-surface-container-high rounded-full overflow-hidden hidden sm:block">
+<div class="bg-value-success h-full" style="width: 98.8%"></div>
+</div>
+</div>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface">58.2</td>
+<td class="p-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 text-secondary hover:text-emerald-deep hover:bg-surface-container-high rounded" title="Assign/Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 text-secondary hover:text-error hover:bg-error-container rounded" title="Disable">
+<span class="material-symbols-outlined text-[18px]">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center font-bold text-sm shrink-0">PN</div>
+<div>
+<div class="font-body-md text-body-md font-semibold text-on-surface">Priya N.</div>
+<div class="font-data-mono text-[11px] text-secondary">TRC-8501</div>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-value-success/10 text-value-success font-label-sm text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-value-success"></span>
+                                        Active
+                                    </span>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface">1,102</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<span class="font-data-mono text-data-mono text-on-surface">95.4%</span>
+<div class="w-16 h-1 bg-surface-container-high rounded-full overflow-hidden hidden sm:block">
+<div class="bg-value-success h-full" style="width: 95.4%"></div>
+</div>
+</div>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface">45.0</td>
+<td class="p-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 text-secondary hover:text-emerald-deep hover:bg-surface-container-high rounded" title="Assign/Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 text-secondary hover:text-error hover:bg-error-container rounded" title="Disable">
+<span class="material-symbols-outlined text-[18px]">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-fixed text-on-primary-fixed flex items-center justify-center font-bold text-sm shrink-0">SM</div>
+<div>
+<div class="font-body-md text-body-md font-semibold text-on-surface">Suresh M.</div>
+<div class="font-data-mono text-[11px] text-secondary">TRC-8214</div>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-variant text-on-surface-variant font-label-sm text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                                        On Leave
+                                    </span>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-secondary">450</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<span class="font-data-mono text-data-mono text-secondary">92.1%</span>
+<div class="w-16 h-1 bg-surface-container-high rounded-full overflow-hidden hidden sm:block">
+<div class="bg-warning-amber h-full" style="width: 92.1%"></div>
+</div>
+</div>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-secondary">41.5</td>
+<td class="p-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 text-secondary hover:text-emerald-deep hover:bg-surface-container-high rounded" title="Assign/Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 text-secondary hover:text-error hover:bg-error-container rounded" title="Disable">
+<span class="material-symbols-outlined text-[18px]">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-bright transition-colors group">
+<td class="p-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center font-bold text-sm shrink-0">VK</div>
+<div>
+<div class="font-body-md text-body-md font-semibold text-on-surface">Vijay K.</div>
+<div class="font-data-mono text-[11px] text-secondary">TRC-8655</div>
+</div>
+</div>
+</td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-value-success/10 text-value-success font-label-sm text-[11px]">
+<span class="w-1.5 h-1.5 rounded-full bg-value-success"></span>
+                                        Active
+                                    </span>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface">980</td>
+<td class="p-4">
+<div class="flex items-center gap-2">
+<span class="font-data-mono text-data-mono text-on-surface">88.5%</span>
+<div class="w-16 h-1 bg-surface-container-high rounded-full overflow-hidden hidden sm:block">
+<div class="bg-depletion-danger h-full" style="width: 88.5%"></div>
+</div>
+<span class="material-symbols-outlined text-[14px] text-warning-amber ml-1" title="Needs review">warning</span>
+</div>
+</td>
+<td class="p-4 font-data-mono text-data-mono text-on-surface">38.0</td>
+<td class="p-4 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-1.5 text-secondary hover:text-emerald-deep hover:bg-surface-container-high rounded" title="Assign/Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 text-secondary hover:text-error hover:bg-error-container rounded" title="Disable">
+<span class="material-symbols-outlined text-[18px]">block</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination -->
+<div class="p-4 border-t border-outline-variant bg-surface-bright flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary">Showing 1 to 4 of 42 employees</span>
+<div class="flex items-center gap-1">
+<button class="p-1 border border-outline-variant rounded hover:bg-surface-container-low text-secondary disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-7 h-7 flex items-center justify-center rounded bg-emerald-deep text-white font-data-mono text-sm">1</button>
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-surface-container-low text-secondary font-data-mono text-sm border border-transparent">2</button>
+<button class="w-7 h-7 flex items-center justify-center rounded hover:bg-surface-container-low text-secondary font-data-mono text-sm border border-transparent">3</button>
+<span class="text-secondary px-1">...</span>
+<button class="p-1 border border-outline-variant rounded hover:bg-surface-container-low text-secondary">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
