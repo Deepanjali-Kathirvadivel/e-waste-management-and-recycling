@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sustainability Recommendation Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#e0e3e5",
+                        "tertiary": "#4f1f19",
+                        "tertiary-fixed-dim": "#ffb4a9",
+                        "primary-container": "#064e3b",
+                        "on-secondary-container": "#57657b",
+                        "inverse-on-surface": "#eff1f3",
+                        "slate-industrial": "#334155",
+                        "surface-container-lowest": "#ffffff",
+                        "value-success": "#10B981",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary": "#515f74",
+                        "depletion-danger": "#EF4444",
+                        "on-tertiary-container": "#ea9e93",
+                        "on-surface": "#191c1e",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "surface": "#f7f9fb",
+                        "surface-bright": "#f7f9fb",
+                        "primary": "#003527",
+                        "surface-container-low": "#f2f4f6",
+                        "outline-variant": "#bfc9c3",
+                        "outline": "#707974",
+                        "on-primary-fixed": "#002117",
+                        "primary-fixed-dim": "#95d3ba",
+                        "on-secondary-fixed": "#0d1c2f",
+                        "forest-heavy": "#065F46",
+                        "inverse-primary": "#95d3ba",
+                        "on-primary": "#ffffff",
+                        "data-blue": "#0EA5E9",
+                        "secondary-container": "#d5e3fd",
+                        "on-tertiary-fixed": "#380d08",
+                        "on-error": "#ffffff",
+                        "on-surface-variant": "#404944",
+                        "primary-fixed": "#b0f0d6",
+                        "surface-container": "#eceef0",
+                        "emerald-deep": "#064E3B",
+                        "on-primary-fixed-variant": "#0b513d",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2d3133",
+                        "on-tertiary-fixed-variant": "#6e372f",
+                        "warning-amber": "#F59E0B",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#ffdad5",
+                        "secondary-fixed-dim": "#b9c7e0",
+                        "on-primary-container": "#80bea6",
+                        "background": "#f7f9fb",
+                        "on-background": "#191c1e",
+                        "surface-dim": "#d8dadc",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "surface-tint": "#2b6954",
+                        "tertiary-container": "#6b342d",
+                        "secondary-fixed": "#d5e3fd"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "container-max": "1440px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "base": "4px",
+                        "margin-desktop": "32px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "display-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex">
+<!-- Side NavBar -->
+<aside class="bg-surface-container-low dark:bg-inverse-surface h-screen w-64 fixed left-0 top-0 border-r border-outline-variant dark:border-outline flex flex-col h-full py-6 px-4 z-50">
+<div class="mb-8 px-4">
+<h1 class="font-headline-md text-headline-md font-bold text-emerald-deep dark:text-primary-fixed-dim">Command Center</h1>
+<p class="font-label-sm text-label-sm text-secondary dark:text-secondary-fixed-dim">Admin Strategy</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-body-md text-body-md font-semibold">Executive Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-body-md text-body-md font-semibold">Forecasting Center</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded bg-secondary-container dark:bg-primary-container text-on-secondary-container dark:text-on-primary-container font-semibold translate-x-1 transition-transform shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="eco">eco</span>
+<span class="font-body-md text-body-md font-semibold">Sustainability Planner</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="engineering">engineering</span>
+<span class="font-body-md text-body-md font-semibold">Operations Control</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-outline-variant dark:border-outline space-y-4">
+<button class="w-full bg-emerald-deep text-white font-label-sm text-label-sm py-2 rounded flex items-center justify-center gap-2 hover:bg-forest-heavy transition-colors">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                 New Global Audit
+             </button>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 rounded text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded text-secondary dark:text-secondary-fixed-dim hover:bg-surface-container-high hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-colors duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="font-label-sm text-label-sm">Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-64 flex flex-col min-h-screen">
+<!-- Top NavBar -->
+<header class="bg-surface dark:bg-background docked full-width top-0 sticky z-40 border-b border-outline-variant dark:border-outline flex justify-between items-center w-full px-8 py-4 max-w-full">
+<div class="flex items-center gap-8">
+<span class="font-headline-lg text-headline-lg font-black text-emerald-deep dark:text-primary-fixed-dim">E-Waste OS</span>
+<div class="relative hidden md:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded focus:border-emerald-deep focus:ring-1 focus:ring-emerald-deep outline-none font-body-md text-body-md text-on-surface w-64 placeholder:text-outline transition-colors" placeholder="Search operations..." type="text"/>
+</div>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="font-body-md text-body-md text-emerald-deep dark:text-primary-fixed-dim border-b-2 border-emerald-deep pb-1 hover:text-emerald-deep dark:hover:text-primary-fixed transition-all" href="#">Global View</a>
+<a class="font-body-md text-body-md text-slate-industrial dark:text-on-surface-variant hover:text-emerald-deep dark:hover:text-primary-fixed transition-all pb-1" href="#">Regional Nodes</a>
+<a class="font-body-md text-body-md text-slate-industrial dark:text-on-surface-variant hover:text-emerald-deep dark:hover:text-primary-fixed transition-all pb-1" href="#">Archives</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-slate-industrial hover:text-emerald-deep transition-colors p-2">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-slate-industrial hover:text-emerald-deep transition-colors p-2">
+<span class="material-symbols-outlined" data-icon="cloud_upload">cloud_upload</span>
+</button>
+<button class="bg-emerald-deep text-white px-4 py-2 rounded font-label-sm text-label-sm hover:bg-forest-heavy transition-colors ml-2 hidden lg:block">
+                    Generate Report
+                </button>
+<div class="w-10 h-10 rounded-full bg-surface-variant border border-outline-variant overflow-hidden ml-4">
+<img alt="User Administrator Portrait" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZlbkvf0qBQ7Pc4aN_iBiG1E1dirrfeQJ1WzPayK85Fe976HVqswfpEJcv6tq7UpqasNWCtm0d7A12TMBe9kfcb4m4Nw48XQoW0GhhUqwAyVl-KYOny_z5ypinMATIN6BlBlPkpNnD563Fjxr2FBjzyl-dRUxpD7Jp1wU378oXRqdt8p4uOwYgHHPtA9ZWTcIKgf5X-G5jBJF5R99nn8sxCqfIhl3SYia-K8jHHuW-MeKBVpirne2PNZed9JKSpOUCJq4pXk-Oc86Z"/>
+</div>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<div class="flex-1 p-margin-desktop overflow-y-auto bg-surface">
+<div class="mb-8 flex justify-between items-end">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Sustainability Recommendation Center</h2>
+<p class="font-body-md text-body-md text-secondary">AI-driven insights for strategic infrastructure expansion and logistics optimization.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter">
+<!-- Map Interface (Bento Grid Area) -->
+<div class="xl:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-xl p-6 flex flex-col shadow-sm">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-emerald-deep">hub</span>
+                        Regional Distance Network
+                    </h3>
+<div class="flex-1 bg-surface-container-low rounded-lg border border-outline-variant relative overflow-hidden min-h-[400px]">
+<!-- Simulated Map Area -->
+<div class="absolute inset-0 bg-slate-100 opacity-50 pointer-events-none" style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px;"></div>
+<!-- Coimbatore Head Office (Center) -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center z-10">
+<div class="w-6 h-6 rounded-full bg-emerald-deep border-4 border-white shadow-md flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[12px]">home</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface mt-1 bg-white/80 px-2 py-1 rounded shadow-sm border border-outline-variant backdrop-blur-sm">Coimbatore (HQ)</span>
+</div>
+<!-- Chennai Node -->
+<div class="absolute top-[20%] left-[70%] flex flex-col items-center group">
+<div class="w-4 h-4 rounded-full bg-warning-amber border-2 border-white shadow-sm"></div>
+<span class="font-label-sm text-label-sm text-secondary mt-1 bg-white/80 px-2 py-1 rounded shadow-sm border border-outline-variant">Chennai (500km)</span>
+<!-- SVG Line to HQ -->
+<svg class="absolute top-2 left-[-150px] w-[150px] h-[100px] pointer-events-none -z-10" style="transform-origin: top left; transform: rotate(155deg);">
+<line stroke="#94a3b8" stroke-dasharray="4 4" stroke-width="2" x1="0" x2="150" y1="0" y2="0"></line>
+</svg>
+</div>
+<!-- Salem Node -->
+<div class="absolute top-[35%] left-[30%] flex flex-col items-center">
+<div class="w-4 h-4 rounded-full bg-value-success border-2 border-white shadow-sm"></div>
+<span class="font-label-sm text-label-sm text-secondary mt-1 bg-white/80 px-2 py-1 rounded shadow-sm border border-outline-variant">Salem (165km)</span>
+<svg class="absolute top-2 left-[10px] w-[100px] h-[50px] pointer-events-none -z-10" style="transform-origin: top left; transform: rotate(25deg);">
+<line stroke="#10B981" stroke-width="2" x1="0" x2="100" y1="0" y2="0"></line>
+</svg>
+</div>
+<!-- Trichy Node -->
+<div class="absolute top-[70%] left-[60%] flex flex-col items-center">
+<div class="w-4 h-4 rounded-full bg-value-success border-2 border-white shadow-sm"></div>
+<span class="font-label-sm text-label-sm text-secondary mt-1 bg-white/80 px-2 py-1 rounded shadow-sm border border-outline-variant">Trichy (215km)</span>
+<svg class="absolute top-2 left-[-50px] w-[80px] h-[80px] pointer-events-none -z-10" style="transform-origin: top left; transform: rotate(220deg);">
+<line stroke="#10B981" stroke-width="2" x1="0" x2="80" y1="0" y2="0"></line>
+</svg>
+</div>
+<!-- Kochi Node -->
+<div class="absolute top-[65%] left-[20%] flex flex-col items-center">
+<div class="w-4 h-4 rounded-full bg-depletion-danger border-2 border-white shadow-sm animate-pulse"></div>
+<span class="font-label-sm text-label-sm text-secondary mt-1 bg-white/80 px-2 py-1 rounded shadow-sm border border-outline-variant text-depletion-danger font-bold">Kochi (190km - Over Capacity)</span>
+<svg class="absolute top-2 left-[10px] w-[120px] h-[80px] pointer-events-none -z-10" style="transform-origin: top left; transform: rotate(-30deg);">
+<line stroke="#EF4444" stroke-width="2" x1="0" x2="120" y1="0" y2="0"></line>
+</svg>
+</div>
+</div>
+<div class="mt-4 flex gap-4 text-label-sm font-label-sm text-secondary">
+<div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-value-success inline-block"></span> Optimal Range</div>
+<div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-warning-amber inline-block"></span> Edge Case (&gt;250km)</div>
+<div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-depletion-danger inline-block"></span> Action Required</div>
+</div>
+</div>
+<!-- Recommendations Sidebar -->
+<div class="xl:col-span-4 flex flex-col gap-6">
+<h3 class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-warning-amber">lightbulb</span>
+                        AI Recommendations
+                    </h3>
+<!-- Card 1: New Collection Center -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-3">
+<div class="bg-blue-100 text-data-blue px-2 py-1 rounded text-label-sm font-label-sm inline-block">New Collection Center</div>
+<span class="material-symbols-outlined text-outline">more_horiz</span>
+</div>
+<h4 class="font-body-lg text-body-lg font-semibold text-on-surface mb-1">Establish Chennai Hub</h4>
+<p class="font-body-md text-body-md text-secondary mb-4 text-sm">Distance (500km) exceeds 250km threshold. Local collection center recommended to reduce transport emissions.</p>
+<div class="grid grid-cols-2 gap-4 mb-4 border-t border-b border-surface-variant py-3">
+<div>
+<span class="block text-label-sm font-label-sm text-secondary uppercase tracking-wider">Impact Score</span>
+<span class="font-data-mono text-data-mono text-value-success font-bold">+18% Efficiency</span>
+</div>
+<div>
+<span class="block text-label-sm font-label-sm text-secondary uppercase tracking-wider">Est. CAPEX</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">₹12,50,000</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 bg-emerald-deep text-white py-2 rounded font-label-sm text-label-sm hover:bg-forest-heavy transition-colors">Approve for Planning</button>
+<button class="flex-1 border border-slate-industrial text-slate-industrial py-2 rounded font-label-sm text-label-sm hover:bg-surface-variant transition-colors">View Analysis</button>
+</div>
+</div>
+<!-- Card 2: Facility Expansion -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow border-l-4 border-l-depletion-danger">
+<div class="flex justify-between items-start mb-3">
+<div class="bg-red-100 text-depletion-danger px-2 py-1 rounded text-label-sm font-label-sm inline-block flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">warning</span> Facility Expansion
+                            </div>
+</div>
+<h4 class="font-body-lg text-body-lg font-semibold text-on-surface mb-1">Upgrade Kochi Node</h4>
+<p class="font-body-md text-body-md text-secondary mb-4 text-sm">Current processing volume is at 112% capacity. Immediate expansion required to prevent bottleneck.</p>
+<div class="grid grid-cols-2 gap-4 mb-4 border-t border-b border-surface-variant py-3">
+<div>
+<span class="block text-label-sm font-label-sm text-secondary uppercase tracking-wider">Impact Score</span>
+<span class="font-data-mono text-data-mono text-value-success font-bold">+35% Capacity</span>
+</div>
+<div>
+<span class="block text-label-sm font-label-sm text-secondary uppercase tracking-wider">Est. CAPEX</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">₹45,00,000</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 bg-emerald-deep text-white py-2 rounded font-label-sm text-label-sm hover:bg-forest-heavy transition-colors">Approve for Planning</button>
+<button class="flex-1 border border-slate-industrial text-slate-industrial py-2 rounded font-label-sm text-label-sm hover:bg-surface-variant transition-colors">View Analysis</button>
+</div>
+</div>
+<!-- Card 3: Logistics Optimization -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-3">
+<div class="bg-emerald-100 text-emerald-deep px-2 py-1 rounded text-label-sm font-label-sm inline-block">Logistics Optimization</div>
+</div>
+<h4 class="font-body-lg text-body-lg font-semibold text-on-surface mb-1">Route Consolidation: Salem-Trichy</h4>
+<p class="font-body-md text-body-md text-secondary mb-4 text-sm">Combine weekly shipments from Salem and Trichy to HQ. Reduces total trips by 1/week.</p>
+<div class="grid grid-cols-2 gap-4 mb-4 border-t border-b border-surface-variant py-3">
+<div>
+<span class="block text-label-sm font-label-sm text-secondary uppercase tracking-wider">Impact Score</span>
+<span class="font-data-mono text-data-mono text-value-success font-bold">-12% Fuel Cost</span>
+</div>
+<div>
+<span class="block text-label-sm font-label-sm text-secondary uppercase tracking-wider">Est. CAPEX</span>
+<span class="font-data-mono text-data-mono text-on-surface font-bold">₹0 (OpEx)</span>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 bg-emerald-deep text-white py-2 rounded font-label-sm text-label-sm hover:bg-forest-heavy transition-colors">Approve for Planning</button>
+<button class="flex-1 border border-slate-industrial text-slate-industrial py-2 rounded font-label-sm text-label-sm hover:bg-surface-variant transition-colors">View Analysis</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

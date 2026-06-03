@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Notification Drawer &amp; Toasts - E-Waste OS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "outline": "#707974",
+                      "tertiary": "#4f1f19",
+                      "on-primary-fixed-variant": "#0b513d",
+                      "primary-fixed-dim": "#95d3ba",
+                      "on-error": "#ffffff",
+                      "surface-container-highest": "#e0e3e5",
+                      "surface-bright": "#f7f9fb",
+                      "on-secondary-fixed-variant": "#3a485c",
+                      "outline-variant": "#bfc9c3",
+                      "on-tertiary": "#ffffff",
+                      "secondary-container": "#d5e3fd",
+                      "tertiary-fixed": "#ffdad5",
+                      "forest-heavy": "#065F46",
+                      "secondary-fixed-dim": "#b9c7e0",
+                      "tertiary-container": "#6b342d",
+                      "surface-container": "#eceef0",
+                      "on-secondary-fixed": "#0d1c2f",
+                      "surface-dim": "#d8dadc",
+                      "primary": "#003527",
+                      "slate-industrial": "#334155",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-container": "#ea9e93",
+                      "on-primary-fixed": "#002117",
+                      "on-primary": "#ffffff",
+                      "primary-container": "#064e3b",
+                      "surface-container-low": "#f2f4f6",
+                      "surface-container-high": "#e6e8ea",
+                      "on-surface": "#191c1e",
+                      "inverse-on-surface": "#eff1f3",
+                      "surface-variant": "#e0e3e5",
+                      "on-tertiary-fixed-variant": "#6e372f",
+                      "on-tertiary-fixed": "#380d08",
+                      "on-error-container": "#93000a",
+                      "inverse-surface": "#2d3133",
+                      "on-background": "#191c1e",
+                      "emerald-deep": "#064E3B",
+                      "tertiary-fixed-dim": "#ffb4a9",
+                      "surface": "#f7f9fb",
+                      "error": "#ba1a1a",
+                      "depletion-danger": "#EF4444",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed": "#b0f0d6",
+                      "on-secondary": "#ffffff",
+                      "on-surface-variant": "#404944",
+                      "on-secondary-container": "#57657b",
+                      "inverse-primary": "#95d3ba",
+                      "secondary": "#515f74",
+                      "background": "#f7f9fb",
+                      "warning-amber": "#F59E0B",
+                      "value-success": "#10B981",
+                      "surface-tint": "#2b6954",
+                      "secondary-fixed": "#d5e3fd",
+                      "data-blue": "#0EA5E9",
+                      "on-primary-container": "#80bea6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "margin-desktop": "32px",
+                      "base": "4px",
+                      "container-max": "1440px",
+                      "margin-mobile": "16px",
+                      "gutter": "24px"
+              },
+              "fontFamily": {
+                      "label-sm": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "data-mono": [
+                              "JetBrains Mono"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-mono": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Utility for ambient shadow */
+        .ambient-shadow {
+            box-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05); /* Slate-900 at 5% */
+        }
+        
+        /* Scrollbar styling for high-density lists */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #bfc9c3;
+            border-radius: 2px;
+        }
+        
+        /* Drawer animation */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        .drawer-slide-in {
+            animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface h-screen w-full overflow-hidden flex flex-col font-body-md text-body-md">
+<!-- TopNavBar Overlaying Everything -->
+<header class="bg-surface border-b border-outline-variant docked full-width top-0 sticky z-40">
+<div class="flex justify-between items-center w-full px-8 py-4 ml-64 max-w-[calc(100%-16rem)]">
+<div class="flex items-center gap-4">
+<span class="font-headline-lg text-headline-lg font-black text-emerald-deep">E-Waste OS</span>
+</div>
+<nav class="flex gap-6 items-center">
+<a class="text-slate-industrial font-label-sm text-label-sm hover:text-emerald-deep transition-all" href="#">Global View</a>
+<a class="text-slate-industrial font-label-sm text-label-sm hover:text-emerald-deep transition-all" href="#">Regional Nodes</a>
+<a class="text-slate-industrial font-label-sm text-label-sm hover:text-emerald-deep transition-all" href="#">Archives</a>
+</nav>
+<div class="flex items-center gap-6">
+<!-- Search Icon (Left of actions) -->
+<button class="text-slate-industrial hover:text-emerald-deep transition-all">
+<span class="material-symbols-outlined">search</span>
+</button>
+<div class="flex items-center gap-4">
+<button aria-label="Notifications" class="text-emerald-deep scale-95 opacity-80 relative flex items-center justify-center h-10 w-10 rounded-full hover:bg-surface-variant transition-colors" id="notification-toggle">
+<span class="material-symbols-outlined" data-weight="fill">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-depletion-danger rounded-full"></span>
+</button>
+<button class="text-slate-industrial hover:text-emerald-deep transition-all flex items-center justify-center h-10 w-10 rounded-full hover:bg-surface-variant">
+<span class="material-symbols-outlined">cloud_upload</span>
+</button>
+</div>
+<button class="bg-emerald-deep text-on-primary font-label-sm text-label-sm py-2 px-4 rounded hover:bg-forest-heavy transition-colors">
+                    Generate Report
+                </button>
+<div class="h-8 w-8 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden">
+<img alt="User Administrator Portrait" class="w-full h-full object-cover" data-alt="A professional headshot of a corporate administrator in a modern office setting. The lighting is bright and clean, fitting an industrial software application. High contrast, sharp focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0dGO0NUKA4Vt_U0sqczHzAyE9-bt-UcRpQSvq2tTS3yE-8JZpG8rKF8-8B4MeDDJG5LO_AF8ZFcU1o25oJrMhLe8XyxW-JN5hTZyfJeEDlinQmIaUy2fR36Iz8aEGbAzU-2N49KZsQI9Cp90zw4cnnibjD1UJmiipqLZm43YVPYxp4by9YypSav3Y7LMpfns_j9opupxvqqLeZMqvFdiaLiRD1KLnwndFFYkTe9xtTLlWUH7a51u_sD6-F8U-BwQ1XicY3VKiifhD"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="bg-surface-container-low h-screen w-64 fixed left-0 top-0 border-r border-outline-variant flex flex-col py-6 px-4 z-50">
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 rounded bg-emerald-deep flex items-center justify-center text-on-primary font-bold">
+<span class="material-symbols-outlined">eco</span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md font-bold text-emerald-deep leading-none">Command Center</div>
+<div class="font-label-sm text-label-sm text-secondary mt-1">Admin Strategy</div>
+</div>
+</div>
+<button class="w-full bg-emerald-deep text-on-primary font-label-sm text-label-sm py-3 px-4 rounded mb-8 hover:bg-forest-heavy transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span> New Global Audit
+        </button>
+<div class="flex flex-col gap-1 flex-grow">
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm text-label-sm">Executive Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-sm text-label-sm">Forecasting Center</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">eco</span>
+<span class="font-label-sm text-label-sm">Sustainability Planner</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded bg-secondary-container text-on-secondary-container font-semibold translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined" data-weight="fill">engineering</span>
+<span class="font-label-sm text-label-sm">Operations Control</span>
+</a>
+</div>
+<div class="flex flex-col gap-1 mt-auto pt-4 border-t border-outline-variant">
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-sm text-label-sm">Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area (Background) -->
+<main class="ml-64 flex-1 bg-surface-bright p-8 overflow-y-auto relative z-0">
+<!-- Placeholder Dashboard Content -->
+<div class="max-w-container-max mx-auto space-y-6 opacity-40 transition-opacity" id="main-content">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h1 class="font-display-lg text-display-lg text-emerald-deep mb-2">Operations Overview</h1>
+<p class="text-secondary font-body-md text-body-md">Live feed of global processing nodes.</p>
+</div>
+</div>
+<!-- Dashboard Grid (Bento style placeholder) -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Large Chart Card -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-lg p-6 h-96 flex flex-col">
+<h3 class="font-headline-md text-headline-md text-slate-industrial mb-4">Processing Volume (7 Days)</h3>
+<div class="flex-1 border border-dashed border-outline-variant rounded flex items-center justify-center bg-surface-container-low">
+<span class="text-secondary font-data-mono text-data-mono">[Chart Data Placeholder]</span>
+</div>
+</div>
+<!-- Status Stats -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex-1 flex flex-col justify-center">
+<span class="font-label-sm text-label-sm text-secondary mb-1 uppercase tracking-wider">Total Throughput</span>
+<span class="font-display-lg text-display-lg text-emerald-deep">14,208</span>
+<span class="font-label-sm text-label-sm text-value-success mt-2 flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span> +12% from last week
+                        </span>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 flex-1 flex flex-col justify-center">
+<span class="font-label-sm text-label-sm text-secondary mb-1 uppercase tracking-wider">Critical Alerts</span>
+<span class="font-display-lg text-display-lg text-depletion-danger">3</span>
+<span class="font-label-sm text-label-sm text-secondary mt-2">Requires immediate attention</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Overlay Background (visible when drawer is open) -->
+<div class="fixed inset-0 bg-slate-industrial/20 backdrop-blur-sm z-40 hidden transition-opacity" id="drawer-overlay"></div>
+<!-- NOTIFICATION DRAWER (Right Slide-out) -->
+<aside class="fixed top-0 right-0 h-full w-[400px] bg-surface-container-lowest border-l border-outline-variant z-50 flex flex-col ambient-shadow drawer-slide-in" id="notification-drawer">
+<!-- Drawer Header -->
+<div class="px-6 py-5 border-b border-outline-variant flex justify-between items-center bg-surface-bright">
+<div>
+<h2 class="font-headline-md text-headline-md text-emerald-deep">Recent Activity</h2>
+</div>
+<button class="text-slate-industrial hover:text-emerald-deep transition-colors p-1 rounded hover:bg-surface-container" id="close-drawer">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Tabs -->
+<div class="flex border-b border-outline-variant px-6 bg-surface-bright">
+<button class="py-3 px-4 border-b-2 border-emerald-deep text-emerald-deep font-label-sm text-label-sm">
+                Unread (3)
+            </button>
+<button class="py-3 px-4 border-b-2 border-transparent text-secondary hover:text-slate-industrial font-label-sm text-label-sm transition-colors">
+                All
+            </button>
+</div>
+<!-- Notification List (High Density) -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-2">
+<!-- Item 1: Critical / Action Required -->
+<div class="p-4 mb-2 bg-error-container/20 border border-outline-variant rounded flex gap-4 group relative hover:bg-error-container/30 transition-colors">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-depletion-danger rounded-l"></div>
+<div class="flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-depletion-danger">warning</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-sm text-label-sm text-on-surface truncate pr-2">Processing Node Offline</span>
+<span class="font-data-mono text-[10px] text-secondary flex-shrink-0">10m ago</span>
+</div>
+<p class="font-body-md text-[13px] text-on-surface-variant leading-tight mb-2">Node Alpha-7 in Sector 4 is unresponsive. Temperature critical before disconnect.</p>
+<div class="flex gap-3 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="font-label-sm text-[11px] text-emerald-deep hover:underline">View Diagnostics</button>
+<button class="font-label-sm text-[11px] text-secondary hover:text-slate-industrial">Mark as Read</button>
+</div>
+</div>
+</div>
+<!-- Item 2: Success / Informational -->
+<div class="p-4 mb-2 bg-surface border border-outline-variant rounded flex gap-4 group hover:bg-surface-container transition-colors relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-value-success rounded-l"></div>
+<div class="flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-value-success">check_circle</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-sm text-label-sm text-on-surface truncate pr-2">Batch Processing Complete</span>
+<span class="font-data-mono text-[10px] text-secondary flex-shrink-0">1h ago</span>
+</div>
+<p class="font-body-md text-[13px] text-on-surface-variant leading-tight mb-2">Batch ID <span class="font-data-mono">#778-XR</span> processed successfully. Yield: 94% reusable.</p>
+<div class="flex gap-3 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="font-label-sm text-[11px] text-emerald-deep hover:underline">View Report</button>
+<button class="font-label-sm text-[11px] text-secondary hover:text-slate-industrial">Mark as Read</button>
+</div>
+</div>
+</div>
+<!-- Item 3: System Update -->
+<div class="p-4 mb-2 bg-surface border border-outline-variant rounded flex gap-4 group hover:bg-surface-container transition-colors relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-data-blue rounded-l"></div>
+<div class="flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-data-blue">update</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-sm text-label-sm text-on-surface truncate pr-2">Forecasting Model Updated</span>
+<span class="font-data-mono text-[10px] text-secondary flex-shrink-0">3h ago</span>
+</div>
+<p class="font-body-md text-[13px] text-on-surface-variant leading-tight mb-2">CV algorithms recalibrated for better precious metal detection.</p>
+<div class="flex gap-3 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="font-label-sm text-[11px] text-emerald-deep hover:underline">Read Release Notes</button>
+<button class="font-label-sm text-[11px] text-secondary hover:text-slate-industrial">Mark as Read</button>
+</div>
+</div>
+</div>
+<!-- Item 4: Read state (muted) -->
+<div class="p-4 mb-2 bg-surface-container-low border border-outline-variant/50 rounded flex gap-4 group opacity-70">
+<div class="flex-shrink-0 mt-1">
+<span class="material-symbols-outlined text-secondary">assignment</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start mb-1">
+<span class="font-label-sm text-label-sm text-secondary truncate pr-2">New Audit Assigned</span>
+<span class="font-data-mono text-[10px] text-secondary flex-shrink-0">Yesterday</span>
+</div>
+<p class="font-body-md text-[13px] text-secondary leading-tight">You have been assigned to audit facility Omega-2.</p>
+</div>
+</div>
+</div>
+<!-- Drawer Footer -->
+<div class="p-4 border-t border-outline-variant bg-surface-bright flex justify-center">
+<a class="font-label-sm text-label-sm text-emerald-deep hover:underline flex items-center gap-1" href="#">
+                View All in Notification Center <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+</aside>
+<!-- TOAST NOTIFICATIONS (Bottom Right) -->
+<div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 w-80 pointer-events-none">
+<!-- Toast 1: Success -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded ambient-shadow p-4 flex items-start gap-3 pointer-events-auto transform transition-all translate-y-0 opacity-100 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-value-success"></div>
+<span class="material-symbols-outlined text-value-success flex-shrink-0">check_circle</span>
+<div class="flex-1">
+<p class="font-label-sm text-[13px] text-on-surface">Assessment Saved successfully</p>
+</div>
+<button class="text-secondary hover:text-slate-industrial">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- Toast 2: Warning/Error -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded ambient-shadow p-4 flex items-start gap-3 pointer-events-auto transform transition-all translate-y-0 opacity-100 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-warning-amber"></div>
+<span class="material-symbols-outlined text-warning-amber flex-shrink-0">wifi_off</span>
+<div class="flex-1">
+<p class="font-label-sm text-[13px] text-on-surface">Connection Lost</p>
+<p class="font-body-md text-[12px] text-on-surface-variant mt-1 leading-tight">Syncing paused. Changes saved locally.</p>
+</div>
+<button class="text-secondary hover:text-slate-industrial">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Lightweight JS for interactions -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const drawer = document.getElementById('notification-drawer');
+            const overlay = document.getElementById('drawer-overlay');
+            const closeBtn = document.getElementById('close-drawer');
+            const toggleBtn = document.getElementById('notification-toggle');
+            const mainContent = document.getElementById('main-content');
+
+            // Initialize drawer as open for the design showcase
+            // In a real app, it might start closed.
+            
+            function closeDrawer() {
+                drawer.style.transform = 'translateX(100%)';
+                overlay.classList.add('hidden');
+                mainContent.style.opacity = '1';
+            }
+
+            function openDrawer() {
+                drawer.style.transform = 'translateX(0)';
+                overlay.classList.remove('hidden');
+                mainContent.style.opacity = '0.4';
+            }
+
+            closeBtn.addEventListener('click', closeDrawer);
+            overlay.addEventListener('click', closeDrawer);
+            
+            toggleBtn.addEventListener('click', () => {
+                if(drawer.style.transform === 'translateX(100%)' || drawer.style.transform === '') {
+                    openDrawer();
+                } else {
+                    closeDrawer();
+                }
+            });
+
+            // Ensure drawer transition property is set after initial render
+            setTimeout(() => {
+                drawer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            }, 50);
+        });
+    </script>
+</body></html>
