@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Collection Center Directory - E-Waste OS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error": "#ffffff",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-surface": "#191c1e",
+                        "primary-fixed-dim": "#95d3ba",
+                        "on-background": "#191c1e",
+                        "warning-amber": "#F59E0B",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#0b513d",
+                        "on-secondary-fixed": "#0d1c2f",
+                        "on-primary-container": "#80bea6",
+                        "tertiary-fixed-dim": "#ffb4a9",
+                        "on-tertiary": "#ffffff",
+                        "value-success": "#10B981",
+                        "on-tertiary-fixed": "#380d08",
+                        "emerald-deep": "#064E3B",
+                        "on-tertiary-container": "#ea9e93",
+                        "forest-heavy": "#065F46",
+                        "outline": "#707974",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#eceef0",
+                        "surface-container-high": "#e6e8ea",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#002117",
+                        "on-tertiary-fixed-variant": "#6e372f",
+                        "depletion-danger": "#EF4444",
+                        "tertiary": "#4f1f19",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-bright": "#f7f9fb",
+                        "primary-container": "#064e3b",
+                        "outline-variant": "#bfc9c3",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "surface-container-low": "#f2f4f6",
+                        "background": "#f7f9fb",
+                        "surface-variant": "#e0e3e5",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2d3133",
+                        "surface-dim": "#d8dadc",
+                        "secondary": "#515f74",
+                        "secondary-fixed": "#d5e3fd",
+                        "surface": "#f7f9fb",
+                        "tertiary-fixed": "#ffdad5",
+                        "on-surface-variant": "#404944",
+                        "inverse-primary": "#95d3ba",
+                        "secondary-container": "#d5e3fd",
+                        "secondary-fixed-dim": "#b9c7e0",
+                        "on-secondary-container": "#57657b",
+                        "primary-fixed": "#b0f0d6",
+                        "slate-industrial": "#334155",
+                        "primary": "#003527",
+                        "surface-tint": "#2b6954",
+                        "data-blue": "#0EA5E9",
+                        "tertiary-container": "#6b342d",
+                        "on-primary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "margin-desktop": "32px",
+                        "base": "4px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "data-mono": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md antialiased flex">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-low border-r border-outline-variant h-screen w-64 fixed left-0 top-0 flex flex-col py-6 px-4 z-50">
+<!-- Brand Logo & Header -->
+<div class="mb-8 px-2 flex items-center gap-3">
+<div class="w-8 h-8 bg-emerald-deep rounded-DEFAULT flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-white text-xl">recycling</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-emerald-deep">Command Center</h1>
+<p class="font-label-sm text-label-sm text-secondary">Admin Strategy</p>
+</div>
+</div>
+<!-- Main Tabs -->
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm text-label-sm">Executive Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-label-sm text-label-sm">Forecasting Center</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">eco</span>
+<span class="font-label-sm text-label-sm">Sustainability Planner</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT bg-secondary-container text-on-secondary-container font-semibold translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">engineering</span>
+<span class="font-label-sm text-label-sm">Operations Control</span>
+</a>
+</div>
+<!-- CTA -->
+<div class="mt-8 mb-4">
+<button class="w-full flex items-center justify-center gap-2 bg-emerald-deep text-white px-4 py-2 rounded-DEFAULT font-label-sm text-label-sm hover:bg-forest-heavy transition-colors">
+<span class="material-symbols-outlined text-sm">add</span>
+                New Global Audit
+            </button>
+</div>
+<!-- Footer Tabs -->
+<div class="space-y-1 pt-4 border-t border-outline-variant">
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-sm text-label-sm">Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-DEFAULT text-secondary hover:bg-surface-container-highest transition-colors duration-200" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-sm text-label-sm">Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="bg-surface border-b border-outline-variant docked full-width top-0 sticky z-40 flex justify-between items-center w-full px-8 py-4">
+<div class="flex items-center gap-8">
+<div class="font-headline-lg text-headline-lg font-black text-emerald-deep">E-Waste OS</div>
+<!-- Navigation Links -->
+<nav class="hidden md:flex gap-6 h-full items-center">
+<a class="text-slate-industrial hover:text-emerald-deep transition-all font-body-md text-body-md py-4" href="#">Global View</a>
+<a class="text-emerald-deep border-b-2 border-emerald-deep font-body-md text-body-md py-4 font-semibold" href="#">Regional Nodes</a>
+<a class="text-slate-industrial hover:text-emerald-deep transition-all font-body-md text-body-md py-4" href="#">Archives</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<!-- Search -->
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 border border-outline-variant rounded-DEFAULT bg-surface-container-lowest focus:border-emerald-deep focus:ring-1 focus:ring-emerald-deep text-sm w-64 transition-all" placeholder="Search operations..." type="text"/>
+</div>
+<!-- Actions -->
+<div class="flex items-center gap-4">
+<button class="text-slate-industrial hover:text-emerald-deep transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-slate-industrial hover:text-emerald-deep transition-all">
+<span class="material-symbols-outlined">cloud_upload</span>
+</button>
+<button class="bg-emerald-deep text-white px-4 py-2 rounded-DEFAULT font-label-sm text-label-sm hover:bg-forest-heavy transition-colors">
+                        Generate Report
+                    </button>
+<img alt="User Administrator Portrait" class="w-8 h-8 rounded-full border border-outline-variant object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrpcv5od6vbo_OIloATAGZoXVy80hV_oRRPaEByjHlpoiy0-dxExfkyAv_J0INdjyVfzVUB66y1-ABjR8ZlH3mQlKdMaqkX_ZMPU5JcTgce4bcrRR0lXVCDurtNb7ySBoJoT_5fzF7KGZ32tSKt2g57S7Z6KCM4gsAYPntlfmwn0COMXuKRgB8-BWfbTTXIHsk2CXc5XbqrA13dzIGuerRh1nt1Prxuu48xFipRWi4ObTWE8IRS-BwYPH5tTGEz7blMLdA4eF3cxo-"/>
+</div>
+</div>
+</header>
+<!-- Page Canvas -->
+<div class="p-8 flex-1 flex flex-col max-w-container-max mx-auto w-full">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-8">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-1">Collection Center Directory</h2>
+<p class="font-body-md text-body-md text-secondary">Manage and monitor all regional e-waste intake facilities.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-4 py-2 border border-slate-industrial text-slate-industrial rounded-DEFAULT font-label-sm text-label-sm hover:bg-surface-container transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">download</span> Export
+                    </button>
+<button class="px-4 py-2 border border-slate-industrial text-slate-industrial rounded-DEFAULT font-label-sm text-label-sm hover:bg-surface-container transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">upload_file</span> Bulk Import
+                    </button>
+<button class="px-4 py-2 bg-emerald-deep text-white rounded-DEFAULT font-label-sm text-label-sm hover:bg-forest-heavy transition-colors flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-sm">add</span> Add New Center
+                    </button>
+</div>
+</div>
+<!-- Bulk Actions Bar (Active State) -->
+<div class="bg-secondary-container border border-outline-variant rounded-t-DEFAULT p-4 flex justify-between items-center animate-fade-in">
+<div class="flex items-center gap-3">
+<span class="font-label-sm text-label-sm text-on-secondary-container font-semibold">2 Centers Selected</span>
+<div class="h-4 w-px bg-outline-variant"></div>
+<button class="text-on-secondary-container hover:text-error transition-colors font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">delete</span> Delete
+                    </button>
+<button class="text-on-secondary-container hover:text-emerald-deep transition-colors font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">pause_circle</span> Suspend Operations
+                    </button>
+<button class="text-on-secondary-container hover:text-emerald-deep transition-colors font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">edit_note</span> Edit Status
+                    </button>
+</div>
+<button class="text-on-secondary-container hover:text-slate-industrial transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Data Table Container -->
+<div class="bg-surface-container-lowest border-x border-b border-outline-variant rounded-b-DEFAULT overflow-hidden flex-1 flex flex-col shadow-sm">
+<!-- Table Header/Filters -->
+<div class="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-bright">
+<div class="flex gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">filter_alt</span>
+<select class="pl-9 pr-8 py-1.5 border border-outline-variant rounded-DEFAULT bg-surface-container-lowest text-sm focus:border-emerald-deep focus:ring-1 focus:ring-emerald-deep appearance-none cursor-pointer">
+<option>All Regions</option>
+<option>North America</option>
+<option>Europe</option>
+<option>Asia Pacific</option>
+</select>
+</div>
+<div class="relative">
+<select class="pl-3 pr-8 py-1.5 border border-outline-variant rounded-DEFAULT bg-surface-container-lowest text-sm focus:border-emerald-deep focus:ring-1 focus:ring-emerald-deep appearance-none cursor-pointer">
+<option>Status: All</option>
+<option>Active</option>
+<option>Maintenance</option>
+<option>Offline</option>
+</select>
+</div>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="pl-9 pr-4 py-1.5 border border-outline-variant rounded-DEFAULT bg-surface-container-lowest text-sm focus:border-emerald-deep focus:ring-1 focus:ring-emerald-deep w-64" placeholder="Search directory..." type="text"/>
+</div>
+</div>
+<!-- The Table -->
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant border-b border-outline-variant">
+<th class="p-4 w-12"><input checked="" class="rounded border-outline-variant text-emerald-deep focus:ring-emerald-deep cursor-pointer" type="checkbox"/></th>
+<th class="p-4 font-label-sm text-label-sm cursor-pointer hover:bg-surface-container-high transition-colors group">
+<div class="flex items-center gap-1">Status <span class="material-symbols-outlined text-[16px] text-outline group-hover:text-emerald-deep">unfold_more</span></div>
+</th>
+<th class="p-4 font-label-sm text-label-sm cursor-pointer hover:bg-surface-container-high transition-colors group">
+<div class="flex items-center gap-1">Center Name <span class="material-symbols-outlined text-[16px] text-emerald-deep">arrow_downward</span></div>
+</th>
+<th class="p-4 font-label-sm text-label-sm cursor-pointer hover:bg-surface-container-high transition-colors group">
+<div class="flex items-center gap-1">Region <span class="material-symbols-outlined text-[16px] text-outline group-hover:text-emerald-deep">unfold_more</span></div>
+</th>
+<th class="p-4 font-label-sm text-label-sm">Manager</th>
+<th class="p-4 font-label-sm text-label-sm text-right cursor-pointer hover:bg-surface-container-high transition-colors group">
+<div class="flex items-center justify-end gap-1">Daily Throughput (₹) <span class="material-symbols-outlined text-[16px] text-outline group-hover:text-emerald-deep">unfold_more</span></div>
+</th>
+<th class="p-4 w-12"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant font-body-md text-body-md">
+<!-- Row 1 (Selected) -->
+<tr class="bg-secondary-container/20 hover:bg-secondary-container/40 transition-colors">
+<td class="p-4"><input checked="" class="rounded border-outline-variant text-emerald-deep focus:ring-emerald-deep cursor-pointer" type="checkbox"/></td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-deep"></span> Active
+                                    </span>
+</td>
+<td class="p-4 font-medium text-emerald-deep">Alpha-1 Processing Facility</td>
+<td class="p-4 text-slate-industrial">North America - West</td>
+<td class="p-4 text-slate-industrial">Sarah Jenkins</td>
+<td class="p-4 font-data-mono text-data-mono text-right text-emerald-deep">142,500</td>
+<td class="p-4 text-right">
+<button class="text-outline hover:text-emerald-deep"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 2 (Selected) -->
+<tr class="bg-secondary-container/20 hover:bg-secondary-container/40 transition-colors">
+<td class="p-4"><input checked="" class="rounded border-outline-variant text-emerald-deep focus:ring-emerald-deep cursor-pointer" type="checkbox"/></td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-deep"></span> Active
+                                    </span>
+</td>
+<td class="p-4 font-medium text-emerald-deep">Beta-9 sorting Hub</td>
+<td class="p-4 text-slate-industrial">Europe - Central</td>
+<td class="p-4 text-slate-industrial">Klaus Müller</td>
+<td class="p-4 font-data-mono text-data-mono text-right text-emerald-deep">89,200</td>
+<td class="p-4 text-right">
+<button class="text-outline hover:text-emerald-deep"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-4"><input class="rounded border-outline-variant text-emerald-deep focus:ring-emerald-deep cursor-pointer" type="checkbox"/></td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-surface-variant text-on-surface-variant font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-industrial"></span> Maintenance
+                                    </span>
+</td>
+<td class="p-4 font-medium text-slate-industrial">Gamma-3 Extraction Node</td>
+<td class="p-4 text-slate-industrial">Asia Pacific - South</td>
+<td class="p-4 text-slate-industrial">Aiko Tanaka</td>
+<td class="p-4 font-data-mono text-data-mono text-right text-slate-industrial">12,400</td>
+<td class="p-4 text-right">
+<button class="text-outline hover:text-emerald-deep"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-4"><input class="rounded border-outline-variant text-emerald-deep focus:ring-emerald-deep cursor-pointer" type="checkbox"/></td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-error-container text-on-error-container font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> Offline
+                                    </span>
+</td>
+<td class="p-4 font-medium text-slate-industrial">Delta-4 Battery Protocol</td>
+<td class="p-4 text-slate-industrial">North America - East</td>
+<td class="p-4 text-slate-industrial">David Chen</td>
+<td class="p-4 font-data-mono text-data-mono text-right text-slate-industrial">0</td>
+<td class="p-4 text-right">
+<button class="text-outline hover:text-emerald-deep"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="p-4"><input class="rounded border-outline-variant text-emerald-deep focus:ring-emerald-deep cursor-pointer" type="checkbox"/></td>
+<td class="p-4">
+<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-deep"></span> Active
+                                    </span>
+</td>
+<td class="p-4 font-medium text-emerald-deep">Epsilon-1 Recovery Lab</td>
+<td class="p-4 text-slate-industrial">Europe - North</td>
+<td class="p-4 text-slate-industrial">Elena Rostova</td>
+<td class="p-4 font-data-mono text-data-mono text-right text-emerald-deep">215,800</td>
+<td class="p-4 text-right">
+<button class="text-outline hover:text-emerald-deep"><span class="material-symbols-outlined text-[20px]">more_vert</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="p-4 border-t border-outline-variant flex items-center justify-between bg-surface-bright">
+<span class="font-label-sm text-label-sm text-secondary">Showing 1-5 of 124 Centers</span>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded-DEFAULT text-outline hover:bg-surface-container transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center border border-emerald-deep bg-emerald-deep/10 text-emerald-deep rounded-DEFAULT font-label-sm text-label-sm">1</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant text-slate-industrial hover:bg-surface-container rounded-DEFAULT font-label-sm text-label-sm transition-colors">2</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant text-slate-industrial hover:bg-surface-container rounded-DEFAULT font-label-sm text-label-sm transition-colors">3</button>
+<span class="text-outline">...</span>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded-DEFAULT text-slate-industrial hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
