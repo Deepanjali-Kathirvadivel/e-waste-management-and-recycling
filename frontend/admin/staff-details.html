@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Staff Details - GreenEra Admin</title>
+  <title>Staff Details - Green Era Recyclers</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <link rel="stylesheet" href="../assets/css/style.css">
@@ -12,7 +12,7 @@
 <body>
   <div class="admin-wrapper">
     <aside class="admin-sidebar" id="adminSidebar">
-      <div class="admin-sidebar-brand"><h5><i class="bi bi-recycle"></i> GreenEra</h5></div>
+      <div class="admin-sidebar-brand"><h5><i class="bi bi-recycle"></i> Green Era Recyclers</h5></div>
       <div class="nav-section">Main</div>
       <nav class="nav flex-column">
         <a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
@@ -128,60 +128,45 @@
       window.adminLogout = function () { localStorage.removeItem('greenera_admin_token'); localStorage.removeItem('greenera_admin'); window.location.href = 'login.html'; };
       window.toggleSidebar = function () { document.getElementById('adminSidebar').classList.toggle('show'); };
 
-      const staffStore = JSON.parse(localStorage.getItem('greenEra_staff') || 'null') || [
-        { id: 1, name: 'Admin User', username: 'admin', email: 'admin@greenera.com', phone: '+1-555-0100', role: 'Manager', region: 'Central', status: 'active', assessments: 1247, collections: 89, rating: 4.9, joined: '2020-06-15', value: 248600 },
-        { id: 2, name: 'John Davis', username: 'jdavis', email: 'john@greenera.com', phone: '+1-555-0101', role: 'Collector', region: 'North', status: 'active', assessments: 340, collections: 210, rating: 4.7, joined: '2021-03-10', value: 45200 },
-        { id: 3, name: 'Sarah Lee', username: 'slee', email: 'sarah@greenera.com', phone: '+1-555-0102', role: 'Assessor', region: 'South', status: 'active', assessments: 560, collections: 45, rating: 4.8, joined: '2021-08-22', value: 68500 },
-        { id: 4, name: 'Mike Brown', username: 'mbrown', email: 'mike@greenera.com', phone: '+1-555-0103', role: 'Verifier', region: 'East', status: 'active', assessments: 420, collections: 12, rating: 4.5, joined: '2022-01-05', value: 52400 },
-        { id: 5, name: 'Emma Wilson', username: 'ewilson', email: 'emma@greenera.com', phone: '+1-555-0104', role: 'Collector', region: 'West', status: 'active', assessments: 280, collections: 175, rating: 4.6, joined: '2022-04-18', value: 38100 },
-        { id: 6, name: 'James Chen', username: 'jchen', email: 'james@greenera.com', phone: '+1-555-0105', role: 'Assessor', region: 'Central', status: 'active', assessments: 390, collections: 32, rating: 4.4, joined: '2022-07-12', value: 47100 },
-        { id: 7, name: 'Lisa Park', username: 'lpark', email: 'lisa@greenera.com', phone: '+1-555-0106', role: 'Collector', region: 'North', status: 'disabled', assessments: 150, collections: 98, rating: 4.2, joined: '2022-09-30', value: 18900 },
-        { id: 8, name: 'Robert Kim', username: 'rkim', email: 'robert@greenera.com', phone: '+1-555-0107', role: 'Manager', region: 'South', status: 'active', assessments: 680, collections: 56, rating: 4.3, joined: '2021-11-14', value: 81500 },
-      ];
-
       const params = new URLSearchParams(window.location.search);
-      const staffId = parseInt(params.get('id'));
-      const staff = staffStore.find(s => s.id === staffId) || staffStore[0];
+      const staffId = params.get('id');
+      const token = localStorage.getItem('greenera_admin_token');
+      const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-      document.getElementById('staffDetailName').textContent = staff.name;
-      document.getElementById('staffDetailName2').textContent = staff.name;
-      document.getElementById('staffDetailRole').textContent = staff.role + ' — ' + staff.region;
-      document.getElementById('staffDetailUsername').textContent = staff.username;
-      document.getElementById('staffDetailEmail').textContent = staff.email;
-      document.getElementById('staffDetailPhone').textContent = staff.phone;
-      document.getElementById('staffDetailRegion').textContent = staff.region;
-      document.getElementById('staffDetailJoined').textContent = staff.joined;
-      document.getElementById('staffDetailStatus').textContent = staff.status.charAt(0).toUpperCase() + staff.status.slice(1);
-      document.getElementById('staffDetailStatus').className = 'badge ' + (staff.status === 'active' ? 'bg-green' : 'bg-secondary') + ' mb-3';
-      document.getElementById('staffDetailAvatar').textContent = staff.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      async function loadStaff() {
+        try {
+          const res = await fetch(API_BASE + '/admin/staff/' + staffId, { headers });
+          const data = await res.json();
+          const s = data.staff || {};
+          const stats = data.stats || {};
 
-      document.getElementById('perfAssessments').textContent = staff.assessments.toLocaleString();
-      document.getElementById('perfCollections').textContent = staff.collections;
-      document.getElementById('perfRating').textContent = staff.rating;
-      document.getElementById('perfValue').textContent = '₹' + staff.value.toLocaleString('en-IN');
+          document.getElementById('staffDetailName').textContent = s.full_name || '-';
+          document.getElementById('staffDetailName2').textContent = s.full_name || '-';
+          document.getElementById('staffDetailRole').textContent = (s.role || '-').replace(/_/g, ' ') + ' — ' + (s.region?.name || '');
+          document.getElementById('staffDetailUsername').textContent = s.username || '-';
+          document.getElementById('staffDetailEmail').textContent = s.email || '-';
+          document.getElementById('staffDetailPhone').textContent = s.phone || '-';
+          document.getElementById('staffDetailRegion').textContent = s.region?.name || '-';
+          document.getElementById('staffDetailJoined').textContent = s.created_at ? new Date(s.created_at).toLocaleDateString() : '-';
+          document.getElementById('staffDetailStatus').textContent = s.is_active ? 'Active' : 'Disabled';
+          document.getElementById('staffDetailStatus').className = 'badge ' + (s.is_active ? 'bg-green' : 'bg-secondary') + ' mb-3';
+          document.getElementById('staffDetailAvatar').textContent = (s.full_name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+          document.getElementById('perfAssessments').textContent = (stats.assessments_count || 0).toLocaleString();
+          document.getElementById('perfCollections').textContent = (stats.collections_count || 0).toLocaleString();
+          document.getElementById('perfRating').textContent = (stats.avg_rating || 'N/A');
+          document.getElementById('perfValue').textContent = '\u20B9' + (stats.total_value || 0).toLocaleString('en-IN');
+        } catch (e) {
+          document.getElementById('staffDetailName').textContent = 'Staff #' + staffId;
+        }
+      }
 
-      // Collection Chart
       new Chart(document.getElementById('staffCollectionChart'), {
         type: 'bar',
-        data: {
-          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-          datasets: [{ label: 'Collections', data: [12, 18, 8, 22, 15, 24], backgroundColor: '#16A34A', borderRadius: 4 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, animation: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' } }, x: { grid: { display: false } } } }
+        data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ label: 'Collections', data: [10, 15, 12, 20, 18, 25], backgroundColor: '#16A34A', borderRadius: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' } }, x: { grid: { display: false } } } }
       });
 
-      // Activity Feed
-      const feed = document.getElementById('staffActivityFeed');
-      const acts = [
-        { text: `Completed assessment #AST-1042`, time: '2 hrs ago', color: 'green' },
-        { text: `Collected 12 items from North zone`, time: '4 hrs ago', color: 'blue' },
-        { text: `Verified 8 product assessments`, time: '6 hrs ago', color: 'green' },
-        { text: `Submitted monthly report`, time: '1 day ago', color: 'orange' },
-        { text: `Updated profile information`, time: '2 days ago', color: 'blue' },
-      ];
-      feed.innerHTML = acts.map(a => `<li><span class="act-dot ${a.color}"></span><span class="act-text">${a.text}</span><span class="act-time">${a.time}</span></li>`).join('');
+      loadStaff();
     })();
   </script>
 </body>

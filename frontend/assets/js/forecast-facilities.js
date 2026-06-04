@@ -1,108 +1,68 @@
-var facilities = {
-  centers: [
-    { id: 1, name: 'Downtown Collection Hub', capacity: 500, rent: 1000000, electricity: 290000, staffCost: 1500000 },
-    { id: 2, name: 'Suburban Recycling Hub', capacity: 350, rent: 700000, electricity: 232000, staffCost: 1160000 },
-    { id: 3, name: 'Industrial District Center', capacity: 750, rent: 1500000, electricity: 430000, staffCost: 1800000 }
-  ],
-  units: [
-    { id: 1, name: 'Material Separation Unit A', capacity: 300, rent: 790000, electricity: 340000, staffCost: 1250000 },
-    { id: 2, name: 'Shredding & Sorting Unit B', capacity: 450, rent: 1160000, electricity: 480000, staffCost: 1580000 }
-  ]
-};
-
-var nextFacilityId = { center: 4, unit: 3 };
-
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
   document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  renderFacilities();
-});
+  const token = localStorage.getItem('greenera_admin_token');
+  if (!token) return;
+  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-function renderFacilities() {
-  var centersBody = document.getElementById('centersTableBody');
-  var unitsBody = document.getElementById('unitsTableBody');
-  centersBody.innerHTML = '';
-  unitsBody.innerHTML = '';
+  let facilities = [];
 
-  facilities.centers.forEach(function (f) {
-    centersBody.innerHTML += rowHTML(f, 'center');
-  });
-  facilities.units.forEach(function (f) {
-    unitsBody.innerHTML += rowHTML(f, 'unit');
-  });
-}
+  async function load() {
+    try {
+      const res = await fetch(API_BASE + '/facilities', { headers });
+      const data = await res.json();
+      facilities = data.facilities || [];
+      renderTable();
+    } catch (e) { showToast('Error loading facilities', 'error'); }
+  }
 
-function rowHTML(f, type) {
-  return '<tr>' +
-    '<td><strong>' + f.name + '</strong></td>' +
-    '<td>' + f.capacity.toLocaleString() + '</td>' +
-    '<td>₹' + f.rent.toLocaleString('en-IN') + '</td>' +
-    '<td>₹' + f.electricity.toLocaleString('en-IN') + '</td>' +
-    '<td>₹' + f.staffCost.toLocaleString('en-IN') + '</td>' +
-    '<td class="text-end">' +
-      '<button class="btn btn-sm btn-outline-primary me-1" onclick="editFacility(' + f.id + ',\'' + type + '\')"><i class="bi bi-pencil"></i></button>' +
-      '<button class="btn btn-sm btn-outline-danger" onclick="deleteFacility(' + f.id + ',\'' + type + '\')"><i class="bi bi-trash"></i></button>' +
-    '</td>' +
-  '</tr>';
-}
+  function renderTable() {
+    const centers = facilities.filter(f => f.type === 'collection_center');
+    const units = facilities.filter(f => f.type !== 'collection_center');
+    document.getElementById('centerTableBody').innerHTML = centers.map(f => `
+      <tr><td>${f.name}</td><td>${f.capacity || '-'}</td><td>\u20B9${(f.rent || 0).toLocaleString()}</td><td>\u20B9${(f.electricity_cost || 0).toLocaleString()}</td><td>\u20B9${(f.staff_cost || 0).toLocaleString()}</td><td><span class="badge bg-${f.status === 'active' ? 'success' : 'secondary'}">${f.status}</span></td><td><button class="btn btn-sm btn-outline-green" onclick="editFacility(${f.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="deleteFacility(${f.id})"><i class="bi bi-trash"></i></button></td></tr>
+    `).join('');
+    document.getElementById('unitTableBody').innerHTML = units.map(f => `
+      <tr><td>${f.name}</td><td>${f.type.replace(/_/g, ' ')}</td><td>${f.capacity || '-'}</td><td>\u20B9${(f.rent || 0).toLocaleString()}</td><td>\u20B9${(f.staff_cost || 0).toLocaleString()}</td><td><span class="badge bg-${f.status === 'active' ? 'success' : 'secondary'}">${f.status}</span></td><td><button class="btn btn-sm btn-outline-green" onclick="editFacility(${f.id})"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="deleteFacility(${f.id})"><i class="bi bi-trash"></i></button></td></tr>
+    `).join('');
+  }
 
-function openFacilityModal(type) {
-  document.getElementById('facilityModalTitle').textContent = type === 'center' ? 'Add Collection Center' : 'Add Preprocessing Unit';
-  document.getElementById('facilityType').value = type;
-  document.getElementById('facilityId').value = '';
-  document.getElementById('facilityName').value = '';
-  document.getElementById('facilityCapacity').value = '';
-  document.getElementById('facilityRent').value = '';
-  document.getElementById('facilityElectricity').value = '';
-  document.getElementById('facilityStaffCost').value = '';
-  var modal = new bootstrap.Modal(document.getElementById('facilityModal'));
-  modal.show();
-}
-
-function editFacility(id, type) {
-  var list = type === 'center' ? facilities.centers : facilities.units;
-  var f = list.find(function (x) { return x.id === id; });
-  if (!f) return;
-  document.getElementById('facilityModalTitle').textContent = type === 'center' ? 'Edit Collection Center' : 'Edit Preprocessing Unit';
-  document.getElementById('facilityType').value = type;
-  document.getElementById('facilityId').value = f.id;
-  document.getElementById('facilityName').value = f.name;
-  document.getElementById('facilityCapacity').value = f.capacity;
-  document.getElementById('facilityRent').value = f.rent;
-  document.getElementById('facilityElectricity').value = f.electricity;
-  document.getElementById('facilityStaffCost').value = f.staffCost;
-  var modal = new bootstrap.Modal(document.getElementById('facilityModal'));
-  modal.show();
-}
-
-function saveFacility() {
-  var type = document.getElementById('facilityType').value;
-  var list = type === 'center' ? facilities.centers : facilities.units;
-  var id = document.getElementById('facilityId').value;
-  var data = {
-    name: document.getElementById('facilityName').value.trim(),
-    capacity: parseInt(document.getElementById('facilityCapacity').value) || 0,
-    rent: parseInt(document.getElementById('facilityRent').value) || 0,
-    electricity: parseInt(document.getElementById('facilityElectricity').value) || 0,
-    staffCost: parseInt(document.getElementById('facilityStaffCost').value) || 0
+  window.editFacility = function(id) {
+    const f = facilities.find(x => x.id === id);
+    if (!f) return;
+    document.getElementById('facilityModalTitle').textContent = 'Edit Facility';
+    document.getElementById('editFacilityId').value = f.id;
+    document.getElementById('fName').value = f.name;
+    document.getElementById('fCapacity').value = f.capacity || '';
+    document.getElementById('fRent').value = f.rent || '';
+    document.getElementById('fElectricity').value = f.electricity_cost || '';
+    document.getElementById('fStaffCost').value = f.staff_cost || '';
+    new bootstrap.Modal(document.getElementById('facilityModal')).show();
   };
-  if (!data.name) { alert('Facility name is required.'); return; }
-  if (id) {
-    var f = list.find(function (x) { return x.id === parseInt(id); });
-    if (f) { f.name = data.name; f.capacity = data.capacity; f.rent = data.rent; f.electricity = data.electricity; f.staffCost = data.staffCost; }
-  } else {
-    data.id = nextFacilityId[type]++;
-    list.push(data);
-  }
-  renderFacilities();
-  bootstrap.Modal.getInstance(document.getElementById('facilityModal')).hide();
-}
 
-function deleteFacility(id, type) {
-  if (!confirm('Delete this facility?')) return;
-  if (type === 'center') {
-    facilities.centers = facilities.centers.filter(function (x) { return x.id !== id; });
-  } else {
-    facilities.units = facilities.units.filter(function (x) { return x.id !== id; });
-  }
-  renderFacilities();
-}
+  window.deleteFacility = async function(id) {
+    if (!confirm('Delete?')) return;
+    try { await fetch(API_BASE + '/facilities/' + id, { method: 'DELETE', headers }); showToast('Deleted'); load(); }
+    catch (e) { showToast('Error', 'error'); }
+  };
+
+  document.getElementById('facilityForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const editId = document.getElementById('editFacilityId').value;
+    const body = { name: document.getElementById('fName').value.trim(), capacity: parseInt(document.getElementById('fCapacity').value) || null, rent: parseFloat(document.getElementById('fRent').value) || null, electricity_cost: parseFloat(document.getElementById('fElectricity').value) || null, staff_cost: parseFloat(document.getElementById('fStaffCost').value) || null };
+    try {
+      if (editId) { await fetch(API_BASE + '/facilities/' + editId, { method: 'PUT', headers, body: JSON.stringify(body) }); showToast('Updated'); }
+      else { await fetch(API_BASE + '/facilities', { method: 'POST', headers, body: JSON.stringify(body) }); showToast('Created'); }
+      bootstrap.Modal.getInstance(document.getElementById('facilityModal')).hide();
+      document.getElementById('facilityForm').reset();
+      load();
+    } catch (e) { showToast('Error', 'error'); }
+  });
+
+  document.querySelectorAll('[data-bs-target="#facilityModal"]').forEach(btn => btn.addEventListener('click', function() {
+    document.getElementById('facilityModalTitle').textContent = 'Add Facility';
+    document.getElementById('editFacilityId').value = '';
+    document.getElementById('facilityForm').reset();
+  }));
+
+  load();
+});
