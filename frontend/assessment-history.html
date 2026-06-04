@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Assessment History - GreenEra</title>
+  <title>Assessment History - Green Era Recyclers</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <link rel="stylesheet" href="assets/css/style.css">
@@ -11,7 +11,7 @@
 <body class="dashboard-body">
   <nav class="navbar navbar-expand-lg fixed-top">
     <div class="container-fluid px-4">
-      <a class="navbar-brand" href="dashboard.html"><i class="bi bi-recycle"></i> GreenEra</a>
+      <a class="navbar-brand" href="dashboard.html"><i class="bi bi-recycle"></i> Green Era Recyclers</a>
       <div class="d-flex align-items-center gap-3">
         <span class="text-muted d-none d-md-inline">Assessment History</span>
         <div class="dropdown">
@@ -142,113 +142,86 @@
       const user = checkAuth();
       if (user) document.getElementById('userName').textContent = user.full_name || user.username;
 
-      // Load assessments from localStorage (submitted via assessment-new.html) + demo data
-      const storedAssessments = JSON.parse(localStorage.getItem('greenEra_assessments') || '[]');
-      const storedRows = storedAssessments.map(a => ({
-        id: a.id, date: a.date, customer: a.customerName, product: a.productName,
-        brand: a.brand, condition: (a.condition || '').replace(/-/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }),
-        value: a.estimatedValue || 0, status: a.status
-      }));
-      const demoAssessments = [
-        { id: 'AST-1001', date: '2026-06-03', customer: 'John Smith', product: 'Laptop', brand: 'Dell', condition: 'Good', value: 10375, status: 'completed' },
-        { id: 'AST-1002', date: '2026-06-03', customer: 'Sarah Lee', product: 'Mobile', brand: 'Samsung', condition: 'Excellent', value: 7470, status: 'completed' },
-        { id: 'AST-1003', date: '2026-06-02', customer: 'Mike Brown', product: 'TV', brand: 'LG', condition: 'Fair', value: 13280, status: 'pending' },
-        { id: 'AST-1004', date: '2026-06-02', customer: 'Emma Wilson', product: 'AC', brand: 'Daikin', condition: 'Good', value: 18675, status: 'in-progress' },
-        { id: 'AST-1005', date: '2026-06-01', customer: 'James Chen', product: 'Fridge', brand: 'Whirlpool', condition: 'Poor', value: 6225, status: 'completed' },
-        { id: 'AST-1006', date: '2026-06-01', customer: 'Lisa Park', product: 'Monitor', brand: 'HP', condition: 'Good', value: 3527.5, status: 'completed' },
-        { id: 'AST-1007', date: '2026-05-31', customer: 'Robert Kim', product: 'Washing Machine', brand: 'Samsung', condition: 'Excellent', value: 21580, status: 'pending' },
-        { id: 'AST-1008', date: '2026-05-31', customer: 'Anna Davis', product: 'Laptop', brand: 'Apple', condition: 'Good', value: 15770, status: 'completed' },
-        { id: 'AST-1009', date: '2026-05-30', customer: 'David Clark', product: 'Mobile', brand: 'Google', condition: 'Fair', value: 3942.5, status: 'cancelled' },
-        { id: 'AST-1010', date: '2026-05-30', customer: 'Maria Garcia', product: 'Fan', brand: 'Crompton', condition: 'Good', value: 1660, status: 'completed' },
-        { id: 'AST-1011', date: '2026-05-29', customer: 'Tom Harris', product: 'Keyboard', brand: 'Logitech', condition: 'Excellent', value: 1037.5, status: 'pending' },
-        { id: 'AST-1012', date: '2026-05-29', customer: 'Nina Patel', product: 'Mouse', brand: 'Razer', condition: 'Good', value: 622.5, status: 'completed' },
-      ];
-      const assessments = [...storedRows, ...demoAssessments];
-
-      let filteredData = [...assessments];
+      let allAssessments = [];
+      let filteredData = [];
       let currentPage = 1;
       const rowsPerPage = 5;
 
+      async function loadAssessments() {
+        try {
+          const params = new URLSearchParams();
+          const searchVal = document.getElementById('searchInput')?.value.toLowerCase();
+          const statusVal = document.getElementById('statusFilter')?.value;
+          const typeVal = document.getElementById('typeFilter')?.value;
+          const dateVal = document.getElementById('dateFrom')?.value;
+          if (statusVal && statusVal !== 'all') params.set('status', statusVal);
+          if (typeVal && typeVal !== 'all') params.set('type', typeVal);
+          if (dateVal) params.set('date_from', dateVal);
+          const res = await fetch(API_BASE + '/assessments?' + params, { headers: getAuthHeaders() });
+          const data = await res.json();
+          allAssessments = (data.assessments || []).map(a => ({
+            id: '#' + a.id, date: new Date(a.created_at).toLocaleDateString(),
+            customer: a.customer_name || '-', product: a.product_catalog?.name || '-',
+            brand: a.brand || '-', condition: (a.condition || '-').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+            value: a.value_estimate || 0, status: a.status
+          }));
+          if (searchVal) {
+            allAssessments = allAssessments.filter(a => a.customer.toLowerCase().includes(searchVal) || a.product.toLowerCase().includes(searchVal));
+          }
+          filteredData = [...allAssessments];
+          currentPage = 1;
+          renderTable();
+        } catch (e) {
+          document.getElementById('historyTableBody').innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Error loading assessments</td></tr>';
+        }
+      }
+
       function renderTable() {
-        const searchVal = document.getElementById('searchInput').value.toLowerCase();
-        const statusVal = document.getElementById('statusFilter').value;
-        const typeVal = document.getElementById('typeFilter').value;
-
-        filteredData = assessments.filter(a => {
-          const matchSearch = a.customer.toLowerCase().includes(searchVal) || a.product.toLowerCase().includes(searchVal) || a.id.toLowerCase().includes(searchVal);
-          const matchStatus = statusVal === 'all' || a.status === statusVal;
-          const matchType = typeVal === 'all' || a.product === typeVal;
-          return matchSearch && matchStatus && matchType;
-        });
-
         const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
         if (currentPage > totalPages) currentPage = totalPages;
-
         const start = (currentPage - 1) * rowsPerPage;
         const end = start + rowsPerPage;
         const pageData = filteredData.slice(start, end);
-
         const tbody = document.getElementById('historyTableBody');
-        if (pageData.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No assessments found</td></tr>';
-        } else {
-          tbody.innerHTML = pageData.map(a => `
-            <tr>
-              <td class="fw-semibold">${a.id}</td>
-              <td>${a.date}</td>
-              <td>${a.customer}</td>
-              <td>${a.product} (${a.brand})</td>
-              <td><span class="badge bg-${a.condition === 'Excellent' ? 'success' : a.condition === 'Good' ? 'primary' : a.condition === 'Fair' ? 'warning' : 'secondary'}">${a.condition}</span></td>
-               <td>₹${a.value.toLocaleString('en-IN')}</td>
-              <td><span class="status-badge ${a.status}">${a.status.charAt(0).toUpperCase() + a.status.slice(1)}</span></td>
-              <td><button class="btn btn-sm btn-outline-green" onclick="showToast('Viewing ${a.id}')"><i class="bi bi-eye"></i></button></td>
-            </tr>
-          `).join('');
-        }
-
-        document.getElementById('tableInfo').textContent = `Showing ${start + 1}-${Math.min(end, filteredData.length)} of ${filteredData.length} entries`;
-
-        const pagination = document.getElementById('tablePagination');
-        let pagHtml = `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage - 1})">&laquo;</a></li>`;
-        for (let i = 1; i <= totalPages; i++) {
-          pagHtml += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
-        }
-        pagHtml += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage + 1})">&raquo;</a></li>`;
-        pagination.innerHTML = pagHtml;
+        tbody.innerHTML = pageData.length ? pageData.map(a => `
+          <tr>
+            <td class="fw-semibold">${a.id}</td>
+            <td>${a.date}</td>
+            <td>${a.customer}</td>
+            <td>${a.product} (${a.brand})</td>
+            <td><span class="badge bg-${a.condition === 'Excellent' ? 'success' : a.condition === 'Good' ? 'primary' : a.condition === 'Fair' ? 'warning' : 'secondary'}">${a.condition}</span></td>
+            <td>\u20B9${a.value.toLocaleString('en-IN')}</td>
+            <td><span class="status-badge ${a.status}">${a.status.charAt(0).toUpperCase() + a.status.slice(1)}</span></td>
+            <td><button class="btn btn-sm btn-outline-green" onclick="showToast('Assessment ${a.id}')"><i class="bi bi-eye"></i></button></td>
+          </tr>
+        `).join('') : '<tr><td colspan="8" class="text-center text-muted py-4">No assessments found</td></tr>';
+        document.getElementById('tableInfo').textContent = \`Showing \${start + 1}-\${Math.min(end, filteredData.length)} of \${filteredData.length} entries\`;
+        let pagHtml = \`<li class="page-item \${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(\${currentPage - 1})">&laquo;</a></li>\`;
+        for (let i = 1; i <= totalPages; i++) pagHtml += \`<li class="page-item \${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(\${i})">\${i}</a></li>\`;
+        pagHtml += \`<li class="page-item \${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(\${currentPage + 1})">&raquo;</a></li>\`;
+        document.getElementById('tablePagination').innerHTML = pagHtml;
       }
 
-      window.filterTable = function() { currentPage = 1; renderTable(); };
+      window.filterTable = function() { loadAssessments(); };
       window.changePage = function(p) { currentPage = p; renderTable(); };
 
-      window.exportPDF = function() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        doc.text('GreenEra - Assessment History', 14, 20);
-        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
-        let y = 40;
-        doc.setFontSize(8);
-        filteredData.forEach((a, i) => {
-          if (y > 270) { doc.addPage(); y = 20; }
-          doc.text(`${a.id} | ${a.date} | ${a.customer} | ${a.product} | ${a.condition} | ₹${typeof a.value === 'number' ? a.value.toLocaleString('en-IN') : a.value} | ${a.status}`, 14, y);
-          y += 6;
-        });
-        doc.save('assessment-history.pdf');
-        showToast('PDF exported successfully');
+      window.exportPDF = async function() {
+        const a = document.createElement('a');
+        a.href = API_BASE + '/assessments/export?format=pdf';
+        a.download = 'assessments.pdf';
+        a.click();
+        showToast('PDF downloaded');
       };
 
-      window.exportExcel = function() {
-        const wb = XLSX.utils.book_new();
-        const data = filteredData.map(a => ({
-          ID: a.id, Date: a.date, Customer: a.customer, Product: a.product,
-          Brand: a.brand, Condition: a.condition, Value: a.value, Status: a.status
-        }));
-        const ws = XLSX.utils.json_to_sheet(data);
-        XLSX.utils.book_append_sheet(wb, ws, 'Assessments');
-        XLSX.writeFile(wb, 'assessment-history.xlsx');
-        showToast('Excel exported successfully');
+      window.exportExcel = async function() {
+        const a = document.createElement('a');
+        a.href = API_BASE + '/assessments/export?format=xlsx';
+        a.download = 'assessments.xlsx';
+        a.click();
+        showToast('Excel downloaded');
       };
 
-      renderTable();
+      loadAssessments();
     })();
   </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Assessment - GreenEra Admin</title>
+  <title>Product Assessment - Green Era Recyclers</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
   <link rel="stylesheet" href="../assets/css/style.css">
@@ -12,7 +12,7 @@
 <body>
   <div class="admin-wrapper">
     <aside class="admin-sidebar" id="adminSidebar">
-      <div class="admin-sidebar-brand"><h5><i class="bi bi-recycle"></i> GreenEra</h5></div>
+      <div class="admin-sidebar-brand"><h5><i class="bi bi-recycle"></i> Green Era Recyclers</h5></div>
       <div class="nav-section">Main</div>
       <nav class="nav flex-column">
         <a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
@@ -153,49 +153,48 @@
       window.adminLogout = function () { localStorage.removeItem('greenera_admin_token'); localStorage.removeItem('greenera_admin'); window.location.href = 'login.html'; };
       window.toggleSidebar = function () { document.getElementById('adminSidebar').classList.toggle('show'); };
 
-      const products = [
-        { id: 1, name: 'Samsung QLED 55"', type: 'TV', brand: 'Samsung', model: 'QLED Q60', year: '2022', weight: '16.5 kg', score: 82, condScore: '78/100', classification: 'Reusable', value: 26500 },
-        { id: 2, name: 'Dell XPS 15 Laptop', type: 'Laptop', brand: 'Dell', model: 'XPS 15 9530', year: '2023', weight: '1.8 kg', score: 45, condScore: '55/100', classification: 'Repairable', value: 15000 },
-        { id: 3, name: 'iPhone 14 Pro', type: 'Mobile', brand: 'Apple', model: 'A2650', year: '2022', weight: '0.2 kg', score: 78, condScore: '82/100', classification: 'Reusable', value: 29000 },
-        { id: 4, name: 'LG Double Door Fridge', type: 'Fridge', brand: 'LG', model: 'GL-D242', year: '2020', weight: '68 kg', score: 30, condScore: '38/100', classification: 'Recyclable', value: 10000 },
-        { id: 5, name: 'Daikin 1.5T AC', type: 'AC', brand: 'Daikin', model: 'FTKM50', year: '2021', weight: '12 kg', score: 68, condScore: '65/100', classification: 'Repairable', value: 20000 },
-        { id: 6, name: 'Whirlpool WM 7kg', type: 'Washing Machine', brand: 'Whirlpool', model: '7Ace', year: '2019', weight: '65 kg', score: 15, condScore: '20/100', classification: 'Scrap', value: 3300 },
-        { id: 7, name: 'MacBook Pro M3', type: 'Laptop', brand: 'Apple', model: 'MacBook Pro 14"', year: '2024', weight: '1.6 kg', score: 90, condScore: '95/100', classification: 'Reusable', value: 54000 },
-        { id: 20, name: 'ASUS ZenBook 14', type: 'Laptop', brand: 'ASUS', model: 'UX3402', year: '2022', weight: '1.4 kg', score: 10, condScore: '15/100', classification: 'Scrap', value: 2500 },
-      ];
-
       const params = new URLSearchParams(window.location.search);
-      const prodId = parseInt(params.get('id'));
-      const prod = products.find(p => p.id === prodId) || products[0];
+      const prodId = params.get('id');
+      const token = localStorage.getItem('greenera_admin_token');
+      const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-      document.getElementById('pdProductName').textContent = prod.name;
-      document.getElementById('pdProd').textContent = prod.name;
-      document.getElementById('pdType').textContent = prod.type;
-      document.getElementById('pdBrand').textContent = prod.brand;
-      document.getElementById('pdModel').textContent = prod.model;
-      document.getElementById('pdYear').textContent = prod.year;
-      document.getElementById('pdWeight').textContent = prod.weight;
-      document.getElementById('pdScore').textContent = prod.score;
-      document.getElementById('pdScore').className = `score-ring ${prod.score >= 70 ? 'high' : prod.score >= 40 ? 'medium' : 'low'}`;
-      document.getElementById('pdConditionScore').textContent = prod.condScore;
-      document.getElementById('pdClassification').textContent = prod.classification;
-      document.getElementById('pdClassification').className = prod.classification === 'Reusable' ? 'text-green fw-bold' : prod.classification === 'Repairable' ? 'text-info fw-bold' : prod.classification === 'Recyclable' ? 'text-warning fw-bold' : 'text-danger fw-bold';
-      document.getElementById('pdEstValue').textContent = '₹' + Number(prod.value).toLocaleString('en-IN');
+      async function loadProduct() {
+        try {
+          const res = await fetch(API_BASE + '/admin/products/' + prodId, { headers });
+          const data = await res.json();
+          const p = data.product || {};
+          document.getElementById('pdProductName').textContent = (p.brand || '') + ' ' + (p.model || '');
+          document.getElementById('pdProd').textContent = (p.brand || '-') + ' ' + (p.model || '');
+          document.getElementById('pdType').textContent = p.product_catalog?.name || '-';
+          document.getElementById('pdBrand').textContent = p.brand || '-';
+          document.getElementById('pdModel').textContent = p.model || '-';
+          document.getElementById('pdYear').textContent = p.year_of_manufacture || '-';
+          document.getElementById('pdWeight').textContent = p.weight_kg ? p.weight_kg + ' kg' : '-';
+          const score = parseInt(p.ai_score) || 50;
+          document.getElementById('pdScore').textContent = score;
+          document.getElementById('pdScore').className = `score-ring ${score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low'}`;
+          document.getElementById('pdConditionScore').textContent = (p.condition || 'N/A') + ' / ' + (score || 'N/A');
+          const cls = p.classification || 'Unknown';
+          document.getElementById('pdClassification').textContent = cls.charAt(0).toUpperCase() + cls.slice(1);
+          document.getElementById('pdEstValue').textContent = '\u20B9' + (p.value_estimate || 0).toLocaleString('en-IN');
+        } catch (e) {
+          document.getElementById('pdProductName').textContent = 'Product #' + prodId;
+        }
+      }
 
-      // Condition chart (radar)
       new Chart(document.getElementById('pdConditionChart'), {
         type: 'radar',
         data: {
           labels: ['Screen', 'Casing', 'Ports', 'Battery', 'Audio', 'Connectivity'],
           datasets: [
-            { label: 'Condition', data: [92, 85, 78, 65, 80, 72], borderColor: '#16A34A', backgroundColor: 'rgba(22,163,74,0.15)', pointBackgroundColor: '#16A34A', fill: true },
+            { label: 'Condition', data: [85, 78, 72, 65, 70, 68], borderColor: '#16A34A', backgroundColor: 'rgba(22,163,74,0.15)', pointBackgroundColor: '#16A34A', fill: true },
             { label: 'Threshold', data: [60, 60, 60, 60, 60, 60], borderColor: '#EF4444', borderDash: [4, 4], pointRadius: 0, borderWidth: 1.5, fill: false }
           ]
         },
-        options: { responsive: true, maintainAspectRatio: false, animation: false,
-          scales: { r: { min: 0, max: 100, ticks: { stepSize: 20, font: { size: 9 } } } },
-          plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } } } }
+        options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 100, ticks: { stepSize: 20, font: { size: 9 } } } }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, font: { size: 10 } } } } }
       });
+
+      loadProduct();
     })();
   </script>
 </body>

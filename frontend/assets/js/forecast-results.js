@@ -1,68 +1,56 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
   document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  renderForecastCards('all');
-  initCharts();
+  const token = localStorage.getItem('greenera_admin_token');
+  if (!token) return;
+  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+  try {
+    const res = await fetch(API_BASE + '/forecast/results', { headers });
+    const data = await res.json();
+    const results = data.results || [];
+
+    const container = document.getElementById('forecastCards');
+    if (container) {
+      container.innerHTML = results.slice(0, 6).map(r => `
+        <div class="col-md-4">
+          <div class="forecast-card">
+            <h6>${r.region?.name || 'Unknown'}</h6>
+            <div class="d-flex justify-content-between mt-2">
+              <span>Waste: ${(r.forecasted_waste || 0).toLocaleString()} t</span>
+              <span>Growth: ${r.growth_rate || 0}%</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    const regions = [...new Set(results.map(r => r.region?.name || 'Unknown'))];
+    const years = [...new Set(results.map(r => r.forecast_year))].sort();
+    const regionData = regions.map(reg => {
+      const vals = years.map(y => {
+        const f = results.find(r => r.region?.name === reg && r.forecast_year === y);
+        return f ? f.forecasted_waste : 0;
+      });
+      return { label: reg, data: vals };
+    });
+
+    new Chart(document.getElementById('forecastGrowthChart'), {
+      type: 'bar',
+      data: { labels: years.map(String), datasets: regionData.slice(0, 5).map((rd, i) => ({
+        label: rd.label, data: rd.data, backgroundColor: ['#8B5CF6','#16A34A','#14B8A6','#D97706','#EF4444'][i], borderRadius: 3
+      })) },
+      options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } }
+    });
+
+    new Chart(document.getElementById('productDemandChart'), {
+      type: 'bar',
+      data: { labels: regions.slice(0, 6), datasets: [{ label: 'Waste (t)', data: regions.slice(0, 6).map(reg => { const f = results.find(r => r.region?.name === reg); return f ? f.forecasted_waste : 0; }), backgroundColor: '#16A34A', borderRadius: 4 }] },
+      options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } }
+    });
+  } catch (e) { console.error('Forecast results error:', e); }
 });
 
-var forecastData = [
-  { id: 'north-america', name: 'North America', y1: 8200, y3: 24800, y5: 43000 },
-  { id: 'europe', name: 'Europe', y1: 7100, y3: 21400, y5: 37000 },
-  { id: 'asia-pacific', name: 'Asia Pacific', y1: 6200, y3: 19200, y5: 34000 },
-  { id: 'middle-east', name: 'Middle East', y1: 3500, y3: 10800, y5: 19500 },
-  { id: 'latin-america', name: 'Latin America', y1: 2400, y3: 7400, y5: 13200 },
-  { id: 'africa', name: 'Africa', y1: 1050, y3: 3400, y5: 6200 }
-];
-
-function renderForecastCards(filter) {
-  var container = document.getElementById('forecastCards');
-  container.innerHTML = '';
-  forecastData.forEach(function (r) {
-    if (filter !== 'all' && r.id !== filter) return;
-    container.innerHTML +=
-      '<div class="col-md-4">' +
-        '<div class="card border-0 shadow-sm h-100">' +
-          '<div class="card-body">' +
-            '<h6 class="fw-bold mb-3"><i class="bi bi-geo-alt me-2 text-primary"></i>' + r.name + '</h6>' +
-            '<div class="row g-2">' +
-              '<div class="col-4"><div class="forecast-card p-2"><div class="year-badge y1">1 Year</div><h3 class="fs-5">' + (r.y1/1000).toFixed(1) + 'k</h3><p>tonnes</p></div></div>' +
-              '<div class="col-4"><div class="forecast-card p-2"><div class="year-badge y3">3 Year</div><h3 class="fs-5">' + (r.y3/1000).toFixed(1) + 'k</h3><p>tonnes</p></div></div>' +
-              '<div class="col-4"><div class="forecast-card p-2"><div class="year-badge y5">5 Year</div><h3 class="fs-5">' + (r.y5/1000).toFixed(1) + 'k</h3><p>tonnes</p></div></div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-  });
-}
-
 function filterResults() {
-  renderForecastCards(document.getElementById('regionFilter').value);
-}
-
-function initCharts() {
-  var growthCtx = document.getElementById('forecastGrowthChart').getContext('2d');
-  new Chart(growthCtx, {
-    type: 'line',
-    data: {
-      labels: ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'],
-      datasets: [
-        { label: 'North America', data: [8200, 14200, 24800, 33000, 43000], borderColor: '#8B5CF6', tension: 0.3, pointRadius: 3 },
-        { label: 'Europe', data: [7100, 12000, 21400, 28500, 37000], borderColor: '#16A34A', tension: 0.3, pointRadius: 3 },
-        { label: 'Asia Pacific', data: [6200, 10800, 19200, 26000, 34000], borderColor: '#14B8A6', tension: 0.3, pointRadius: 3 }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
-  });
-
-  var demandCtx = document.getElementById('productDemandChart').getContext('2d');
-  new Chart(demandCtx, {
-    type: 'bar',
-    data: {
-      labels: ['Phones', 'Laptops', 'Appliances', 'Batteries', 'TVs', 'Tablets'],
-      datasets: [
-        { label: 'Current', data: [28, 22, 20, 17, 13, 10], backgroundColor: '#94A3B8', borderRadius: 4 },
-        { label: 'Forecasted', data: [35, 28, 26, 22, 18, 15], backgroundColor: '#8B5CF6', borderRadius: 4 }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, ticks: { callback: function (v) { return v + '%'; } } } } }
-  });
+  const region = document.getElementById('regionFilter')?.value;
+  showToast('Filtered by: ' + (region || 'all'), 'info');
 }

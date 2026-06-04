@@ -1,36 +1,36 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
   document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const token = localStorage.getItem('greenera_admin_token');
+  if (!token) return;
+  const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-  function animateKPI(id, target, prefix, suffix) {
-    var el = document.getElementById(id); var c = 0; var s = Math.ceil(target / 30);
-    var i = setInterval(function () { c += s; if (c >= target) { c = target; clearInterval(i); } el.textContent = prefix + c.toLocaleString() + suffix; }, 40);
-  }
-  animateKPI('kpiCurrentProfit', 35000000, '₹', '');
-  animateKPI('kpiPredictedProfit', 51000000, '₹', '');
-  animateKPI('kpiSavings', 16000000, '₹', '');
-  animateKPI('kpiROI', 34, '', '%');
-  animateKPI('kpiPayback', 14, '', 'm');
+  try {
+    const res = await fetch(API_BASE + '/bi/profitability', { headers });
+    const data = await res.json();
+    document.getElementById('kpiProfit').textContent = '\u20B9' + (data.current_profit || 0).toLocaleString('en-IN');
+    document.getElementById('kpiPredicted').textContent = '\u20B9' + (data.predicted_profit || 0).toLocaleString('en-IN');
+    document.getElementById('kpiSavings').textContent = '\u20B9' + (data.savings || 0).toLocaleString('en-IN');
+    document.getElementById('kpiROI').textContent = (data.roi || 0) + '%';
+    document.getElementById('kpiPayback').textContent = (data.payback_period || 0) + ' mo';
 
-  var ctx1 = document.getElementById('profitCostChart').getContext('2d');
-  new Chart(ctx1, {
-    type: 'bar',
-    data: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-      datasets: [
-        { label: 'Revenue', data: [43000000, 45500000, 48000000, 50500000, 53000000, 56000000], backgroundColor: '#16A34A', borderRadius: 4 },
-        { label: 'Costs', data: [31500000, 32500000, 33500000, 34500000, 36000000, 37500000], backgroundColor: '#EF4444', borderRadius: 4 }
-      ]
-    },
-        options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: function (v) { return '₹' + (v / 10000000) + 'Cr'; } } } } }
-  });
+    const pt = data.profit_trend || {};
+    new Chart(document.getElementById('profitChart'), {
+      type: 'line',
+      data: {
+        labels: pt.labels || ['Jan','Feb','Mar','Apr','May','Jun'],
+        datasets: [
+          { label: 'Revenue', data: pt.revenue || [], borderColor: '#16A34A', backgroundColor: 'rgba(22,163,74,0.1)', fill: true, tension: 0.3 },
+          { label: 'Cost', data: pt.cost || [], borderColor: '#EF4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.3 },
+          { label: 'Profit', data: pt.profit || [], borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.3 }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+    });
 
-  var ctx2 = document.getElementById('costBreakdownChart').getContext('2d');
-  new Chart(ctx2, {
-    type: 'doughnut',
-    data: {
-      labels: ['Transportation', 'Labor', 'Facility', 'Operational', 'Other'],
-      datasets: [{ data: [28, 25, 22, 18, 7], backgroundColor: ['#4F46E5', '#16A34A', '#14B8A6', '#D97706', '#94A3B8'], borderWidth: 0 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { position: 'bottom' } } }
-  });
+    new Chart(document.getElementById('costChart'), {
+      type: 'doughnut',
+      data: { labels: ['Transport', 'Facility', 'Labor', 'Operations'], datasets: [{ data: [25, 30, 25, 20], backgroundColor: ['#3B82F6','#16A34A','#F59E0B','#EF4444'], borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'bottom' } } }
+    });
+  } catch (e) { console.error('BI profit load error:', e); }
 });

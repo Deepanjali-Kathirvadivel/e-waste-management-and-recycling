@@ -13,26 +13,22 @@
     const password = document.getElementById('adminPass').value;
 
     try {
-      const res = await fetch('/api/admin/login', {
+      const res = await fetch(API_BASE + '/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-      if (!res.ok) throw new Error((await res.json()).message || 'Invalid credentials');
+      if (!res.ok) throw new Error((await res.json()).error || 'Invalid credentials');
       const data = await res.json();
+      if (data.user.role === 'employee') throw new Error('Admin access required');
       localStorage.setItem('greenera_admin_token', data.token);
-      localStorage.setItem('greenera_admin', JSON.stringify(data.admin));
+      localStorage.setItem('greenera_admin', JSON.stringify(data.user));
+      localStorage.removeItem('greenera_token');
+      localStorage.removeItem('greenera_user');
       window.location.href = 'dashboard.html';
-    } catch (_) {
-      // Demo fallback
-      if (username === 'admin' && password === 'Admin@123') {
-        localStorage.setItem('greenera_admin_token', 'demo_admin_' + Date.now());
-        localStorage.setItem('greenera_admin', JSON.stringify({ id: 1, username: 'admin', full_name: 'Super Admin', role: 'super_admin' }));
-        window.location.href = 'dashboard.html';
-      } else {
-        errorEl.textContent = 'Invalid admin credentials. Try admin / Admin@123';
-        errorEl.classList.remove('d-none');
-      }
+    } catch (err) {
+      errorEl.textContent = err.message || 'Invalid admin credentials';
+      errorEl.classList.remove('d-none');
     }
   });
 })();
