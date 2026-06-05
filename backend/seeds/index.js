@@ -162,10 +162,10 @@ async function seed() {
         forecastData.push({
           region_id: region.id,
           forecast_year: year,
-          forecasted_waste: Math.floor(Math.random() * 10000) + 2000 + idx * 2000,
+          forecasted_waste: Math.floor((Math.random() * 10000 + 2000 + idx * 2000) * 0.25),
           growth_rate: parseFloat((Math.random() * 10 + 5).toFixed(1)),
           opportunity_score: Math.floor(Math.random() * 30) + 60,
-          predicted_revenue: Math.floor(Math.random() * 100000) + 100000 + idx * 20000,
+          predicted_revenue: Math.floor((Math.random() * 100000 + 100000 + idx * 20000) * 0.25),
         });
       });
     });
