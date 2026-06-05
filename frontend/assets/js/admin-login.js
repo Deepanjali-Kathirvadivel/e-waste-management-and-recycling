@@ -21,10 +21,23 @@
       if (!res.ok) throw new Error((await res.json()).error || 'Invalid credentials');
       const data = await res.json();
       if (data.user.role === 'employee') throw new Error('Admin access required');
-      localStorage.setItem('greenera_admin_token', data.token);
-      localStorage.setItem('greenera_admin', JSON.stringify(data.user));
+      const remember = document.getElementById('adminRemember')?.checked;
+      const storage = remember ? localStorage : sessionStorage;
+
+      // Clear both storages first to ensure no stale data remains
+      localStorage.removeItem('greenera_admin_token');
+      localStorage.removeItem('greenera_admin');
+      sessionStorage.removeItem('greenera_admin_token');
+      sessionStorage.removeItem('greenera_admin');
+
+      storage.setItem('greenera_admin_token', data.token);
+      storage.setItem('greenera_admin', JSON.stringify(data.user));
+
       localStorage.removeItem('greenera_token');
       localStorage.removeItem('greenera_user');
+      sessionStorage.removeItem('greenera_token');
+      sessionStorage.removeItem('greenera_user');
+
       window.location.href = 'dashboard.html';
     } catch (err) {
       errorEl.textContent = err.message || 'Invalid admin credentials';

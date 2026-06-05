@@ -1,0 +1,21 @@
+Region,Year,ProductCategory,UnitsImported,ImportValue_INR
+Coimbatore,2023,Electronics,10000,50000000
+Coimbatore,2023,Home Appliance,5000,35000000
+Coimbatore,2024,Electronics,12000,60000000
+Coimbatore,2024,Home Appliance,6000,42000000
+Chennai,2023,Electronics,20000,100000000
+Chennai,2023,Home Appliance,10000,70000000
+Chennai,2024,Electronics,23000,115000000
+Chennai,2024,Home Appliance,11000,77000000
+Trichy,2023,Electronics,4000,20000000
+Trichy,2023,Home Appliance,2000,14000000
+Trichy,2024,Electronics,4500,22500000
+Trichy,2024,Home Appliance,2200,15400000
+Kochi,2023,Electronics,8000,40000000
+Kochi,2023,Home Appliance,4000,28000000
+Kochi,2024,Electronics,9000,45000000
+Kochi,2024,Home Appliance,4500,31500000
+Salem,2023,Electronics,3000,15000000
+Salem,2023,Home Appliance,1500,10500000
+Salem,2024,Electronics,3500,17500000
+Salem,2024,Home Appliance,1800,12600000

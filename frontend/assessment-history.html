@@ -76,13 +76,16 @@
               <label class="fw-semibold small mb-1">Type</label>
               <select class="form-select" id="typeFilter" onchange="filterTable()">
                 <option value="all">All Types</option>
-                <option value="TV">TV</option>
-                <option value="AC">AC</option>
-                <option value="Fridge">Fridge</option>
-                <option value="Washing Machine">Washing Machine</option>
-                <option value="Laptop">Laptop</option>
-                <option value="Mobile">Mobile</option>
-                <option value="Monitor">Monitor</option>
+                <option value="1">TV</option>
+                <option value="2">AC</option>
+                <option value="3">Fridge</option>
+                <option value="4">Washing Machine</option>
+                <option value="5">Fan</option>
+                <option value="6">Laptop</option>
+                <option value="7">Mobile</option>
+                <option value="8">Monitor</option>
+                <option value="9">Keyboard</option>
+                <option value="10">Mouse</option>
               </select>
             </div>
             <div class="col-md-2">
@@ -160,7 +163,7 @@
           const res = await fetch(API_BASE + '/assessments?' + params, { headers: getAuthHeaders() });
           const data = await res.json();
           allAssessments = (data.assessments || []).map(a => ({
-            id: '#' + a.id, date: new Date(a.created_at).toLocaleDateString(),
+            id: '#' + a.id, date: new Date(a.createdAt || a.created_at).toLocaleDateString(),
             customer: a.customer_name || '-', product: a.product_catalog?.name || '-',
             brand: a.brand || '-', condition: (a.condition || '-').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
             value: a.value_estimate || 0, status: a.status
@@ -190,15 +193,15 @@
             <td>${a.customer}</td>
             <td>${a.product} (${a.brand})</td>
             <td><span class="badge bg-${a.condition === 'Excellent' ? 'success' : a.condition === 'Good' ? 'primary' : a.condition === 'Fair' ? 'warning' : 'secondary'}">${a.condition}</span></td>
-            <td>\u20B9${a.value.toLocaleString('en-IN')}</td>
+            <td>₹${a.value.toLocaleString('en-IN')}</td>
             <td><span class="status-badge ${a.status}">${a.status.charAt(0).toUpperCase() + a.status.slice(1)}</span></td>
             <td><button class="btn btn-sm btn-outline-green" onclick="showToast('Assessment ${a.id}')"><i class="bi bi-eye"></i></button></td>
           </tr>
         `).join('') : '<tr><td colspan="8" class="text-center text-muted py-4">No assessments found</td></tr>';
-        document.getElementById('tableInfo').textContent = \`Showing \${start + 1}-\${Math.min(end, filteredData.length)} of \${filteredData.length} entries\`;
-        let pagHtml = \`<li class="page-item \${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(\${currentPage - 1})">&laquo;</a></li>\`;
-        for (let i = 1; i <= totalPages; i++) pagHtml += \`<li class="page-item \${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(\${i})">\${i}</a></li>\`;
-        pagHtml += \`<li class="page-item \${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(\${currentPage + 1})">&raquo;</a></li>\`;
+        document.getElementById('tableInfo').textContent = `Showing ${start + 1}-${Math.min(end, filteredData.length)} of ${filteredData.length} entries`;
+        let pagHtml = `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage - 1})">&laquo;</a></li>`;
+        for (let i = 1; i <= totalPages; i++) pagHtml += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
+        pagHtml += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage + 1})">&raquo;</a></li>`;
         document.getElementById('tablePagination').innerHTML = pagHtml;
       }
 
@@ -206,19 +209,37 @@
       window.changePage = function(p) { currentPage = p; renderTable(); };
 
       window.exportPDF = async function() {
-        const a = document.createElement('a');
-        a.href = API_BASE + '/assessments/export?format=pdf';
-        a.download = 'assessments.pdf';
-        a.click();
-        showToast('PDF downloaded');
+        try {
+          const res = await fetch(API_BASE + '/assessments/export?format=pdf', { headers: getAuthHeaders() });
+          if (!res.ok) throw new Error('Download failed');
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'assessments.pdf';
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('PDF downloaded');
+        } catch (err) {
+          showToast('Failed to export PDF', 'error');
+        }
       };
 
       window.exportExcel = async function() {
-        const a = document.createElement('a');
-        a.href = API_BASE + '/assessments/export?format=xlsx';
-        a.download = 'assessments.xlsx';
-        a.click();
-        showToast('Excel downloaded');
+        try {
+          const res = await fetch(API_BASE + '/assessments/export?format=xlsx', { headers: getAuthHeaders() });
+          if (!res.ok) throw new Error('Download failed');
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'assessments.xlsx';
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('Excel downloaded');
+        } catch (err) {
+          showToast('Failed to export Excel', 'error');
+        }
       };
 
       loadAssessments();

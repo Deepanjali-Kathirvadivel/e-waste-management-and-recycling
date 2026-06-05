@@ -27,10 +27,11 @@
     const email = document.getElementById('editEmail').value.trim();
     const phone = document.getElementById('editPhone').value.trim();
     try {
-      await fetch(API_BASE + '/profile', {
+      const res = await fetch(API_BASE + '/profile', {
         method: 'PUT', headers: getAuthHeaders(),
         body: JSON.stringify({ full_name: fullName, email, phone })
       });
+      if (!res.ok) throw new Error('Failed to update profile');
       const updatedUser = { ...user, full_name: fullName, email, phone };
       localStorage.setItem('greenera_user', JSON.stringify(updatedUser));
       document.getElementById('profileName').textContent = fullName;
@@ -49,10 +50,11 @@
     if (newPass !== confirm) { showToast('Passwords do not match', 'error'); return; }
     if (newPass.length < 6) { showToast('Password must be at least 6 characters', 'error'); return; }
     try {
-      await fetch(API_BASE + '/profile/change-password', {
+      const res = await fetch(API_BASE + '/profile/change-password', {
         method: 'PUT', headers: getAuthHeaders(),
         body: JSON.stringify({ currentPassword: current, newPassword: newPass })
       });
+      if (!res.ok) throw new Error('Current password is incorrect');
       showToast('Password changed successfully');
       document.getElementById('changePasswordForm').reset();
     } catch (err) {

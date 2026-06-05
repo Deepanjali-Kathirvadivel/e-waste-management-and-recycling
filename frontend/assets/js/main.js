@@ -1,5 +1,21 @@
 const API_BASE = 'http://localhost:5400/api';
 
+// Support Session Storage fallback when "Remember Me" is not checked
+(function() {
+  const originalGet = localStorage.getItem;
+  localStorage.getItem = function(key) {
+    const val = originalGet.call(localStorage, key);
+    if (val !== null) return val;
+    return sessionStorage.getItem(key);
+  };
+
+  const originalRemove = localStorage.removeItem;
+  localStorage.removeItem = function(key) {
+    originalRemove.call(localStorage, key);
+    sessionStorage.removeItem(key);
+  };
+})();
+
 function checkAuth() {
   const token = localStorage.getItem('greenera_token');
   const user = JSON.parse(localStorage.getItem('greenera_user') || 'null');

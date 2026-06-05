@@ -16,5 +16,6 @@ router.get('/:id/estimate', auth, ctrl.estimate);
 router.post('/upload-image', auth, uploadAssessment.single('image'), ctrl.uploadImage);
 router.delete('/:id/images/:imageId', auth, ctrl.deleteImage);
 router.post('/ai-analyze', auth, ctrl.aiAnalyze);
+router.get('/catalog/:category', auth, ctrl.getCatalogByCategory);
 
 module.exports = router;

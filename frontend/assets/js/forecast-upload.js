@@ -12,17 +12,25 @@ function handleUpload(type, inputId) {
   formData.append('file', input.files[0]);
   formData.append('data_type', type);
   fetch(API_BASE + '/forecast/upload', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData })
-    .then(r => r.json()).then(d => { showToast(type + ' uploaded', 'success'); })
-    .catch(e => showToast('Upload failed', 'error'));
+    .then(async r => {
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Upload failed');
+      return data;
+    }).then(d => { showToast(type + ' uploaded successfully', 'success'); })
+    .catch(e => showToast(e.message || 'Upload failed', 'error'));
 }
 
 function runForecast() {
   const btn = document.querySelector('.btn-generate-forecast');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Generating...'; }
   fetch(API_BASE + '/forecast/generate', { method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } })
-    .then(r => r.json()).then(d => {
-      showToast('Forecast generated', 'success');
+    .then(async r => {
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || 'Generation failed');
+      return data;
+    }).then(d => {
+      showToast('Forecast generated successfully', 'success');
       setTimeout(() => { window.location.href = 'forecast-results.html'; }, 1000);
-    }).catch(e => showToast('Generation failed', 'error'))
+    }).catch(e => showToast(e.message || 'Generation failed', 'error'))
     .finally(() => { if (btn) { btn.disabled = false; btn.textContent = 'Generate Forecast'; } });
 }

@@ -3,14 +3,15 @@
   if (user) document.getElementById('userName').textContent = user.full_name || user.username;
 
   let currentStep = 1;
-  const totalSteps = 8;
+  const totalSteps = 9;
   let uploadedFiles = [];
   let assessmentData = {
     customerName: '', customerEmail: '', customerPhone: '', customerAddress: '',
     productType: '', productBrand: '', productModel: '', productYear: '',
     productCondition: 'good', productWeight: 0, productNotes: '',
     images: [], aiResult: null, extractedBrand: '', extractedModel: '',
-    verifiedCondition: 'good', verificationChecks: {}, verificationNotes: ''
+    verifiedCondition: 'good', verificationChecks: {}, verificationNotes: '',
+    qPowerOn: 'yes', qDamage: 'none', qAge: 'new', qAccessories: 'all'
   };
   let assessmentId = null;
 
@@ -28,11 +29,11 @@
     const newStep = currentStep + dir;
     if (newStep < 1 || newStep > totalSteps) return;
     saveStepData(currentStep);
-    if (newStep === 4) runAIAnalysis();
-    if (newStep === 5) populateProductDetails();
-    if (newStep === 6) renderVerificationQuestions();
-    if (newStep === 7) calculateValue();
-    if (newStep === 8) buildSummary();
+    if (newStep === 5) runAIAnalysis();
+    if (newStep === 6) populateProductDetails();
+    if (newStep === 7) renderVerificationQuestions();
+    if (newStep === 8) calculateValue();
+    if (newStep === 9) buildSummary();
     currentStep = newStep;
     updateUI();
   };
@@ -56,7 +57,13 @@
       assessmentData.customerPhone = document.getElementById('custPhone').value.trim();
       assessmentData.customerAddress = document.getElementById('custAddress').value.trim();
     }
-    if (step === 5) {
+    if (step === 4) {
+      assessmentData.qPowerOn = document.getElementById('qPowerOn').value;
+      assessmentData.qDamage = document.getElementById('qDamage').value;
+      assessmentData.qAge = document.getElementById('qAge').value;
+      assessmentData.qAccessories = document.getElementById('qAccessories').value;
+    }
+    if (step === 6) {
       assessmentData.productBrand = document.getElementById('productBrand').value.trim();
       assessmentData.productModel = document.getElementById('productModel').value.trim();
       assessmentData.productYear = document.getElementById('productYear').value;
@@ -64,7 +71,7 @@
       assessmentData.productWeight = parseFloat(document.getElementById('productWeight').value) || 0;
       assessmentData.productNotes = document.getElementById('productNotes').value.trim();
     }
-    if (step === 6) {
+    if (step === 7) {
       const container = document.getElementById('verificationQuestions');
       if (container) {
         const checks = {};
@@ -154,10 +161,11 @@
 
   async function runAIAnalysis() {
     const type = assessmentData.productType || 'Unknown';
+    const filename = uploadedFiles[0] ? uploadedFiles[0].name : '';
     try {
       const res = await fetch(API_BASE + '/assessments/ai-analyze', {
         method: 'POST', headers: getAuthHeaders(),
-        body: JSON.stringify({ product_type: type })
+        body: JSON.stringify({ product_type: type, filename: filename })
       });
       const data = await res.json();
       if (data.analysis) {
@@ -184,16 +192,61 @@
     document.getElementById('aiDataRisk').textContent = 'N/A';
   }
 
-  function populateProductDetails() {
-    if (assessmentData.extractedBrand && !document.getElementById('productBrand').value) {
-      document.getElementById('productBrand').value = assessmentData.extractedBrand;
-      const bb = document.getElementById('brandBadge');
-      if (bb) bb.style.display = 'inline-block';
-    }
-    if (assessmentData.extractedModel && !document.getElementById('productModel').value) {
-      document.getElementById('productModel').value = assessmentData.extractedModel;
-      const mb = document.getElementById('modelBadge');
-      if (mb) mb.style.display = 'inline-block';
+  let categoryCatalog = [];
+
+  async function populateProductDetails() {
+    const type = assessmentData.productType || 'Unknown';
+    const brandSelect = document.getElementById('productBrand');
+    const modelSelect = document.getElementById('productModel');
+    
+    brandSelect.innerHTML = '<option value="">Select Brand</option>';
+    modelSelect.innerHTML = '<option value="">Select Model</option>';
+
+    try {
+      const res = await fetch(API_BASE + '/assessments/catalog/' + type, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('Failed to load catalog');
+      const data = await res.json();
+      categoryCatalog = data.catalog || [];
+
+      // Extract unique brands
+      const brands = [...new Set(categoryCatalog.map(item => item.company))].sort();
+      brands.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b;
+        opt.textContent = b;
+        brandSelect.appendChild(opt);
+      });
+
+      if (!brandSelect.dataset.bound) {
+        brandSelect.addEventListener('change', function() {
+          const selectedBrand = this.value;
+          modelSelect.innerHTML = '<option value="">Select Model</option>';
+          const models = categoryCatalog.filter(item => item.company === selectedBrand).map(item => item.model).sort();
+          models.forEach(m => {
+            const opt = document.createElement('option');
+            opt.value = m;
+            opt.textContent = m;
+            modelSelect.appendChild(opt);
+          });
+        });
+        brandSelect.dataset.bound = 'true';
+      }
+
+      if (assessmentData.extractedBrand && assessmentData.extractedBrand !== 'N/A') {
+        brandSelect.value = assessmentData.extractedBrand;
+        const bb = document.getElementById('brandBadge');
+        if (bb) bb.style.display = 'inline-block';
+        
+        brandSelect.dispatchEvent(new Event('change'));
+        
+        if (assessmentData.extractedModel && assessmentData.extractedModel !== 'N/A') {
+          modelSelect.value = assessmentData.extractedModel;
+          const mb = document.getElementById('modelBadge');
+          if (mb) mb.style.display = 'inline-block';
+        }
+      }
+    } catch (err) {
+      showToast('Error loading product catalog', 'error');
     }
   }
 
@@ -239,10 +292,15 @@
   window.resetWizard = function (silent) {
     if (!silent && !confirm('Cancel this assessment?')) return;
     currentStep = 1; assessmentId = null;
-    assessmentData = { customerName: '', customerEmail: '', customerPhone: '', customerAddress: '', productType: '', productBrand: '', productModel: '', productYear: '', productCondition: 'good', productWeight: 0, productNotes: '', images: [], aiResult: null, extractedBrand: '', extractedModel: '', verifiedCondition: 'good', verificationChecks: {}, verificationNotes: '' };
+    assessmentData = { customerName: '', customerEmail: '', customerPhone: '', customerAddress: '', productType: '', productBrand: '', productModel: '', productYear: '', productCondition: 'good', productWeight: 0, productNotes: '', images: [], aiResult: null, extractedBrand: '', extractedModel: '', verifiedCondition: 'good', verificationChecks: {}, verificationNotes: '', qPowerOn: 'yes', qDamage: 'none', qAge: 'new', qAccessories: 'all' };
     uploadedFiles = [];
     document.querySelectorAll('.product-type-item').forEach(i => i.classList.remove('selected'));
     document.querySelectorAll('input, textarea, select').forEach(el => { if (el.id && el.type !== 'hidden') el.value = ''; });
+    // Reset MCQ defaults
+    const q1 = document.getElementById('qPowerOn'); if (q1) q1.value = 'yes';
+    const q2 = document.getElementById('qDamage'); if (q2) q2.value = 'none';
+    const q3 = document.getElementById('qAge'); if (q3) q3.value = 'new';
+    const q4 = document.getElementById('qAccessories'); if (q4) q4.value = 'all';
     const bb = document.getElementById('brandBadge'), mb = document.getElementById('modelBadge');
     if (bb) bb.style.display = 'none'; if (mb) mb.style.display = 'none';
     if (previewContainer) previewContainer.innerHTML = '';
