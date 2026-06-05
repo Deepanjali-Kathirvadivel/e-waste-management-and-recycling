@@ -75,14 +75,24 @@ exports.submit = catchAsync(async (req, res) => {
   if (!assessment) throw new AppError('Assessment not found', 404);
   if (req.user.role === 'employee' && assessment.user_id !== req.user.id) throw new AppError('Unauthorized', 403);
 
-  const product = await ProductCatalog.findByPk(assessment.product_type_id);
-  const productName = product ? product.name : 'General';
-
-  const valuation = valuationService.calculate(
-    productName,
-    assessment.condition || 'fair',
-    parseFloat(assessment.weight_kg) || 1
-  );
+  let valuation;
+  if (assessment.value_estimate !== null && assessment.value_estimate !== undefined) {
+    valuation = {
+      base_price: parseFloat(assessment.value_estimate),
+      condition_multiplier: 1.0,
+      weight_adjustment: 1.0,
+      market_factor: 1.0,
+      estimated_value: parseFloat(assessment.value_estimate)
+    };
+  } else {
+    const product = await ProductCatalog.findByPk(assessment.product_type_id);
+    const productName = product ? product.name : 'General';
+    valuation = valuationService.calculate(
+      productName,
+      assessment.condition || 'fair',
+      parseFloat(assessment.weight_kg) || 1
+    );
+  }
 
   await assessment.update({
     status: 'completed',

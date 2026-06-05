@@ -29,13 +29,14 @@ document.addEventListener('DOMContentLoaded', async function () {
   window.editFacility = function(id) {
     const f = facilities.find(x => x.id === id);
     if (!f) return;
-    document.getElementById('facilityModalTitle').textContent = 'Edit Facility';
+    document.getElementById('facilityModalTitle').textContent = f.type === 'collection_center' ? 'Edit Collection Center' : 'Edit Preprocessing Unit';
     document.getElementById('editFacilityId').value = f.id;
     document.getElementById('fName').value = f.name;
     document.getElementById('fCapacity').value = f.capacity || '';
     document.getElementById('fRent').value = f.rent || '';
     document.getElementById('fElectricity').value = f.electricity_cost || '';
     document.getElementById('fStaffCost').value = f.staff_cost || '';
+    document.getElementById('fType').value = f.type || 'collection_center';
     new bootstrap.Modal(document.getElementById('facilityModal')).show();
   };
 
@@ -48,7 +49,14 @@ document.addEventListener('DOMContentLoaded', async function () {
   document.getElementById('facilityForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const editId = document.getElementById('editFacilityId').value;
-    const body = { name: document.getElementById('fName').value.trim(), capacity: parseInt(document.getElementById('fCapacity').value) || null, rent: parseFloat(document.getElementById('fRent').value) || null, electricity_cost: parseFloat(document.getElementById('fElectricity').value) || null, staff_cost: parseFloat(document.getElementById('fStaffCost').value) || null };
+    const body = { 
+      name: document.getElementById('fName').value.trim(), 
+      type: document.getElementById('fType').value,
+      capacity: parseInt(document.getElementById('fCapacity').value) || null, 
+      rent: parseFloat(document.getElementById('fRent').value) || null, 
+      electricity_cost: parseFloat(document.getElementById('fElectricity').value) || null, 
+      staff_cost: parseFloat(document.getElementById('fStaffCost').value) || null 
+    };
     try {
       if (editId) { await fetch(API_BASE + '/facilities/' + editId, { method: 'PUT', headers, body: JSON.stringify(body) }); showToast('Updated'); }
       else { await fetch(API_BASE + '/facilities', { method: 'POST', headers, body: JSON.stringify(body) }); showToast('Created'); }
@@ -59,9 +67,11 @@ document.addEventListener('DOMContentLoaded', async function () {
   });
 
   document.querySelectorAll('[data-bs-target="#facilityModal"]').forEach(btn => btn.addEventListener('click', function() {
-    document.getElementById('facilityModalTitle').textContent = 'Add Facility';
+    const isUnit = document.getElementById('units-tab').classList.contains('active');
+    document.getElementById('facilityModalTitle').textContent = isUnit ? 'Add Preprocessing Unit' : 'Add Collection Center';
     document.getElementById('editFacilityId').value = '';
     document.getElementById('facilityForm').reset();
+    document.getElementById('fType').value = isUnit ? 'preprocessing_unit' : 'collection_center';
   }));
 
   load();

@@ -45,16 +45,108 @@ document.addEventListener('DOMContentLoaded', async function () {
       window.selectScenario(scenarios[0].id, document.getElementById('sc' + scenarios[0].id));
     }
 
-    new Chart(document.getElementById('scenarioChart'), {
+    const ctx = document.getElementById('scenarioChart').getContext('2d');
+    
+    const profitGradient = ctx.createLinearGradient(0, 0, 0, 300);
+    profitGradient.addColorStop(0, 'rgba(16, 185, 129, 0.95)'); // Emerald Green
+    profitGradient.addColorStop(1, 'rgba(5, 150, 105, 0.35)');
+
+    const costGradient = ctx.createLinearGradient(0, 0, 0, 300);
+    costGradient.addColorStop(0, 'rgba(239, 68, 68, 0.95)'); // Vivid Red
+    costGradient.addColorStop(1, 'rgba(220, 38, 38, 0.35)');
+
+    new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: scenarios.map(s => s.name),
+        labels: scenarios.map(s => s.name.replace('Scenario ', '')),
         datasets: [
-          { label: 'Profit', data: scenarios.map(s => s.profit), backgroundColor: '#16A34A', borderRadius: 4 },
-          { label: 'Cost', data: scenarios.map(s => s.cost), backgroundColor: '#EF4444', borderRadius: 4 }
+          {
+            label: 'Projected Profit',
+            data: scenarios.map(s => s.profit),
+            backgroundColor: profitGradient,
+            borderColor: '#10B981',
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false,
+            hoverBackgroundColor: 'rgba(16, 185, 129, 1)',
+            hoverBorderWidth: 3
+          },
+          {
+            label: 'Estimated Cost',
+            data: scenarios.map(s => s.cost),
+            backgroundColor: costGradient,
+            borderColor: '#EF4444',
+            borderWidth: 2,
+            borderRadius: 8,
+            borderSkipped: false,
+            hoverBackgroundColor: 'rgba(239, 68, 68, 1)',
+            hoverBorderWidth: 3
+          }
         ]
       },
-      options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true } } }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              font: { family: 'Inter', size: 12, weight: 'bold' },
+              color: '#4B5563',
+              usePointStyle: true,
+              boxWidth: 8
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+            titleFont: { family: 'Sora', size: 13, weight: 'bold' },
+            bodyFont: { family: 'Inter', size: 12 },
+            padding: 12,
+            borderRadius: 10,
+            boxWidth: 10,
+            boxHeight: 10,
+            usePointStyle: true,
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                if (context.parsed.y !== null) {
+                  label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(context.parsed.y);
+                }
+                return label;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: {
+              font: { family: 'Inter', size: 10, weight: '500' },
+              color: '#4B5563'
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(229, 231, 235, 0.5)',
+              drawBorder: false
+            },
+            ticks: {
+              font: { family: 'Inter', size: 10 },
+              color: '#4B5563',
+              callback: function(value) {
+                if (Math.abs(value) >= 100000) {
+                  return '₹' + (value / 100000).toFixed(1) + ' L';
+                }
+                return '₹' + value.toLocaleString('en-IN');
+              }
+            }
+          }
+        }
+      }
     });
   } catch (e) { console.error('Scenario load error:', e); }
 });

@@ -12,6 +12,7 @@ const createAssessmentSchema = Joi.object({
   condition: Joi.string().valid('excellent', 'good', 'fair', 'poor', 'damaged').allow(null),
   weight_kg: Joi.number().precision(2).allow(null),
   notes: Joi.string().allow('', null),
+  value_estimate: Joi.number().precision(2).allow(null),
 });
 
 const updateAssessmentSchema = Joi.object({
@@ -27,6 +28,7 @@ const updateAssessmentSchema = Joi.object({
   weight_kg: Joi.number().precision(2).allow(null),
   notes: Joi.string().allow('', null),
   status: Joi.string().valid('draft', 'in_progress', 'completed', 'cancelled'),
+  value_estimate: Joi.number().precision(2).allow(null),
 });
 
 module.exports = { createAssessmentSchema, updateAssessmentSchema };
