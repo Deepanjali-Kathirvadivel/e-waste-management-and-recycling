@@ -54,22 +54,22 @@ async function seed() {
 
     // Facilities (Collection Centers)
     const facilities = await Facility.bulkCreate([
-      { name: 'CC001 - Coimbatore Hub', type: 'collection_center', region_id: 1, capacity: 5000, rent: 150000, electricity_cost: 45000, staff_cost: 200000 },
-      { name: 'CC002 - Chennai Center', type: 'collection_center', region_id: 2, capacity: 3000, rent: 80000, electricity_cost: 25000, staff_cost: 120000 },
-      { name: 'CC003 - Trichy Center', type: 'collection_center', region_id: 3, capacity: 2500, rent: 70000, electricity_cost: 22000, staff_cost: 100000 },
-      { name: 'CC004 - Kochi Center', type: 'collection_center', region_id: 4, capacity: 3000, rent: 90000, electricity_cost: 28000, staff_cost: 130000 },
-      { name: 'CC005 - Salem Center', type: 'collection_center', region_id: 5, capacity: 2000, rent: 60000, electricity_cost: 20000, staff_cost: 100000 },
-      { name: 'Coimbatore Head Recycler Hub', type: 'preprocessing_unit', region_id: 1, capacity: 10000, rent: 300000, electricity_cost: 80000, staff_cost: 350000 },
+      { name: 'CC001 - Coimbatore Hub', type: 'collection_center', region_id: 1, capacity: 5000, rent: 8000, electricity_cost: 2000, staff_cost: 10000 },
+      { name: 'CC002 - Chennai Center', type: 'collection_center', region_id: 2, capacity: 3000, rent: 4000, electricity_cost: 1200, staff_cost: 6000 },
+      { name: 'CC003 - Trichy Center', type: 'collection_center', region_id: 3, capacity: 2500, rent: 3500, electricity_cost: 1100, staff_cost: 5000 },
+      { name: 'CC004 - Kochi Center', type: 'collection_center', region_id: 4, capacity: 3000, rent: 4500, electricity_cost: 1400, staff_cost: 6500 },
+      { name: 'CC005 - Salem Center', type: 'collection_center', region_id: 5, capacity: 2000, rent: 3000, electricity_cost: 1000, staff_cost: 5000 },
+      { name: 'Coimbatore Head Recycler Hub', type: 'preprocessing_unit', region_id: 1, capacity: 10000, rent: 15000, electricity_cost: 4000, staff_cost: 18000 },
     ]);
     console.log(`Created ${facilities.length} facilities`);
 
     // Logistics Routes
     const routes = await LogisticsRoute.bulkCreate([
-      { route_name: 'Coimbatore CC to Head Hub', origin_facility_id: 1, destination_facility_id: 6, distance_km: 12, fuel_cost: 1500, driver_salary: 2000, vehicle_cost: 1000, maintenance_cost: 500 },
-      { route_name: 'Chennai CC to Head Hub', origin_facility_id: 2, destination_facility_id: 6, distance_km: 500, fuel_cost: 25000, driver_salary: 12000, vehicle_cost: 15000, maintenance_cost: 6000 },
-      { route_name: 'Trichy CC to Head Hub', origin_facility_id: 3, destination_facility_id: 6, distance_km: 250, fuel_cost: 12000, driver_salary: 6000, vehicle_cost: 8000, maintenance_cost: 3000 },
-      { route_name: 'Kochi CC to Head Hub', origin_facility_id: 4, destination_facility_id: 6, distance_km: 300, fuel_cost: 15000, driver_salary: 7000, vehicle_cost: 9000, maintenance_cost: 4000 },
-      { route_name: 'Salem CC to Head Hub', origin_facility_id: 5, destination_facility_id: 6, distance_km: 160, fuel_cost: 8000, driver_salary: 4000, vehicle_cost: 5000, maintenance_cost: 2000 },
+      { route_name: 'Coimbatore CC to Head Hub', origin_facility_id: 1, destination_facility_id: 6, distance_km: 12, fuel_cost: 100, driver_salary: 150, vehicle_cost: 100, maintenance_cost: 50 },
+      { route_name: 'Chennai CC to Head Hub', origin_facility_id: 2, destination_facility_id: 6, distance_km: 500, fuel_cost: 1200, driver_salary: 600, vehicle_cost: 800, maintenance_cost: 300 },
+      { route_name: 'Trichy CC to Head Hub', origin_facility_id: 3, destination_facility_id: 6, distance_km: 250, fuel_cost: 600, driver_salary: 300, vehicle_cost: 400, maintenance_cost: 150 },
+      { route_name: 'Kochi CC to Head Hub', origin_facility_id: 4, destination_facility_id: 6, distance_km: 300, fuel_cost: 700, driver_salary: 350, vehicle_cost: 450, maintenance_cost: 200 },
+      { route_name: 'Salem CC to Head Hub', origin_facility_id: 5, destination_facility_id: 6, distance_km: 160, fuel_cost: 400, driver_salary: 200, vehicle_cost: 250, maintenance_cost: 100 },
     ]);
     console.log(`Created ${routes.length} logistics routes`);
 
@@ -80,14 +80,30 @@ async function seed() {
     const classifications = ['reusable', 'repairable', 'recyclable', 'scrap'];
 
     const assessmentData = [];
-    for (let i = 0; i < 50; i++) {
+    const totalAssessments = 175;
+    for (let i = 0; i < totalAssessments; i++) {
       const product = products[Math.floor(Math.random() * products.length)];
       const user = users[Math.floor(Math.random() * 5) + 5];
       const conditionVal = conditions[Math.floor(Math.random() * conditions.length)];
       const classVal = classifications[Math.floor(Math.random() * classifications.length)];
-      const statusVal = Math.random() > 0.2 ? 'completed' : (Math.random() > 0.5 ? 'draft' : 'in_progress');
-      const daysAgo = Math.floor(Math.random() * 90);
-      const createdDate = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
+      const statusVal = Math.random() > 0.15 ? 'completed' : (Math.random() > 0.5 ? 'draft' : 'in_progress');
+      
+      // Multi-peak up and down fluctuation: Jan (15), Feb (32) [up], Mar (20) [down], Apr (45) [up], May (25) [down], Jun (38) [up]
+      let mOffset = 0;
+      if (i < 15) mOffset = 5;
+      else if (i < 47) mOffset = 4;
+      else if (i < 67) mOffset = 3;
+      else if (i < 112) mOffset = 2;
+      else if (i < 137) mOffset = 1;
+      else mOffset = 0;
+
+      const now = new Date();
+      const targetMonth = new Date(now.getFullYear(), now.getMonth() - mOffset, 1);
+      let randomDay = 1 + Math.floor(Math.random() * 27);
+      if (mOffset === 0) {
+        randomDay = Math.max(1, Math.min(now.getDate(), randomDay));
+      }
+      const createdDate = new Date(targetMonth.getFullYear(), targetMonth.getMonth(), randomDay, 12, 0, 0);
 
       assessmentData.push({
         user_id: user.id,
@@ -103,10 +119,13 @@ async function seed() {
         weight_kg: Math.floor(Math.random() * 30) + 2,
         notes: [null, 'Minor scratches', 'Screen working', 'Power cable missing', 'Fully functional'][Math.floor(Math.random() * 5)],
         status: statusVal,
-        value_estimate: Math.floor(Math.random() * 15000) + 500,
+        // Individual estimate values average to ₹9,500, keeping peak month (45 items) under ₹5,00,000
+        value_estimate: Math.floor(Math.random() * 5000) + 7000,
         ai_score: Math.floor(Math.random() * 40) + 55,
         classification: statusVal === 'completed' ? classVal : null,
         submitted_at: statusVal === 'completed' ? createdDate : null,
+        createdAt: createdDate,
+        updatedAt: createdDate,
         created_at: createdDate,
         updated_at: createdDate,
       });
@@ -146,7 +165,7 @@ async function seed() {
           forecasted_waste: Math.floor(Math.random() * 10000) + 2000 + idx * 2000,
           growth_rate: parseFloat((Math.random() * 10 + 5).toFixed(1)),
           opportunity_score: Math.floor(Math.random() * 30) + 60,
-          predicted_revenue: Math.floor(Math.random() * 50000000) + 10000000 + idx * 10000000,
+          predicted_revenue: Math.floor(Math.random() * 100000) + 100000 + idx * 20000,
         });
       });
     });

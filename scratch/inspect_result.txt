@@ -1,0 +1,32 @@
+========================================
+Inspecting: D:\Green Era Recyclers\Green-Era-Recyclers\data-input\EWaste_Real_Models_200_Records.xlsx
+Columns: ['Company', 'Model', 'Retail Price (₹)', 'Rebuy Value (₹)', 'Expected Lifetime (Years)', 'Scrap Value (₹)']
+Shape: (20, 6)
+First 10 rows:
+   Company              Model  Retail Price (₹)  Rebuy Value (₹)  Expected Lifetime (Years)  Scrap Value (₹)
+0    Apple  iPhone 15 Pro Max             14500             6525                          6              870
+1    Apple          iPhone 15             19000             8550                          7             1140
+2    Apple          iPhone 14             23500            10575                          8             1410
+3    Apple          iPhone 13             28000            12600                          9             1680
+4  Samsung   Galaxy S24 Ultra             32500            14625                          5             1950
+5  Samsung         Galaxy S24             37000            16650                          6             2220
+6  Samsung      Galaxy S23 FE             41500            18675                          7             2490
+7  Samsung         Galaxy A55             46000            20700                          8             2760
+8  OnePlus         OnePlus 12             50500            22725                          9             3030
+9  OnePlus        OnePlus 11R             55000            24750                          5             3300
+========================================
+Inspecting: D:\Green Era Recyclers\assessments.xlsx
+Columns: ['ID', 'Date', 'Customer', 'Product', 'Brand', 'Condition', 'Value', 'Status']
+Shape: (19, 8)
+First 10 rows:
+   ID          Date       Customer          Product      Brand  Condition    Value     Status
+0  52  Invalid Date            Abc     Refrigerator       Sony       good   ₹3,197  completed
+1  51  Invalid Date            Abc       Television       Sony       good   ₹3,417  completed
+2   2  Invalid Date  Anand Murugan  Air Conditioner    Samsung       good   ₹9,273  completed
+3   4  Invalid Date   Lakshmi Nair          Monitor       Sony       good   ₹5,839  completed
+4  11  Invalid Date  Anand Murugan       Television       Dell    damaged   ₹2,631  completed
+5  12  Invalid Date   Lakshmi Nair         Keyboard         HP    damaged   ₹2,081  completed
+6  22  Invalid Date  Anand Murugan          Monitor  Panasonic       poor     ₹838  completed
+7  23  Invalid Date  Anand Murugan              Fan         HP  excellent  ₹15,005  completed
+8  27  Invalid Date  Anand Murugan            Mouse    Samsung    damaged  ₹14,332  completed
+9  29  Invalid Date     Vikram Raj         Keyboard         HP       fair     ₹519  completed

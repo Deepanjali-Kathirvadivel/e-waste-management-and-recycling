@@ -29,7 +29,23 @@ function checkAuth() {
 function logout() {
   localStorage.removeItem('greenera_token');
   localStorage.removeItem('greenera_user');
-  window.location.href = 'login.html';
+  localStorage.removeItem('greenera_admin_token');
+  localStorage.removeItem('greenera_admin');
+  sessionStorage.removeItem('greenera_admin_token');
+  sessionStorage.removeItem('greenera_admin');
+  
+  if (window.location.pathname.includes('/admin/')) {
+    const parts = window.location.pathname.split('/admin/');
+    const afterAdmin = parts[1] || '';
+    const slashCount = (afterAdmin.match(/\//g) || []).length;
+    let prefix = '';
+    for (let i = 0; i < slashCount; i++) {
+      prefix += '../';
+    }
+    window.location.href = prefix + 'login.html';
+  } else {
+    window.location.href = 'login.html';
+  }
 }
 
 function getAuthHeaders() {

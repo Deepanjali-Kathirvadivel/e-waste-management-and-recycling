@@ -97,10 +97,21 @@
     const tbody = document.getElementById('staffTableBody');
     if (tbody) {
       tbody.innerHTML = filtered.length ? filtered.map(s => `
-        <tr><td><a href="staff-details.html?id=${s.id}" class="fw-semibold text-dark text-decoration-none">${s.full_name}</a></td>
-        <td>${s.username}</td><td><span class="detail-tag blue">${s.role.replace(/_/g, ' ')}</span></td><td>${s.region?.name || '-'}</td>
-        <td><span class="status-badge ${s.is_active ? 'completed' : 'cancelled'}">${s.is_active ? 'Active' : 'Disabled'}</span></td>
-        <td><div class="d-flex gap-1">...</div></td></tr>
+        <tr>
+          <td><a href="staff-details.html?id=${s.id}" class="fw-semibold text-dark text-decoration-none">${s.full_name}</a></td>
+          <td>${s.username}</td>
+          <td><span class="detail-tag blue">${s.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span></td>
+          <td>${s.region?.name || '-'}</td>
+          <td><span class="status-badge ${s.is_active ? 'completed' : 'cancelled'}">${s.is_active ? 'Active' : 'Disabled'}</span></td>
+          <td>
+            <div class="d-flex gap-1">
+              <button class="btn btn-sm btn-outline-green" onclick="editStaff(${s.id})" title="Edit"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-sm ${s.is_active ? 'btn-outline-warning' : 'btn-outline-green'}" onclick="toggleStaffStatus(${s.id})" title="${s.is_active ? 'Disable' : 'Enable'}"><i class="bi ${s.is_active ? 'bi-pause-circle' : 'bi-play-circle'}"></i></button>
+              <button class="btn btn-sm btn-outline-primary" onclick="openResetPwd(${s.id})" title="Reset Password"><i class="bi bi-key"></i></button>
+              <button class="btn btn-sm btn-outline-danger" onclick="openDelete(${s.id})" title="Delete"><i class="bi bi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
       `).join('') : '<tr><td colspan="6" class="text-center text-muted py-3">No staff match your search</td></tr>';
     }
   };

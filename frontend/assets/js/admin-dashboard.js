@@ -40,17 +40,118 @@
 
   function renderCharts(data) {
     const ct = data.collection_trend || { labels: [], collections: [], revenue: [] };
-    new Chart(document.getElementById('collectionTrendChart'), {
-      type: 'line',
-      data: {
-        labels: ct.labels || ['Jan','Feb','Mar','Apr','May','Jun'],
-        datasets: [
-          { label: 'Collections', data: ct.collections || [], borderColor: '#16A34A', backgroundColor: 'rgba(22,163,74,0.08)', fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2.5 },
-          { label: 'Revenue', data: ct.revenue || [], borderColor: '#3B82F6', backgroundColor: 'rgba(59,130,246,0.08)', fill: true, tension: 0.4, pointRadius: 3, borderWidth: 2.5 }
-        ]
-      },
-      options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top', labels: { usePointStyle: true, font: { size: 10 } } } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' } }, x: { grid: { display: false } } } }
-    });
+    const chartEl = document.getElementById('collectionTrendChart');
+    if (chartEl) {
+      const ctx = chartEl.getContext('2d');
+      const collectionsGradient = ctx.createLinearGradient(0, 0, 0, 300);
+      collectionsGradient.addColorStop(0, 'rgba(22, 163, 74, 0.35)');
+      collectionsGradient.addColorStop(1, 'rgba(22, 163, 74, 0.02)');
+
+      const revenueGradient = ctx.createLinearGradient(0, 0, 0, 300);
+      revenueGradient.addColorStop(0, 'rgba(59, 130, 246, 0.35)');
+      revenueGradient.addColorStop(1, 'rgba(59, 130, 246, 0.02)');
+
+      new Chart(chartEl, {
+        type: 'line',
+        data: {
+          labels: ct.labels || ['Jan','Feb','Mar','Apr','May','Jun'],
+          datasets: [
+            { 
+              label: 'Collections', 
+              data: ct.collections || [], 
+              borderColor: '#16A34A', 
+              backgroundColor: collectionsGradient, 
+              fill: true, 
+              tension: 0.4, 
+              pointRadius: 4, 
+              pointHoverRadius: 6,
+              pointBackgroundColor: '#16A34A',
+              borderWidth: 3,
+              yAxisID: 'y'
+            },
+            { 
+              label: 'Revenue (₹)', 
+              data: ct.revenue || [], 
+              borderColor: '#3B82F6', 
+              backgroundColor: revenueGradient, 
+              fill: true, 
+              tension: 0.4, 
+              pointRadius: 4, 
+              pointHoverRadius: 6,
+              pointBackgroundColor: '#3B82F6',
+              borderWidth: 3,
+              yAxisID: 'y1'
+            }
+          ]
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: true, 
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: { 
+            legend: { 
+              position: 'top', 
+              labels: { usePointStyle: true, font: { size: 11, weight: 'bold' } } 
+            },
+            tooltip: {
+              padding: 10,
+              cornerRadius: 8,
+              backgroundColor: 'rgba(17, 24, 39, 0.95)',
+              titleFont: { size: 12, weight: 'bold' },
+              bodyFont: { size: 12 },
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.dataset.yAxisID === 'y1') {
+                    label += '₹' + context.raw.toLocaleString('en-IN');
+                  } else {
+                    label += context.raw.toLocaleString();
+                  }
+                  return label;
+                }
+              }
+            }
+          }, 
+          scales: { 
+            y: { 
+              type: 'linear',
+              display: true,
+              position: 'left',
+              title: {
+                display: true,
+                text: 'Collections Count',
+                color: '#16A34A',
+                font: { weight: 'bold', size: 11 }
+              },
+              beginAtZero: true, 
+              grid: { color: 'rgba(0,0,0,0.04)' } 
+            }, 
+            y1: { 
+              type: 'linear',
+              display: true,
+              position: 'right',
+              title: {
+                display: true,
+                text: 'Revenue (₹)',
+                color: '#3B82F6',
+                font: { weight: 'bold', size: 11 }
+              },
+              beginAtZero: true, 
+              grid: { drawOnChartArea: false } 
+            },
+            x: { 
+              grid: { display: false } 
+            } 
+          } 
+        }
+      });
+    }
 
     const rr = data.region_revenue || [];
     new Chart(document.getElementById('regionChart'), {

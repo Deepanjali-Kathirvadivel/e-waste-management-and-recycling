@@ -187,49 +187,60 @@
 
             <!-- Step 4: General Questions -->
             <div class="wizard-step-content d-none" data-step="4">
-              <h5 class="fw-bold mb-3"><i class="bi bi-question-circle text-green me-2"></i>Product General Questions</h5>
-              <p class="text-muted mb-4">Please answer these basic questions to assess the device's condition before running the AI model scan.</p>
-              <div class="row g-3">
-                <div class="col-md-6">
-                  <div class="form-floating mb-3">
-                    <select class="form-select" id="qPowerOn">
-                      <option value="yes">Yes - Powers on fully</option>
-                      <option value="intermittent">Intermittent / Boot Loop</option>
-                      <option value="no">No - Completely dead</option>
-                    </select>
-                    <label for="qPowerOn">Does the device power on?</label>
+              <div class="row">
+                <div class="col-md-6 border-end">
+                  <h5 class="fw-bold mb-3"><i class="bi bi-question-circle text-green me-2"></i>Product General Questions</h5>
+                  <p class="text-muted mb-4">Please answer these basic questions to assess the device's condition before running the AI model scan.</p>
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <div class="form-floating mb-3">
+                        <select class="form-select" id="qPowerOn">
+                          <option value="yes">Yes - Powers on fully</option>
+                          <option value="intermittent">Intermittent / Boot Loop</option>
+                          <option value="no">No - Completely dead</option>
+                        </select>
+                        <label for="qPowerOn">Does the device power on?</label>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="form-floating mb-3">
+                        <select class="form-select" id="qDamage">
+                          <option value="none">No physical damage</option>
+                          <option value="scratches">Minor scratches/scuffs</option>
+                          <option value="cracks">Cracked casing or screens</option>
+                          <option value="broken">Broken components/Missing keys</option>
+                        </select>
+                        <label for="qDamage">Are there visible cracks or external damage?</label>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="form-floating mb-3">
+                        <select class="form-select" id="qAge">
+                          <option value="new">Less than 1 year</option>
+                          <option value="medium">1 to 3 years</option>
+                          <option value="old">3 to 5 years</option>
+                          <option value="very_old">More than 5 years</option>
+                        </select>
+                        <label for="qAge">How long has this product been in use?</label>
+                      </div>
+                    </div>
+                    <div class="col-12">
+                      <div class="form-floating mb-3">
+                        <select class="form-select" id="qAccessories">
+                          <option value="all">All original cables/accessories included</option>
+                          <option value="partial">Only power adapter/cable included</option>
+                          <option value="none">Device only - No accessories</option>
+                        </select>
+                        <label for="qAccessories">Are accessories or cables included?</label>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="form-floating mb-3">
-                    <select class="form-select" id="qDamage">
-                      <option value="none">No physical damage</option>
-                      <option value="scratches">Minor scratches/scuffs</option>
-                      <option value="cracks">Cracked casing or screens</option>
-                      <option value="broken">Broken components/Missing keys</option>
-                    </select>
-                    <label for="qDamage">Are there visible cracks or external damage?</label>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-floating mb-3">
-                    <select class="form-select" id="qAge">
-                      <option value="new">Less than 1 year</option>
-                      <option value="medium">1 to 3 years</option>
-                      <option value="old">3 to 5 years</option>
-                      <option value="very_old">More than 5 years</option>
-                    </select>
-                    <label for="qAge">How long has this product been in use?</label>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="form-floating mb-3">
-                    <select class="form-select" id="qAccessories">
-                      <option value="all">All original cables/accessories included</option>
-                      <option value="partial">Only power adapter/cable included</option>
-                      <option value="none">Device only - No accessories</option>
-                    </select>
-                    <label for="qAccessories">Are accessories or cables included?</label>
+                  <h5 class="fw-bold mb-3"><i class="bi bi-patch-check text-green me-2"></i>Product Specific Questions</h5>
+                  <p class="text-muted mb-4">Specific checks based on the selected product type.</p>
+                  <div id="productSpecificQuestions" class="row g-3">
+                    <!-- Dynamically populated via js -->
                   </div>
                 </div>
               </div>

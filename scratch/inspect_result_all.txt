@@ -1,0 +1,21 @@
+    Company               Model  Retail Price (₹)  Rebuy Value (₹)  Expected Lifetime (Years)  Scrap Value (₹)
+0     Apple   iPhone 15 Pro Max             14500             6525                          6              870
+1     Apple           iPhone 15             19000             8550                          7             1140
+2     Apple           iPhone 14             23500            10575                          8             1410
+3     Apple           iPhone 13             28000            12600                          9             1680
+4   Samsung    Galaxy S24 Ultra             32500            14625                          5             1950
+5   Samsung          Galaxy S24             37000            16650                          6             2220
+6   Samsung       Galaxy S23 FE             41500            18675                          7             2490
+7   Samsung          Galaxy A55             46000            20700                          8             2760
+8   OnePlus          OnePlus 12             50500            22725                          9             3030
+9   OnePlus         OnePlus 11R             55000            24750                          5             3300
+10   Xiaomi  Redmi Note 13 Pro+             59500            26775                          6             3570
+11   Xiaomi       Redmi Note 13             64000            28800                          7             3840
+12     Vivo             V40 Pro             68500            30825                          8             4110
+13     Vivo                 V30             73000            32850                          9             4380
+14     Oppo         Reno 12 Pro             77500            34875                          5             4650
+15     Oppo            F27 Pro+             82000            36900                          6             4920
+16   Realme                GT 6             86500            38925                          7             5190
+17   Realme        Narzo 70 Pro             91000            40950                          8             5460
+18  Nothing           Phone (2)             95500            42975                          9             5730
+19   Google             Pixel 8            100000            45000                          5             6000

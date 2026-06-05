@@ -11,14 +11,13 @@ const generatePDF = (title, headers, rows) => {
   const colWidth = 180 / headers.length;
   let y = 36;
 
-  doc.setFont('helvetica');
-  doc.setFontStyle('bold');
+  doc.setFont('helvetica', 'bold');
   headers.forEach((h, i) => {
     doc.setFontSize(9);
     doc.text(h, 14 + i * colWidth, y);
   });
 
-  doc.setFontStyle('normal');
+  doc.setFont('helvetica', 'normal');
   y += 6;
 
   rows.forEach((row) => {
