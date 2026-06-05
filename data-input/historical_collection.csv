@@ -1,0 +1,21 @@
+Region,Year,Month,ProductCategory,VolumeCollected_kg,ValueCollected_INR
+Coimbatore,2024,January,Electronics,1200,600000
+Coimbatore,2024,January,Home Appliance,2500,1250000
+Coimbatore,2024,February,Electronics,1350,675000
+Coimbatore,2024,February,Home Appliance,2700,1350000
+Chennai,2024,January,Electronics,1800,900000
+Chennai,2024,January,Home Appliance,3200,1600000
+Chennai,2024,February,Electronics,1900,950000
+Chennai,2024,February,Home Appliance,3100,1550000
+Trichy,2024,January,Electronics,600,300000
+Trichy,2024,January,Home Appliance,1200,600000
+Trichy,2024,February,Electronics,650,325000
+Trichy,2024,February,Home Appliance,1300,650000
+Kochi,2024,January,Electronics,900,450000
+Kochi,2024,January,Home Appliance,1800,900000
+Kochi,2024,February,Electronics,950,475000
+Kochi,2024,February,Home Appliance,1900,950000
+Salem,2024,January,Electronics,500,250000
+Salem,2024,January,Home Appliance,1100,550000
+Salem,2024,February,Electronics,550,275000
+Salem,2024,February,Home Appliance,1050,525000

@@ -33,7 +33,7 @@
           const meta = a.metadata ? JSON.stringify(a.metadata) : '';
           return `
             <tr>
-              <td class="small">${new Date(a.created_at).toLocaleString()}</td>
+              <td class="small">${new Date(a.createdAt || a.created_at).toLocaleString()}</td>
               <td>${a.action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
               <td>${meta || '-'}</td>
               <td>${a.entity_type || '-'}</td>

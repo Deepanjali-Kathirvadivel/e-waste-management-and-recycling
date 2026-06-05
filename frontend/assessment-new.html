@@ -75,22 +75,26 @@
               </div>
               <div class="wizard-step" data-step="4">
                 <div class="step-circle">4</div>
-                <div class="step-label">AI Analysis</div>
+                <div class="step-label">Questions</div>
               </div>
               <div class="wizard-step" data-step="5">
                 <div class="step-circle">5</div>
-                <div class="step-label">Details</div>
+                <div class="step-label">AI Analysis</div>
               </div>
               <div class="wizard-step" data-step="6">
                 <div class="step-circle">6</div>
-                <div class="step-label">Verify</div>
+                <div class="step-label">Details</div>
               </div>
               <div class="wizard-step" data-step="7">
                 <div class="step-circle">7</div>
-                <div class="step-label">Value</div>
+                <div class="step-label">Verify</div>
               </div>
               <div class="wizard-step" data-step="8">
                 <div class="step-circle">8</div>
+                <div class="step-label">Value</div>
+              </div>
+              <div class="wizard-step" data-step="9">
+                <div class="step-circle">9</div>
                 <div class="step-label">Submit</div>
               </div>
             </div>
@@ -181,8 +185,58 @@
               <div class="upload-preview" id="uploadPreview"></div>
             </div>
 
-            <!-- Step 4: AI Analysis Result (includes brand/model extraction) -->
+            <!-- Step 4: General Questions -->
             <div class="wizard-step-content d-none" data-step="4">
+              <h5 class="fw-bold mb-3"><i class="bi bi-question-circle text-green me-2"></i>Product General Questions</h5>
+              <p class="text-muted mb-4">Please answer these basic questions to assess the device's condition before running the AI model scan.</p>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <select class="form-select" id="qPowerOn">
+                      <option value="yes">Yes - Powers on fully</option>
+                      <option value="intermittent">Intermittent / Boot Loop</option>
+                      <option value="no">No - Completely dead</option>
+                    </select>
+                    <label for="qPowerOn">Does the device power on?</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <select class="form-select" id="qDamage">
+                      <option value="none">No physical damage</option>
+                      <option value="scratches">Minor scratches/scuffs</option>
+                      <option value="cracks">Cracked casing or screens</option>
+                      <option value="broken">Broken components/Missing keys</option>
+                    </select>
+                    <label for="qDamage">Are there visible cracks or external damage?</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <select class="form-select" id="qAge">
+                      <option value="new">Less than 1 year</option>
+                      <option value="medium">1 to 3 years</option>
+                      <option value="old">3 to 5 years</option>
+                      <option value="very_old">More than 5 years</option>
+                    </select>
+                    <label for="qAge">How long has this product been in use?</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="form-floating mb-3">
+                    <select class="form-select" id="qAccessories">
+                      <option value="all">All original cables/accessories included</option>
+                      <option value="partial">Only power adapter/cable included</option>
+                      <option value="none">Device only - No accessories</option>
+                    </select>
+                    <label for="qAccessories">Are accessories or cables included?</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 5: AI Analysis Result (includes brand/model extraction) -->
+            <div class="wizard-step-content d-none" data-step="5">
               <h5 class="fw-bold mb-3"><i class="bi bi-robot text-green me-2"></i>AI Analysis Result</h5>
               <p class="text-muted mb-4">Our AI has analyzed the images and extracted the following information.</p>
               <div class="ai-result-card" id="aiResultCard">
@@ -203,21 +257,25 @@
               </div>
             </div>
 
-            <!-- Step 5: Product Details (pre-filled from AI, editable) -->
-            <div class="wizard-step-content d-none" data-step="5">
+            <!-- Step 6: Product Details (pre-filled from AI, editable) -->
+            <div class="wizard-step-content d-none" data-step="6">
               <h5 class="fw-bold mb-3"><i class="bi bi-info-circle text-green me-2"></i>Product Details</h5>
               <p class="text-muted mb-4">Review and edit the AI-extracted details. Fields marked with <span class="badge bg-green-light text-green">AI</span> were detected from your images.</p>
               <input type="hidden" id="selectedProductType" value="">
               <div class="row g-3">
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <input type="text" class="form-control" id="productBrand" placeholder="Brand">
+                    <select class="form-select" id="productBrand">
+                      <option value="">Select Brand</option>
+                    </select>
                     <label for="productBrand">Brand <span class="badge bg-green-light text-green" id="brandBadge" style="font-size:0.65rem;display:none">AI</span></label>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <div class="form-floating">
-                    <input type="text" class="form-control" id="productModel" placeholder="Model">
+                    <select class="form-select" id="productModel">
+                      <option value="">Select Model</option>
+                    </select>
                     <label for="productModel">Model <span class="badge bg-green-light text-green" id="modelBadge" style="font-size:0.65rem;display:none">AI</span></label>
                   </div>
                 </div>
@@ -256,15 +314,15 @@
               </div>
             </div>
 
-            <!-- Step 6: Manual Verification -->
-            <div class="wizard-step-content d-none" data-step="6">
+            <!-- Step 7: Manual Verification -->
+            <div class="wizard-step-content d-none" data-step="7">
               <h5 class="fw-bold mb-3"><i class="bi bi-check2-square text-green me-2"></i>Manual Verification</h5>
               <p class="text-muted mb-4">Review the AI analysis and make manual adjustments as needed.</p>
               <div id="verificationQuestions" class="row g-3"></div>
             </div>
 
-            <!-- Step 7: Value Estimation -->
-            <div class="wizard-step-content d-none" data-step="7">
+            <!-- Step 8: Value Estimation -->
+            <div class="wizard-step-content d-none" data-step="8">
               <h5 class="fw-bold mb-3"><i class="bi bi-currency-rupee text-green me-2"></i>Value Estimation</h5>
               <p class="text-muted mb-4">Estimated value based on product type, condition, and market data.</p>
               <div class="value-estimate mb-4" id="valueEstimateCard">
@@ -300,8 +358,8 @@
               </div>
             </div>
 
-            <!-- Step 8: Submit -->
-            <div class="wizard-step-content d-none" data-step="8">
+            <!-- Step 9: Submit -->
+            <div class="wizard-step-content d-none" data-step="9">
               <h5 class="fw-bold mb-3"><i class="bi bi-check-circle text-green me-2"></i>Review &amp; Submit</h5>
               <p class="text-muted mb-4">Please review the assessment details before final submission.</p>
               <div class="bg-light rounded-3 p-4 mb-4" id="summaryContent">

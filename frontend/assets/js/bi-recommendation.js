@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  runRecommendations();
 });
 
 async function runRecommendations() {

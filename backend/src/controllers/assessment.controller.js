@@ -128,7 +128,23 @@ exports.deleteImage = catchAsync(async (req, res) => {
 });
 
 exports.aiAnalyze = catchAsync(async (req, res) => {
-  const result = aiStub.analyzeImage();
+  const { product_type, filename } = req.body;
+  const cvDetector = require('../../../cv-services');
+  const detection = await cvDetector.detect(product_type || 'Mobile', filename || '');
+
+  const result = {
+    brand: detection.brand,
+    model: detection.model,
+    product_type: product_type || 'Mobile',
+    condition_score: Math.floor(Math.random() * 30) + 70,
+    category: ['TV', 'AC', 'Fridge', 'Washing Machine', 'Fan'].includes(product_type) ? 'Home Appliance' : 'Electronics',
+    recyclability: Math.floor(Math.random() * 20) + 75,
+    data_risk: ['Laptop', 'Mobile'].includes(product_type) ? 'high' : 'low',
+    retailPrice: detection.retailPrice,
+    rebuyValue: detection.rebuyValue,
+    expectedLifetime: detection.expectedLifetime,
+    scrapValue: detection.scrapValue
+  };
   res.json({ analysis: result });
 });
 
@@ -164,4 +180,11 @@ exports.exportData = catchAsync(async (req, res) => {
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', 'attachment; filename=assessments.pdf');
   res.send(buf);
+});
+
+exports.getCatalogByCategory = catchAsync(async (req, res) => {
+  const { category } = req.params;
+  const cvDetector = require('../../../cv-services');
+  const catalog = await cvDetector.getCatalog(category);
+  res.json({ catalog });
 });
