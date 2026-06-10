@@ -50,7 +50,12 @@
       sessionStorage.removeItem('greenera_admin_token');
       sessionStorage.removeItem('greenera_admin');
 
-      window.location.href = 'dashboard.html';
+      // Role-based redirect
+      if (data.user.role === 'hr') {
+        window.location.href = 'hr/dashboard.html';
+      } else {
+        window.location.href = 'dashboard.html';
+      }
     } catch (err) {
       loginError.textContent = err.message || 'Login failed';
       loginError.classList.remove('d-none');

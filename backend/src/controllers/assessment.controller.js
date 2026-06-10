@@ -9,7 +9,35 @@ const aiStub = require('../services/ai-stub.service');
 const reportService = require('../services/report.service');
 
 exports.create = catchAsync(async (req, res) => {
-  const assessment = await Assessment.create({ ...req.body, user_id: req.user.id });
+  const body = { ...req.body };
+
+  if (Array.isArray(body.accessories_available)) {
+    body.accessories_available = body.accessories_available.join(', ');
+  }
+  if (body.specifications && typeof body.specifications === 'object') {
+    body.specifications = JSON.stringify(body.specifications);
+  }
+
+  // Resolve product_type_id from catalog if not provided or invalid
+  if (body.product_type_id) {
+    const catalogEntry = await ProductCatalog.findByPk(body.product_type_id);
+    if (!catalogEntry) body.product_type_id = null;
+  }
+  if (!body.product_type_id && body.product_type) {
+    const catalogEntry = await ProductCatalog.findOne({
+      where: { name: body.product_type }
+    });
+    if (catalogEntry) body.product_type_id = catalogEntry.id;
+  }
+  if (!body.product_type_id && body.product_category) {
+    const catalogEntry = await ProductCatalog.findOne({
+      where: { name: body.product_category }
+    });
+    if (catalogEntry) body.product_type_id = catalogEntry.id;
+  }
+
+  delete body.product_type;
+  const assessment = await Assessment.create({ ...body, user_id: req.user.id });
   await log({ userId: req.user.id, action: 'assessment_created', entityType: 'assessment', entityId: assessment.id });
   res.status(201).json({ assessment });
 });
@@ -94,16 +122,21 @@ exports.submit = catchAsync(async (req, res) => {
     );
   }
 
+  const valueMin = Math.round(valuation.estimated_value * 0.7);
+  const valueMax = Math.round(valuation.estimated_value * 1.3);
+
   await assessment.update({
-    status: 'completed',
+    status: 'pending_hr_approval',
     value_estimate: valuation.estimated_value,
+    value_min: valueMin,
+    value_max: valueMax,
     submitted_at: new Date(),
   });
 
   await log({ userId: req.user.id, action: 'assessment_submitted', entityType: 'assessment', entityId: assessment.id,
-    metadata: { customer: assessment.customer_name, value: valuation.estimated_value } });
+    metadata: { customer: assessment.customer_name, value: valuation.estimated_value, value_min: valueMin, value_max: valueMax } });
 
-  res.json({ assessment, valuation });
+  res.json({ assessment, valuation, value_min: valueMin, value_max: valueMax });
 });
 
 exports.estimate = catchAsync(async (req, res) => {
@@ -138,18 +171,44 @@ exports.deleteImage = catchAsync(async (req, res) => {
 });
 
 exports.aiAnalyze = catchAsync(async (req, res) => {
-  const { product_type, filename } = req.body;
+  const { product_type, filename, questionnaire, productDetails } = req.body;
   const cvDetector = require('../../../cv-services');
   const detection = await cvDetector.detect(product_type || 'Mobile', filename || '');
+
+  const q = questionnaire || {};
+  const pd = productDetails || {};
+
+  const powerScore = q.qPowerOn === 'yes' ? 25 : (q.qPowerOn === 'intermittent' ? 12 : 0);
+  const damageScore = q.qDamage === 'none' ? 25 : (q.qDamage === 'scratches' ? 18 : (q.qDamage === 'cracks' ? 8 : 0));
+  const ageScore = q.qAge === 'new' ? 20 : (q.qAge === 'medium' ? 14 : (q.qAge === 'old' ? 8 : 3));
+  const accessoriesScore = q.qAccessories === 'all' ? 15 : (q.qAccessories === 'partial' ? 8 : 0);
+  const conditionMap = { excellent: 15, good: 12, fair: 8, poor: 4, damaged: 0 };
+  const conditionScore = conditionMap[pd.condition] || 10;
+
+  const total = powerScore + damageScore + ageScore + accessoriesScore + conditionScore;
+  const condition_score = Math.min(Math.round(total), 100);
+  const recyclability = condition_score >= 70 ? Math.floor(Math.random() * 10) + 85
+    : condition_score >= 50 ? Math.floor(Math.random() * 15) + 65
+    : condition_score >= 30 ? Math.floor(Math.random() * 15) + 40
+    : Math.floor(Math.random() * 10) + 20;
+
+  const category = condition_score >= 80 ? 'Reusable'
+    : condition_score >= 60 ? 'Repairable'
+    : condition_score >= 35 ? 'Recyclable'
+    : 'Scrap';
+
+  const data_risk = ['Laptop', 'Mobile', 'Tablet', 'Server'].includes(product_type)
+    ? (pd.hasStorage !== false ? 'high' : 'medium')
+    : 'low';
 
   const result = {
     brand: detection.brand,
     model: detection.model,
     product_type: product_type || 'Mobile',
-    condition_score: Math.floor(Math.random() * 30) + 70,
-    category: ['TV', 'AC', 'Fridge', 'Washing Machine', 'Fan'].includes(product_type) ? 'Home Appliance' : 'Electronics',
-    recyclability: Math.floor(Math.random() * 20) + 75,
-    data_risk: ['Laptop', 'Mobile'].includes(product_type) ? 'high' : 'low',
+    condition_score,
+    category,
+    recyclability: recyclability + '%',
+    data_risk,
     retailPrice: detection.retailPrice,
     rebuyValue: detection.rebuyValue,
     expectedLifetime: detection.expectedLifetime,
@@ -197,4 +256,18 @@ exports.getCatalogByCategory = catchAsync(async (req, res) => {
   const cvDetector = require('../../../cv-services');
   const catalog = await cvDetector.getCatalog(category);
   res.json({ catalog });
+});
+
+exports.updateDetails = catchAsync(async (req, res) => {
+  const assessment = await Assessment.findByPk(req.params.id);
+  if (!assessment) throw new AppError('Assessment not found', 404);
+
+  let detail = await AssessmentDetail.findOne({ where: { assessment_id: assessment.id } });
+  if (!detail) {
+    detail = await AssessmentDetail.create({ assessment_id: assessment.id, ...req.body });
+  } else {
+    await detail.update(req.body);
+  }
+
+  res.json({ detail });
 });

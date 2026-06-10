@@ -46,6 +46,9 @@
           <a href="profile.html" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
             <i class="bi bi-person text-green"></i> My Profile
           </a>
+          <a href="approved-deals.html" class="list-group-item list-group-item-action d-flex align-items-center gap-3">
+            <i class="bi bi-check2-all text-green"></i> Approved Deals
+          </a>
         </div>
       </div>
 
@@ -84,8 +87,8 @@
                 <option value="6">Laptop</option>
                 <option value="7">Mobile</option>
                 <option value="8">Monitor</option>
-                <option value="9">Keyboard</option>
-                <option value="10">Mouse</option>
+                <option value="9">Printer</option>
+                <option value="10">Router</option>
               </select>
             </div>
             <div class="col-md-2">
@@ -135,6 +138,24 @@
     </div>
   </div>
 
+  <!-- Detail Modal -->
+  <div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="bi bi-file-text text-green me-2"></i>Assessment Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="detailModalBody">
+          <div class="text-center py-4 text-muted">Loading...</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -149,6 +170,12 @@
       let filteredData = [];
       let currentPage = 1;
       const rowsPerPage = 5;
+      let rawAssessments = [];
+
+      function mapStatus(val) {
+        const map = { 'pending': 'pending_hr_approval', 'in-progress': 'in_progress', 'completed': 'completed', 'cancelled': 'cancelled' };
+        return map[val] || val;
+      }
 
       async function loadAssessments() {
         try {
@@ -157,20 +184,21 @@
           const statusVal = document.getElementById('statusFilter')?.value;
           const typeVal = document.getElementById('typeFilter')?.value;
           const dateVal = document.getElementById('dateFrom')?.value;
-          if (statusVal && statusVal !== 'all') params.set('status', statusVal);
+          if (searchVal) params.set('search', searchVal);
+          if (statusVal && statusVal !== 'all') params.set('status', mapStatus(statusVal));
           if (typeVal && typeVal !== 'all') params.set('type', typeVal);
           if (dateVal) params.set('date_from', dateVal);
           const res = await fetch(API_BASE + '/assessments?' + params, { headers: getAuthHeaders() });
           const data = await res.json();
-          allAssessments = (data.assessments || []).map(a => ({
-            id: '#' + a.id, date: new Date(a.createdAt || a.created_at).toLocaleDateString(),
-            customer: a.customer_name || '-', product: a.product_catalog?.name || '-',
+          rawAssessments = data.assessments || [];
+          allAssessments = rawAssessments.map(a => ({
+            _id: a.id, id: '#' + a.id, date: new Date(a.createdAt || a.created_at).toLocaleDateString(),
+            customer: a.customer_name || '-', phone: a.customer_phone || '',
+            product: a.product_catalog?.name || '-',
             brand: a.brand || '-', condition: (a.condition || '-').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-            value: a.value_estimate || 0, status: a.status
+            value: a.value_estimate || 0, status: a.status,
+            orderId: a.deal_group_id || '#' + a.id
           }));
-          if (searchVal) {
-            allAssessments = allAssessments.filter(a => a.customer.toLowerCase().includes(searchVal) || a.product.toLowerCase().includes(searchVal));
-          }
           filteredData = [...allAssessments];
           currentPage = 1;
           renderTable();
@@ -179,34 +207,156 @@
         }
       }
 
+      function groupByPhone(items) {
+        const groups = {};
+        items.forEach(a => {
+          const key = a.phone || a.customer;
+          if (!groups[key]) groups[key] = { customer: a.customer, phone: a.phone, items: [], dates: [], ids: [], orderIds: [] };
+          groups[key].items.push(a);
+          groups[key].dates.push(a.date);
+          groups[key].ids.push(a._id);
+          groups[key].orderIds.push(a.orderId);
+        });
+        return Object.values(groups);
+      }
+
       function renderTable() {
-        const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
+        const groups = groupByPhone(filteredData);
+        const totalPages = Math.ceil(groups.length / rowsPerPage) || 1;
         if (currentPage > totalPages) currentPage = totalPages;
         const start = (currentPage - 1) * rowsPerPage;
         const end = start + rowsPerPage;
-        const pageData = filteredData.slice(start, end);
+        const pageGroups = groups.slice(start, end);
         const tbody = document.getElementById('historyTableBody');
-        tbody.innerHTML = pageData.length ? pageData.map(a => `
-          <tr>
-            <td class="fw-semibold">${a.id}</td>
-            <td>${a.date}</td>
-            <td>${a.customer}</td>
-            <td>${a.product} (${a.brand})</td>
-            <td><span class="badge bg-${a.condition === 'Excellent' ? 'success' : a.condition === 'Good' ? 'primary' : a.condition === 'Fair' ? 'warning' : 'secondary'}">${a.condition}</span></td>
-            <td>₹${a.value.toLocaleString('en-IN')}</td>
-            <td><span class="status-badge ${a.status}">${a.status.charAt(0).toUpperCase() + a.status.slice(1)}</span></td>
-            <td><button class="btn btn-sm btn-outline-green" onclick="showToast('Assessment ${a.id}')"><i class="bi bi-eye"></i></button></td>
-          </tr>
-        `).join('') : '<tr><td colspan="8" class="text-center text-muted py-4">No assessments found</td></tr>';
-        document.getElementById('tableInfo').textContent = `Showing ${start + 1}-${Math.min(end, filteredData.length)} of ${filteredData.length} entries`;
-        let pagHtml = `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage - 1})">&laquo;</a></li>`;
-        for (let i = 1; i <= totalPages; i++) pagHtml += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
-        pagHtml += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage + 1})">&raquo;</a></li>`;
+
+        if (pageGroups.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No assessments found</td></tr>';
+        } else {
+          let rows = '';
+          pageGroups.forEach(g => {
+            const first = g.items[0];
+            const totalValue = g.items.reduce((sum, a) => sum + a.value, 0);
+            const status = g.items.some(a => a.status === 'hr_approved') ? 'hr_approved' : g.items[0].status;
+            const baseOrderId = g.orderIds[0] ? g.orderIds[0].replace(/-[A-Z]$/, '') : '';
+            rows += `
+              <tr class="group-header" onclick="toggleGroup('group_${g.phone.replace(/[^a-zA-Z0-9]/g, '_')}')" style="cursor:pointer">
+                <td class="fw-semibold">${baseOrderId || g.ids.join(', #')}</td>
+                <td>${g.dates[0]}</td>
+                <td><strong>${g.customer}</strong>${g.phone ? '<br><small class="text-muted">' + g.phone + '</small>' : ''}</td>
+                <td><span class="badge bg-secondary">${g.items.length} product(s)</span></td>
+                <td>-</td>
+                <td class="fw-bold">₹${totalValue.toLocaleString('en-IN')}</td>
+                <td><span class="status-badge ${status}">${status === 'pending_hr_approval' ? 'Pending' : status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span></td>
+                <td><button class="btn btn-sm btn-outline-green" onclick="event.stopPropagation(); window.viewDetail(${g.ids[0]})"><i class="bi bi-eye"></i></button></td>
+              </tr>
+              <tr class="group-detail d-none" id="group_${g.phone.replace(/[^a-zA-Z0-9]/g, '_')}">
+                <td colspan="8" class="p-0">
+                  <table class="table table-sm mb-0 bg-light">
+                    <thead><tr><th>ID</th><th>Product</th><th>Brand</th><th>Condition</th><th>Value</th><th>Status</th><th></th></tr></thead>
+                    <tbody>${g.items.map((a, idx) => `
+                      <tr>
+                        <td>${a.orderId || '#' + a._id}</td>
+                        <td>${a.product}</td>
+                        <td>${a.brand}</td>
+                        <td><span class="badge bg-${a.condition === 'Excellent' ? 'success' : a.condition === 'Good' ? 'primary' : a.condition === 'Fair' ? 'warning' : 'secondary'}">${a.condition}</span></td>
+                        <td>₹${a.value.toLocaleString('en-IN')}</td>
+                        <td><span class="status-badge ${a.status}">${a.status === 'pending_hr_approval' ? 'Pending' : a.status.charAt(0).toUpperCase() + a.status.slice(1)}</span></td>
+                        <td><button class="btn btn-sm btn-outline-green" onclick="event.stopPropagation(); window.viewDetail(${a._id})"><i class="bi bi-eye"></i></button></td>
+                      </tr>
+                    `).join('')}</tbody>
+                  </table>
+                </td>
+              </tr>`;
+          });
+          tbody.innerHTML = rows;
+        }
+
+        document.getElementById('tableInfo').textContent = 'Showing ' + (start + 1) + '-' + Math.min(end, groups.length) + ' of ' + groups.length + ' deal(s)';
+        let pagHtml = '<li class="page-item ' + (currentPage === 1 ? 'disabled' : '') + '"><a class="page-link" href="#" onclick="changePage(' + (currentPage - 1) + ')">&laquo;</a></li>';
+        for (let i = 1; i <= totalPages; i++) pagHtml += '<li class="page-item ' + (i === currentPage ? 'active' : '') + '"><a class="page-link" href="#" onclick="changePage(' + i + ')">' + i + '</a></li>';
+        pagHtml += '<li class="page-item ' + (currentPage === totalPages ? 'disabled' : '') + '"><a class="page-link" href="#" onclick="changePage(' + (currentPage + 1) + ')">&raquo;</a></li>';
         document.getElementById('tablePagination').innerHTML = pagHtml;
       }
 
+      window.toggleGroup = function(id) {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('d-none');
+      };
+
       window.filterTable = function() { loadAssessments(); };
       window.changePage = function(p) { currentPage = p; renderTable(); };
+
+      window.viewDetail = async function(id) {
+        const body = document.getElementById('detailModalBody');
+        body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-green"></div><p class="mt-2 text-muted">Loading...</p></div>';
+        const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+        modal.show();
+
+        try {
+          const res = await fetch(API_BASE + '/assessments/' + id, { headers: getAuthHeaders() });
+          if (!res.ok) throw new Error('Failed');
+          const data = await res.json();
+          const a = data.assessment;
+          const d = a.assessment_detail;
+          const statusClass = a.status === 'pending_hr_approval' ? 'warning' : a.status === 'hr_approved' ? 'success' : a.status === 'hr_rejected' ? 'danger' : 'secondary';
+
+          body.innerHTML = `
+            <div class="row g-3">
+              <div class="col-md-6">
+                <h6 class="fw-bold text-green border-bottom pb-2"><i class="bi bi-person me-2"></i>Customer</h6>
+                <p class="mb-1"><strong>${a.customer_name || '-'}</strong></p>
+                <p class="mb-1 text-muted small">${a.customer_phone || ''}${a.customer_email ? ' | ' + a.customer_email : ''}</p>
+                <p class="mb-0 text-muted small">${[a.customer_address, a.customer_area_category, a.customer_district, a.customer_state].filter(Boolean).join(', ')}${a.customer_pincode ? ' - ' + a.customer_pincode : ''}</p>
+              </div>
+              <div class="col-md-6">
+                <h6 class="fw-bold text-green border-bottom pb-2"><i class="bi bi-box me-2"></i>Product</h6>
+                <p class="mb-1"><strong>${a.brand || '-'} ${a.model || ''}</strong> <span class="badge bg-secondary">${a.product_category || ''}</span></p>
+                <p class="mb-0 text-muted small">${a.product_catalog?.name || a.brand || '-'} | Serial: ${a.serial_number || '-'} | Condition: <span class="badge bg-${a.condition === 'excellent' ? 'success' : a.condition === 'good' ? 'primary' : a.condition === 'fair' ? 'warning' : 'danger'}">${a.condition || '-'}</span></p>
+                <p class="mb-0 text-muted small">Weight: ${a.weight_kg || 0}kg | Warranty: ${a.warranty_status || 'N/A'} | ${a.ownership_type || ''}</p>
+              </div>
+              ${a.customer_address ? `<div class="col-12"><hr class="my-1"><p class="text-muted small mb-0"><strong>Address:</strong> ${a.customer_address}${a.customer_ward_number ? ', Ward ' + a.customer_ward_number : ''}</p></div>` : ''}
+              <div class="col-12"><hr class="my-1"></div>
+              <div class="col-md-4">
+                <div class="p-2 bg-light rounded text-center">
+                  <small class="text-muted">Est. Value</small>
+                  <h5 class="mb-0 fw-bold">₹${(a.value_estimate || 0).toLocaleString('en-IN')}</h5>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-2 bg-light rounded text-center">
+                  <small class="text-muted">Value Range</small>
+                  <h5 class="mb-0 text-green fw-bold">₹${(a.value_min || 0).toLocaleString('en-IN')} - ₹${(a.value_max || 0).toLocaleString('en-IN')}</h5>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="p-2 bg-light rounded text-center">
+                  <small class="text-muted">Status</small>
+                  <h5 class="mb-0"><span class="badge bg-${statusClass} fs-6">${a.status === 'pending_hr_approval' ? 'Pending' : a.status ? a.status.replace(/_/g, ' ') : 'Draft'}</span></h5>
+                </div>
+              </div>
+              ${d ? `<div class="col-12"><hr class="my-1">
+                <h6 class="fw-bold text-green"><i class="bi bi-question-circle me-2"></i>Verification Answers</h6>
+                <div class="row g-2 small">
+                  <div class="col-3">Power: <span class="fw-bold">${d.verification_answers?.power_on || '-'}</span></div>
+                  <div class="col-3">Damage: <span class="fw-bold">${d.verification_answers?.damage || '-'}</span></div>
+                  <div class="col-3">Age: <span class="fw-bold">${d.verification_answers?.age || '-'}</span></div>
+                  <div class="col-3">Accessories: <span class="fw-bold">${d.verification_answers?.accessories || '-'}</span></div>
+                </div>
+              </div>` : ''}
+              ${a.customer_expected_value ? `<div class="col-12"><hr class="my-1">
+                <p class="mb-0"><strong>Customer Expected Value:</strong> <span class="fw-bold text-info">₹${a.customer_expected_value.toLocaleString('en-IN')}</span></p>
+              </div>` : ''}
+              ${a.receipt_number ? `<div class="col-12"><hr class="my-1">
+                <p class="mb-0 small text-muted">Deal: ${a.deal_number || '-'} | Receipt: ${a.receipt_number || '-'} | Collection: ${a.collection_number || '-'}</p>
+              </div>` : ''}
+              <div class="col-12"><hr class="my-1">
+                <small class="text-muted">Created: ${new Date(a.created_at || a.createdAt).toLocaleString()}${a.submitted_at ? ' | Submitted: ' + new Date(a.submitted_at).toLocaleString() : ''}</small>
+              </div>
+            </div>`;
+        } catch (e) {
+          body.innerHTML = '<div class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle fs-1"></i><p class="mt-2">Failed to load details</p></div>';
+        }
+      };
 
       window.exportPDF = async function() {
         try {

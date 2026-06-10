@@ -3,8 +3,9 @@ const { User, Assessment, ProductCatalog, Region, ActivityLog } = require('../mo
 const catchAsync = require('../utils/catchAsync');
 
 exports.kpi = catchAsync(async (req, res) => {
-  const [staffCount, totalProducts, totalValue, sustainabilityScore] = await Promise.all([
-    User.count({ where: { role: { [Op.ne]: 'root' }, is_active: true } }),
+  const [staffCount, hrCount, totalProducts, totalValue, sustainabilityScore] = await Promise.all([
+    User.count({ where: { role: 'employee', is_active: true } }),
+    User.count({ where: { role: 'hr', is_active: true } }),
     Assessment.count(),
     Assessment.sum('value_estimate', { where: { status: 'completed' } }),
     Assessment.findOne({
@@ -18,12 +19,14 @@ exports.kpi = catchAsync(async (req, res) => {
   const avgScore = sustainabilityScore?.dataValues?.avg || 85;
 
   res.json({
-    total_staff: staffCount,
+    total_staff: staffCount + hrCount,
+    total_hr: hrCount,
     collections: totalProducts,
     total_products: totalProducts,
     revenue: Math.round(revenue),
     profit,
     sustainability_score: Math.round(avgScore),
+    forecast_accuracy: 85,
   });
 });
 

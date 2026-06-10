@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { Op, fn, col } = require('sequelize');
 const { Region, ForecastResult, ForecastData, User } = require('../models');
 const catchAsync = require('../utils/catchAsync');
 const pagination = require('../utils/pagination');
@@ -31,7 +32,7 @@ exports.dashboard = catchAsync(async (req, res) => {
   const regions = await Region.findAll({ where: { type: 'city' } });
   const totalWaste = await ForecastResult.sum('forecasted_waste') || 0;
   const avgGrowth = await ForecastResult.findOne({
-    attributes: [[require('sequelize').fn('AVG', require('sequelize').col('growth_rate')), 'avg']],
+    attributes: [[fn('AVG', col('growth_rate')), 'avg']],
   });
   const predictedRevenue = await ForecastResult.sum('predicted_revenue') || 0;
 

@@ -25,11 +25,14 @@
     try {
       const kpi = await (await fetch(API_BASE + '/admin/dashboard/kpi', { headers })).json();
       document.getElementById('kpiStaff').textContent = (kpi.total_staff || 0).toLocaleString();
+      document.getElementById('kpiHr').textContent = (kpi.total_hr || 0).toLocaleString();
       document.getElementById('kpiCollections').textContent = (kpi.collections || 0).toLocaleString();
       document.getElementById('kpiProducts').textContent = (kpi.total_products || 0).toLocaleString();
       document.getElementById('kpiRevenue').textContent = '\u20B9' + (kpi.revenue || 0).toLocaleString('en-IN');
       document.getElementById('kpiProfit').textContent = '\u20B9' + (kpi.profit || 0).toLocaleString('en-IN');
       document.getElementById('kpiScore').textContent = kpi.sustainability_score || 0;
+      const forecastEl = document.getElementById('kpiForecast');
+      if (forecastEl) forecastEl.textContent = (kpi.forecast_accuracy || 85) + '%';
 
       const charts = await (await fetch(API_BASE + '/admin/dashboard/charts', { headers })).json();
       renderCharts(charts);

@@ -1,6 +1,6 @@
 const multer = require('multer');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
 const assessmentStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -8,7 +8,7 @@ const assessmentStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    cb(null, `assessment_${uuidv4()}${ext}`);
+    cb(null, `assessment_${crypto.randomUUID()}${ext}`);
   },
 });
 
@@ -18,7 +18,7 @@ const forecastStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    cb(null, `forecast_${uuidv4()}${ext}`);
+    cb(null, `forecast_${crypto.randomUUID()}${ext}`);
   },
 });
 

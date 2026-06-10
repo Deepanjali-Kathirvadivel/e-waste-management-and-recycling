@@ -927,6 +927,25 @@ a:hover { color: var(--primary-green-dark); }
   cursor: pointer;
 }
 
+.product-upload-zone {
+  border: 1px solid #E5E7EB;
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #FAFAFA;
+}
+
+.ai-result-card-sm .ai-analysis-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid #F3F4F6;
+  font-size: 0.85rem;
+}
+.ai-result-card-sm .ai-analysis-item:last-child { border-bottom: none; }
+.ai-result-card-sm .ai-analysis-item .label { color: #6B7280; }
+.ai-result-card-sm .ai-analysis-item .value { color: #374151; font-weight: 500; }
+
 /* AI Analysis Result */
 .ai-result-card {
   background: linear-gradient(135deg, #F0FFF4 0%, #E6FFFA 100%);
@@ -958,19 +977,6 @@ a:hover { color: var(--primary-green-dark); }
 .ai-analysis-item:last-child { border-bottom: none; }
 .ai-analysis-item .label { color: var(--medium-gray); font-size: 0.9rem; }
 .ai-analysis-item .value { font-weight: 600; color: var(--dark-gray); }
-
-/* Value Estimation */
-.value-estimate {
-  background: linear-gradient(135deg, var(--primary-green) 0%, #059669 100%);
-  border-radius: var(--radius-md);
-  padding: 2rem;
-  text-align: center;
-  color: var(--white);
-}
-
-.value-estimate h6 { opacity: 0.85; font-weight: 500; margin-bottom: 0.5rem; }
-.value-estimate h2 { font-size: 3rem; font-weight: 800; margin-bottom: 0.25rem; }
-.value-estimate p { opacity: 0.75; font-size: 0.9rem; margin-bottom: 0; }
 
 /* ───── Assessment History ───── */
 .filter-section {
@@ -1165,3 +1171,29 @@ a:hover { color: var(--primary-green-dark); }
   .wizard-footer .btn { width: 100%; }
   .export-btns { flex-wrap: wrap; }
 }
+
+/* Category Tabs */
+.category-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.category-tab { font-size: 0.8rem; font-weight: 600; padding: 4px 14px; border-radius: 20px; letter-spacing: 0.5px; }
+.category-tab.active { background: var(--primary-green); color: #fff; border-color: var(--primary-green); }
+
+/* Valuation Cards */
+.value-estimate { border-radius: var(--radius-md); padding: 1.5rem; box-shadow: var(--shadow-md); text-align: center; color: #fff; }
+.value-estimate h6 { font-size: 0.85rem; margin-bottom: 0.5rem; opacity: 0.9; }
+.value-estimate h2 { font-weight: 800; margin-bottom: 0; font-size: 2.5rem; }
+.value-estimate small { opacity: 0.85; display: block; margin-top: 0.25rem; }
+.value-estimate.min-card { background: linear-gradient(135deg, #059669 0%, #10B981 100%); }
+.value-estimate.max-card { background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%); }
+
+/* Product List (Multi-product) */
+.product-list-item { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid var(--light-gray-2); border-radius: var(--radius-sm); margin-bottom: 6px; cursor: pointer; transition: var(--transition); background: var(--white); }
+.product-list-item:hover { border-color: var(--primary-green); background: var(--primary-green-bg); }
+.product-list-item.active { border-color: var(--primary-green); background: var(--primary-green-bg); border-width: 2px; }
+
+/* HR Badge */
+.badge-hr { background: #F59E0B; color: #fff; }
+
+/* Status badges for HR workflow */
+.status-badge.pending_hr_approval { background: #FEF3C7; color: #92400E; }
+.status-badge.hr_approved { background: #D1FAE5; color: #065F46; }
+.status-badge.hr_rejected { background: #FEE2E2; color: #991B1B; }

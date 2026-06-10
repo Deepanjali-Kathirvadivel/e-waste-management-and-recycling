@@ -21,6 +21,8 @@
       document.getElementById('kpiAssessments').textContent = (kpi.total_assessments || 0).toLocaleString();
       document.getElementById('kpiValue').textContent = '\u20B9' + (kpi.collection_value || 0).toLocaleString();
       document.getElementById('kpiPending').textContent = kpi.pending_assessments || 0;
+      const pQ = document.getElementById('kpiPendingQuotations');
+      if (pQ) pQ.textContent = kpi.pending_quotations || 0;
 
       const trend = await (await fetch(API_BASE + '/dashboard/charts/trend', { headers: getAuthHeaders() })).json();
       renderTrendChart(trend);

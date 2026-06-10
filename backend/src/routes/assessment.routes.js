@@ -5,7 +5,7 @@ const validate = require('../middleware/validate');
 const { createAssessmentSchema, updateAssessmentSchema } = require('../validators/assessment.validator');
 const { uploadAssessment } = require('../config/upload');
 
-router.post('/', auth, rbac('employee', 'admin'), validate(createAssessmentSchema), ctrl.create);
+router.post('/', auth, rbac('employee', 'admin', 'hr'), validate(createAssessmentSchema), ctrl.create);
 router.get('/', auth, ctrl.list);
 router.get('/export', auth, ctrl.exportData);
 router.get('/:id', auth, ctrl.getOne);
@@ -17,5 +17,6 @@ router.post('/upload-image', auth, uploadAssessment.single('image'), ctrl.upload
 router.delete('/:id/images/:imageId', auth, ctrl.deleteImage);
 router.post('/ai-analyze', auth, ctrl.aiAnalyze);
 router.get('/catalog/:category', auth, ctrl.getCatalogByCategory);
+router.put('/:id/details', auth, ctrl.updateDetails);
 
 module.exports = router;

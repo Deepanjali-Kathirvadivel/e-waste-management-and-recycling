@@ -1,6 +1,6 @@
 module.exports = {
-  USER_ROLES: ['root', 'admin', 'center_manager', 'employee'],
-  ASSESSMENT_STATUS: ['draft', 'in_progress', 'completed', 'cancelled'],
+  USER_ROLES: ['root', 'admin', 'hr', 'center_manager', 'employee'],
+  ASSESSMENT_STATUS: ['draft', 'in_progress', 'completed', 'cancelled', 'pending_hr_approval', 'hr_approved', 'hr_rejected'],
   PRODUCT_CONDITIONS: ['excellent', 'good', 'fair', 'poor', 'damaged'],
   CLASSIFICATIONS: ['reusable', 'repairable', 'recyclable', 'scrap'],
   FACILITY_TYPES: ['collection_center', 'preprocessing_unit', 'dismantling', 'recovery'],

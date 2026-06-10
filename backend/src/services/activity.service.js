@@ -1,4 +1,4 @@
-const { ActivityLog } = require('../models');
+const { ActivityLog, User } = require('../models');
 
 const log = async ({ userId, action, entityType, entityId, metadata }) => {
   try {
@@ -20,7 +20,7 @@ const getAllRecent = async (limit = 20) => {
   return ActivityLog.findAll({
     order: [['created_at', 'DESC']],
     limit,
-    include: [{ association: 'user', attributes: ['full_name', 'role'] }],
+    include: [{ model: User, attributes: ['full_name', 'role'] }],
   });
 };
 
