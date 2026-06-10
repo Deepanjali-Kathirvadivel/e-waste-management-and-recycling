@@ -14,5 +14,6 @@ router.use('/regions', require('./region.routes'));
 router.use('/facilities', require('./facility.routes'));
 router.use('/logistics', require('./logistics.routes'));
 router.use('/data/import', require('./dataImport.routes'));
+router.use('/hr', require('./hr.routes'));
 
 module.exports = router;

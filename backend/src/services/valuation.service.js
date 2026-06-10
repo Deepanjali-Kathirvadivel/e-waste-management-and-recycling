@@ -1,7 +1,7 @@
 const basePrices = {
   'Television': 5000, 'Air Conditioner': 8000, 'Refrigerator': 7000,
   'Washing Machine': 4500, 'Fan': 800, 'Laptop': 12000, 'Mobile': 5000,
-  'Monitor': 3000, 'Keyboard': 300, 'Mouse': 150,
+  'Monitor': 3000,
 };
 
 const conditionMultipliers = {

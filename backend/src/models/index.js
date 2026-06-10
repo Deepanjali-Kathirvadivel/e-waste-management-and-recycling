@@ -17,8 +17,10 @@ Region.hasMany(User, { foreignKey: 'region_id' });
 
 Assessment.belongsTo(User, { foreignKey: 'user_id' });
 User.hasMany(Assessment, { foreignKey: 'user_id' });
+Assessment.belongsTo(User, { as: 'approver', foreignKey: 'approved_by' });
 Assessment.belongsTo(ProductCatalog, { foreignKey: 'product_type_id' });
 ProductCatalog.hasMany(Assessment, { foreignKey: 'product_type_id' });
+Assessment.belongsTo(Facility, { as: 'destination', foreignKey: 'destination_id' });
 
 Assessment.hasMany(AssessmentImage, { foreignKey: 'assessment_id' });
 AssessmentImage.belongsTo(Assessment, { foreignKey: 'assessment_id' });

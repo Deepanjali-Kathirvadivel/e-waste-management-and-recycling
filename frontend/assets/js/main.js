@@ -23,6 +23,12 @@ function checkAuth() {
     window.location.href = 'login.html';
     return null;
   }
+  const path = window.location.pathname.replace(/\\/g, '/');
+  if (user.role === 'hr' && !path.includes('/hr/') && !path.includes('login.html') && !path.includes('admin/')) {
+    const base = path.substring(0, path.lastIndexOf('/') + 1);
+    window.location.href = base + 'hr/dashboard.html';
+    return null;
+  }
   return user;
 }
 
@@ -34,8 +40,9 @@ function logout() {
   sessionStorage.removeItem('greenera_admin_token');
   sessionStorage.removeItem('greenera_admin');
   
-  if (window.location.pathname.includes('/admin/')) {
-    const parts = window.location.pathname.split('/admin/');
+  const path = window.location.pathname.replace(/\\/g, '/');
+  if (path.includes('/admin/')) {
+    const parts = path.split('/admin/');
     const afterAdmin = parts[1] || '';
     const slashCount = (afterAdmin.match(/\//g) || []).length;
     let prefix = '';
@@ -43,6 +50,8 @@ function logout() {
       prefix += '../';
     }
     window.location.href = prefix + 'login.html';
+  } else if (path.includes('/hr/')) {
+    window.location.href = '../login.html';
   } else {
     window.location.href = 'login.html';
   }

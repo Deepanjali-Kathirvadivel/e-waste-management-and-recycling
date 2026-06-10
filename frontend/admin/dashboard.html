@@ -18,6 +18,7 @@
       <nav class="nav flex-column">
         <a class="nav-link active" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
         <a class="nav-link" href="staff-management.html"><i class="bi bi-people"></i> Staff Management</a>
+        <a class="nav-link" href="staff-management.html?role=hr"><i class="bi bi-person-badge"></i> HR Management</a>
         <a class="nav-link" href="reusability-center.html"><i class="bi bi-arrow-repeat"></i> Reusability Center</a>
         <a class="nav-link" href="analytics.html"><i class="bi bi-graph-up"></i> Reusability Analytics</a>
       </nav>
@@ -76,13 +77,16 @@
       <div class="admin-content">
         <div class="row g-3 mb-4">
           <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon green"><i class="bi bi-people"></i></div><p class="kpi-label">Total Staff</p><h3 class="kpi-value" id="kpiStaff">0</h3><span class="kpi-sub">6 new this month</span></div>
+            <div class="admin-kpi"><div class="kpi-icon green"><i class="bi bi-people"></i></div><p class="kpi-label">Total Staff</p><h3 class="kpi-value" id="kpiStaff">0</h3><span class="kpi-sub"><span id="kpiStaffChange">Active employees</span></span></div>
+          </div>
+          <div class="col-md-4 col-xl-2">
+            <div class="admin-kpi"><div class="kpi-icon purple"><i class="bi bi-person-badge"></i></div><p class="kpi-label">Total HR</p><h3 class="kpi-value" id="kpiHr">0</h3><span class="kpi-sub">HR officers</span></div>
           </div>
           <div class="col-md-4 col-xl-2">
             <div class="admin-kpi"><div class="kpi-icon blue"><i class="bi bi-truck"></i></div><p class="kpi-label">Collections</p><h3 class="kpi-value" id="kpiCollections">0</h3><span class="kpi-sub">+12% vs last month</span></div>
           </div>
           <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon orange"><i class="bi bi-box-seam"></i></div><p class="kpi-label">Total Products</p><h3 class="kpi-value" id="kpiProducts">0</h3><span class="kpi-sub">12,450 assessed</span></div>
+            <div class="admin-kpi"><div class="kpi-icon orange"><i class="bi bi-box-seam"></i></div><p class="kpi-label">Total Products</p><h3 class="kpi-value" id="kpiProducts">0</h3><span class="kpi-sub">Assessed</span></div>
           </div>
           <div class="col-md-4 col-xl-2">
             <div class="admin-kpi"><div class="kpi-icon purple"><i class="bi bi-currency-rupee"></i></div><p class="kpi-label">Revenue</p><h3 class="kpi-value" id="kpiRevenue">₹0</h3><span class="kpi-sub">+8% this quarter</span></div>
@@ -91,7 +95,10 @@
             <div class="admin-kpi"><div class="kpi-icon red"><i class="bi bi-graph-up-arrow"></i></div><p class="kpi-label">Profit</p><h3 class="kpi-value" id="kpiProfit">₹0</h3><span class="kpi-sub">+15% margin</span></div>
           </div>
           <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon teal"><i class="bi bi-leaf"></i></div><p class="kpi-label">Sustainability Score</p><h3 class="kpi-value" id="kpiScore">0</h3><span class="kpi-sub">A+ rating</span></div>
+            <div class="admin-kpi"><div class="kpi-icon teal"><i class="bi bi-leaf"></i></div><p class="kpi-label">Sustainability</p><h3 class="kpi-value" id="kpiScore">0</h3><span class="kpi-sub">Score</span></div>
+          </div>
+          <div class="col-md-4 col-xl-2">
+            <div class="admin-kpi"><div class="kpi-icon cyan"><i class="bi bi-graph-up-arrow"></i></div><p class="kpi-label">Forecast Accuracy</p><h3 class="kpi-value" id="kpiForecast">85%</h3><span class="kpi-sub">Last 12 months</span></div>
           </div>
         </div>
 

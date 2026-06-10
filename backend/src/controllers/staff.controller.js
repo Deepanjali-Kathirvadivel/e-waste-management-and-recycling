@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { Op } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 const { User, Assessment, Region } = require('../models');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
@@ -52,7 +52,7 @@ exports.getOne = catchAsync(async (req, res) => {
     Assessment.count({ where: { user_id: user.id } }),
     Assessment.count({ where: { user_id: user.id, created_at: { [Op.gte]: new Date(new Date().setDate(1)) } } }),
     Assessment.sum('value_estimate', { where: { user_id: user.id, status: 'completed' } }),
-    Assessment.findOne({ where: { user_id: user.id }, attributes: [[require('sequelize').fn('AVG', require('sequelize').col('ai_score')), 'avg']] }),
+    Assessment.findOne({ where: { user_id: user.id }, attributes: [[fn('AVG', col('ai_score')), 'avg']] }),
   ]);
 
   res.json({ staff: user, stats: { assessments_count: assessmentsCount, collections_count: collectionsCount, total_value: totalValue || 0, avg_rating: avgRating?.dataValues?.avg || 85 } });

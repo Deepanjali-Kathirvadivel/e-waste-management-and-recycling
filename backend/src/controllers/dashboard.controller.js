@@ -8,10 +8,13 @@ exports.staffKPI = catchAsync(async (req, res) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [todayCount, totalCount, pendingCount, activities] = await Promise.all([
+  const [todayCount, totalCount, draftCount, pendingHrCount, approvedCount, rejectedCount, activities] = await Promise.all([
     Assessment.count({ where: { user_id: userId, created_at: { [Op.gte]: today } } }),
     Assessment.count({ where: { user_id: userId } }),
     Assessment.count({ where: { user_id: userId, status: { [Op.in]: ['draft', 'in_progress'] } } }),
+    Assessment.count({ where: { user_id: userId, status: 'pending_hr_approval' } }),
+    Assessment.count({ where: { user_id: userId, status: 'hr_approved' } }),
+    Assessment.count({ where: { user_id: userId, status: 'hr_rejected' } }),
     getRecent(userId, 10),
   ]);
 
@@ -21,7 +24,10 @@ exports.staffKPI = catchAsync(async (req, res) => {
     today_collections: todayCount,
     total_assessments: totalCount,
     collection_value: totalValue || 0,
-    pending_assessments: pendingCount,
+    pending_assessments: draftCount,
+    pending_quotations: pendingHrCount,
+    approved_quotations: approvedCount,
+    rejected_quotations: rejectedCount,
     activities,
   });
 });

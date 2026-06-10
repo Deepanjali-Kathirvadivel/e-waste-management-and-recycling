@@ -30,6 +30,8 @@ async function seed() {
       { username: 'chennai_mgr', email: 'chennai@greenera.in', password_hash: hash, full_name: 'Chennai Center Manager', phone: '9876543213', role: 'center_manager', region_id: 2 },
       { username: 'trichy_mgr', email: 'trichy@greenera.in', password_hash: hash, full_name: 'Trichy Center Manager', phone: '9876543214', role: 'center_manager', region_id: 3 },
       { username: 'employee', email: 'employee@greenera.in', password_hash: adminHash, full_name: 'Staff User', phone: '9876543215', role: 'employee', region_id: 1 },
+      { username: 'hr_user', email: 'hr@greenera.in', password_hash: adminHash, full_name: 'HR Manager', phone: '9876543220', role: 'hr', region_id: 1 },
+      { username: 'hr_senior', email: 'hr.senior@greenera.in', password_hash: hash, full_name: 'Senior HR Officer', phone: '9876543221', role: 'hr', region_id: 2 },
       { username: 'emp_priya', email: 'priya@greenera.in', password_hash: hash, full_name: 'Priya Sharma', phone: '9876543216', role: 'employee', region_id: 1 },
       { username: 'emp_ravi', email: 'ravi@greenera.in', password_hash: hash, full_name: 'Ravi Kumar', phone: '9876543217', role: 'employee', region_id: 2 },
       { username: 'emp_sneha', email: 'sneha@greenera.in', password_hash: hash, full_name: 'Sneha Patel', phone: '9876543218', role: 'employee', region_id: 3 },
@@ -47,8 +49,6 @@ async function seed() {
       { name: 'Laptop', category: 'Electronics', icon: 'laptop', base_price: 12000 },
       { name: 'Mobile', category: 'Electronics', icon: 'mobile', base_price: 5000 },
       { name: 'Monitor', category: 'Electronics', icon: 'monitor', base_price: 3000 },
-      { name: 'Keyboard', category: 'Accessories', icon: 'keyboard', base_price: 300 },
-      { name: 'Mouse', category: 'Accessories', icon: 'mouse', base_price: 150 },
     ]);
     console.log(`Created ${products.length} product types`);
 
@@ -86,7 +86,8 @@ async function seed() {
       const user = users[Math.floor(Math.random() * 5) + 5];
       const conditionVal = conditions[Math.floor(Math.random() * conditions.length)];
       const classVal = classifications[Math.floor(Math.random() * classifications.length)];
-      const statusVal = Math.random() > 0.15 ? 'completed' : (Math.random() > 0.5 ? 'draft' : 'in_progress');
+      const statusRand = Math.random();
+const statusVal = statusRand > 0.5 ? 'completed' : (statusRand > 0.3 ? 'pending_hr_approval' : (statusRand > 0.15 ? 'hr_approved' : (Math.random() > 0.5 ? 'draft' : 'in_progress')));
       
       // Multi-peak up and down fluctuation: Jan (15), Feb (32) [up], Mar (20) [down], Apr (45) [up], May (25) [down], Jun (38) [up]
       let mOffset = 0;
@@ -200,7 +201,7 @@ async function seed() {
     console.log('  Admin:    admin / Admin@123');
     console.log('  Employee: employee / Admin@123');
     console.log(`  All seeded users: password = "password" (except root/admin/employee)`);
-    console.log(`\nServer: http://localhost:${process.env.PORT || 5000}`);
+    console.log(`\nServer: http://localhost:${process.env.PORT || 5400}`);
 
   } catch (err) {
     console.error('Seed error:', err);
