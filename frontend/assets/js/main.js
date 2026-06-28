@@ -24,9 +24,9 @@ function checkAuth() {
     return null;
   }
   const path = window.location.pathname.replace(/\\/g, '/');
-  if (user.role === 'manager' && !path.includes('/hr/') && !path.includes('login.html') && !path.includes('admin/')) {
+  if (user.role === 'manager' && !path.includes('/manager/') && !path.includes('login.html') && !path.includes('admin/')) {
     const base = path.substring(0, path.lastIndexOf('/') + 1);
-    window.location.href = base + 'hr/dashboard.html';
+    window.location.href = base + 'manager/dashboard.html';
     return null;
   }
   if (user.role === 'supply_chain' && !path.includes('/supply-chain/') && !path.includes('login.html') && !path.includes('admin/')) {
@@ -60,7 +60,7 @@ function logout() {
       prefix += '../';
     }
     window.location.href = prefix + 'login.html';
-  } else if (path.includes('/hr/')) {
+  } else if (path.includes('/manager/') || path.includes('/hr/') || path.includes('/hub/') || path.includes('/supply-chain/')) {
     window.location.href = '../login.html';
   } else {
     window.location.href = 'login.html';
@@ -177,6 +177,33 @@ function showToast(message, type = 'success') {
     toast.style.transition = 'opacity 0.3s';
     setTimeout(() => toast.remove(), 300);
   }, 3500);
+}
+
+// ───── Notification polling ─────
+function startNotificationPolling(intervalMs = 30000) {
+  let badge = document.getElementById('notifBadge');
+  let bell = document.getElementById('notifBell');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.id = 'notifBadge';
+    badge.style.cssText = 'position:absolute;top:-4px;right:-6px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;border-radius:50%;min-width:18px;height:18px;display:flex;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 2px 4px rgba(0,0,0,0.2)';
+    if (bell) {
+      bell.style.position = 'relative';
+      bell.appendChild(badge);
+    }
+  }
+  async function poll() {
+    try {
+      const res = await fetch(API_BASE + '/notifications/unread-count', { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (badge) {
+        badge.textContent = data.count || '';
+        badge.style.display = data.count > 0 ? 'flex' : 'none';
+      }
+    } catch (e) { /* ignore */ }
+  }
+  poll();
+  setInterval(poll, intervalMs);
 }
 
 const style = document.createElement('style');

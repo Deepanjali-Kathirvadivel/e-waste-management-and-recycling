@@ -33,11 +33,40 @@
       document.getElementById('kpiScore').textContent = kpi.sustainability_score || 0;
       const forecastEl = document.getElementById('kpiForecast');
       if (forecastEl) forecastEl.textContent = (kpi.forecast_accuracy || 85) + '%';
+      const pendingEl = document.getElementById('kpiPending');
+      if (pendingEl) pendingEl.textContent = (kpi.pending_approvals || 0).toLocaleString();
+      const hubsEl = document.getElementById('kpiHubs');
+      if (hubsEl) hubsEl.textContent = (kpi.hub_count || 0).toLocaleString();
+      const collectedEl = document.getElementById('kpiCollected');
+      if (collectedEl) collectedEl.textContent = (kpi.collected || 0).toLocaleString();
 
       const charts = await (await fetch(API_BASE + '/admin/dashboard/charts', { headers })).json();
       renderCharts(charts);
+      loadHeatmap();
     } catch (e) {
       console.error('Dashboard load error:', e);
+    }
+  }
+
+  async function loadHeatmap() {
+    try {
+      const data = await (await fetch(API_BASE + '/admin/dashboard/heatmap', { headers })).json();
+      const countEl = document.getElementById('heatmapCount');
+      if (countEl) countEl.textContent = (data.total_points || 0) + ' points';
+      const body = document.getElementById('heatmapBody');
+      if (!body) return;
+      if (data.regions && data.regions.length > 0) {
+        let html = '<div class="table-responsive"><table class="table table-sm table-borderless mb-0"><thead><tr><th>Region</th><th>Collections</th><th>Total Value</th></tr></thead><tbody>';
+        data.regions.forEach(r => {
+          html += `<tr><td>${r.region}</td><td>${r.count}</td><td>\u20B9${(r.total_value || 0).toLocaleString('en-IN')}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+        body.innerHTML = html;
+      } else {
+        body.innerHTML = '<div class="text-center text-muted py-4"><i class="bi bi-map fs-1 d-block mb-2"></i> No collection data with GPS coordinates available.</div>';
+      }
+    } catch (e) {
+      console.error('Heatmap load error:', e);
     }
   }
 
@@ -73,7 +102,7 @@
               yAxisID: 'y'
             },
             { 
-              label: 'Revenue (₹)', 
+              label: 'Revenue (\u20B9)', 
               data: ct.revenue || [], 
               borderColor: '#3B82F6', 
               backgroundColor: revenueGradient, 
@@ -112,7 +141,7 @@
                     label += ': ';
                   }
                   if (context.dataset.yAxisID === 'y1') {
-                    label += '₹' + context.raw.toLocaleString('en-IN');
+                    label += '\u20B9' + context.raw.toLocaleString('en-IN');
                   } else {
                     label += context.raw.toLocaleString();
                   }
@@ -141,7 +170,7 @@
               position: 'right',
               title: {
                 display: true,
-                text: 'Revenue (₹)',
+                text: 'Revenue (\u20B9)',
                 color: '#3B82F6',
                 font: { weight: 'bold', size: 11 }
               },
@@ -176,6 +205,21 @@
       data: { labels: rd.map(r => r.label) || ['No Data'], datasets: [{ data: rd.map(r => r.value) || [1], backgroundColor: ['#16A34A','#3B82F6','#F59E0B','#EF4444','#8B5CF6'], borderWidth: 0 }] },
       options: { responsive: true, maintainAspectRatio: true, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 8, font: { size: 10 } } } } }
     });
+
+    const hu = data.hub_utilization || [];
+    if (hu.length > 0) {
+      new Chart(document.getElementById('hubUtilChart'), {
+        type: 'bar',
+        data: {
+          labels: hu.map(h => h.label),
+          datasets: [
+            { label: 'Facilities', data: hu.map(h => h.facilities), backgroundColor: '#3B82F6', borderRadius: 4 },
+            { label: 'Inventory Items', data: hu.map(h => h.inventory), backgroundColor: '#16A34A', borderRadius: 4 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top', labels: { usePointStyle: true, font: { size: 10 } } } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' } }, x: { grid: { display: false } } } }
+      });
+    }
   }
 
   loadDashboard();

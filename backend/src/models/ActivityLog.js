@@ -8,6 +8,10 @@ const ActivityLog = sequelize.define('activity_logs', {
   entity_type: { type: DataTypes.STRING(50) },
   entity_id: { type: DataTypes.INTEGER },
   metadata: { type: DataTypes.JSON },
+  ip_address: { type: DataTypes.STRING(45) },
+  user_agent: { type: DataTypes.STRING(255) },
+  old_value: { type: DataTypes.JSON },
+  new_value: { type: DataTypes.JSON },
 });
 
 module.exports = ActivityLog;

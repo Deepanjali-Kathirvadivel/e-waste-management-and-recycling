@@ -12,9 +12,13 @@
 <body class="dashboard-body">
   <nav class="navbar navbar-expand-lg fixed-top">
     <div class="container-fluid px-4">
-      <a class="navbar-brand" href="#"><i class="bi bi-building"></i> Green Era <span class="badge bg-warning ms-2">Hub</span></a>
+      <a class="navbar-brand" href="#"><i class="bi bi-building"></i> Green Era <span class="badge bg-info ms-2">Hub</span></a>
       <div class="d-flex align-items-center gap-3">
         <span class="text-muted d-none d-md-inline" id="dashboardDate"></span>
+        <a class="text-dark text-decoration-none position-relative" href="#" id="notifBellHub" title="Notifications">
+          <i class="bi bi-bell fs-5 text-green"></i>
+          <span id="hubNotifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;font-size:9px">0</span>
+        </a>
         <div class="dropdown">
           <a class="text-dark text-decoration-none d-flex align-items-center gap-2 dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
             <i class="bi bi-person-circle fs-5 text-green"></i>
@@ -31,24 +35,31 @@
     <div class="row">
       <nav class="col-md-2 d-none d-md-block sidebar"><div class="pt-4">
         <a href="dashboard.html" class="nav-link active"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-        <a href="receiving.html" class="nav-link"><i class="bi bi-inbox me-2"></i>Pending Receiving</a>
+        <a href="receiving.html" class="nav-link"><i class="bi bi-inbox me-2"></i>Receiving</a>
         <a href="inventory.html" class="nav-link"><i class="bi bi-boxes me-2"></i>Inventory</a>
-      </div>
-      <hr>
-      <div class="px-3"><small class="text-muted">Notifications</small><div id="hubNotifBadge" class="mt-1"></div></div>
-      <hr>
-      <div class="px-3"><a href="../dashboard.html" class="nav-link"><i class="bi bi-arrow-left me-2"></i>Back</a></div>
-    </nav>
+        <hr>
+        <div class="px-3"><a href="../dashboard.html" class="nav-link"><i class="bi bi-arrow-left me-2"></i>Back</a></div>
+      </div></nav>
       <main class="col-md-10 ms-sm-auto px-4">
-        <div class="pt-4 pb-2 mb-3 border-bottom"><h1 class="h4">Hub Operations Dashboard</h1></div>
-        <div class="row g-3 mb-4" id="kpiCards">
-          <div class="col-md-3"><div class="card bg-warning bg-opacity-10 border-warning"><div class="card-body text-center"><h3 class="fw-bold text-warning" id="kpiPending">0</h3><small>Pending Receiving</small></div></div></div>
-          <div class="col-md-3"><div class="card bg-info bg-opacity-10 border-info"><div class="card-body text-center"><h3 class="fw-bold text-info" id="kpiInventory">0</h3><small>Total Inventory</small></div></div></div>
-          <div class="col-md-3"><div class="card bg-success bg-opacity-10 border-success"><div class="card-body text-center"><h3 class="fw-bold text-success" id="kpiReceived">0</h3><small>Received Today</small></div></div></div>
-          <div class="col-md-3"><div class="card bg-primary bg-opacity-10 border-primary"><div class="card-body text-center"><h3 class="fw-bold text-primary" id="kpiAnalysis">0</h3><small>Forwarded for Analysis</small></div></div></div>
+        <div class="pt-4 pb-2 mb-3 border-bottom"><h1 class="h4"><i class="bi bi-building me-2"></i>Hub Dashboard</h1></div>
+
+        <!-- KPI Row -->
+        <div class="row g-3 mb-4" id="kpiRow">
+          <div class="col-md-3 col-6"><div class="card border-0 shadow-sm bg-warning bg-opacity-10"><div class="card-body text-center"><div class="display-6 text-warning fw-bold" id="kpiPendingReceive">0</div><small class="text-muted">Pending Receive</small></div></div></div>
+          <div class="col-md-3 col-6"><div class="card border-0 shadow-sm bg-primary bg-opacity-10"><div class="card-body text-center"><div class="display-6 text-primary fw-bold" id="kpiTotalInv">0</div><small class="text-muted">Total Inventory</small></div></div></div>
+          <div class="col-md-3 col-6"><div class="card border-0 shadow-sm bg-success bg-opacity-10"><div class="card-body text-center"><div class="display-6 text-success fw-bold" id="kpiReceivedToday">0</div><small class="text-muted">Received Today</small></div></div></div>
+          <div class="col-md-3 col-6"><div class="card border-0 shadow-sm bg-info bg-opacity-10"><div class="card-body text-center"><div class="display-6 text-info fw-bold" id="kpiForwarded">0</div><small class="text-muted">Forwarded Analysis</small></div></div></div>
         </div>
-        <div class="card"><div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>Recent Deliveries</h6></div>
-        <div class="card-body" id="recentDeliveries"><p class="text-muted">Loading...</p></div></div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-4"><div class="card shadow-sm"><div class="card-header bg-white fw-bold small">Classification Summary</div><div class="card-body" id="classificationSummary"><p class="text-muted small">Loading...</p></div></div></div>
+          <div class="col-md-4"><div class="card shadow-sm"><div class="card-header bg-white fw-bold small">Storage Locations</div><div class="card-body" id="storageSummary"><p class="text-muted small">Loading...</p></div></div></div>
+          <div class="col-md-4"><div class="card shadow-sm"><div class="card-header bg-white fw-bold small">Lifecycle Status</div><div class="card-body" id="lifecycleSummary"><p class="text-muted small">Loading...</p></div></div></div>
+        </div>
+
+        <div class="card shadow-sm"><div class="card-header bg-white fw-bold small"><i class="bi bi-clock me-2"></i>Recent Deliveries</div>
+          <div class="card-body p-0"><div class="table-responsive"><table class="table table-hover mb-0 small"><thead class="table-light"><tr><th>Deal #</th><th>Product</th><th>Delivered By</th><th>Status</th><th>Inventory</th><th>Action</th></tr></thead>
+            <tbody id="recentDeliveriesBody"><tr><td colspan="6" class="text-center text-muted py-3">Loading...</td></tr></tbody></table></div></div></div>
       </main>
     </div>
   </div>
@@ -58,31 +69,60 @@
   (async function() {
     const token = localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token');
     if (!token) { window.location.href = '../login.html'; return; }
-    const headers = { 'Authorization': 'Bearer ' + token };
-    try {
-      const res = await fetch('/api/hub/dashboard', { headers });
-      const data = await res.json();
-      document.getElementById('kpiPending').textContent = data.pending_receiving || 0;
-      document.getElementById('kpiInventory').textContent = data.total_inventory || 0;
-      document.getElementById('kpiReceived').textContent = data.received_today || 0;
-      document.getElementById('kpiAnalysis').textContent = data.forwarded_for_analysis || 0;
+    const h = { 'Authorization': 'Bearer ' + token };
+    const user = JSON.parse(localStorage.getItem('greenera_user') || '{}');
+    document.getElementById('userName').textContent = user.full_name || user.username || 'Staff';
+    document.getElementById('dashboardDate').textContent = new Date().toLocaleDateString('en-IN', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
 
-      let html = '<table class="table table-sm"><thead><tr><th>ID</th><th>Product</th><th>Employee</th><th>Status</th></tr></thead><tbody>';
-      (data.recent_deliveries || []).forEach(d => {
-        html += `<tr><td>#${d.id}</td><td>${d.product_catalog?.name || d.brand || '-'}</td><td>${d.user?.full_name || '-'}</td><td><span class="badge bg-info">${d.status}</span></td></tr>`;
-      });
-      html += '</tbody></table>';
-      if (!data.recent_deliveries?.length) html = '<p class="text-muted">No recent deliveries</p>';
-      document.getElementById('recentDeliveries').innerHTML = html;
-      async function loadNotifBadge() {
-        try {
-          const r = await fetch('/api/notifications/unread-count', { headers: { 'Authorization': 'Bearer ' + token } });
-          const d = await r.json();
-          document.getElementById('hubNotifBadge').innerHTML = '<span class="badge bg-danger">' + (d.count || 0) + ' new</span>';
-        } catch(e) { /* ignore */ }
+    try {
+      const res = await fetch('/api/hub/dashboard', { headers: h });
+      const d = await res.json();
+
+      document.getElementById('kpiPendingReceive').textContent = d.pending_receiving || 0;
+      document.getElementById('kpiTotalInv').textContent = d.total_inventory_items || 0;
+      document.getElementById('kpiReceivedToday').textContent = d.received_today || 0;
+      document.getElementById('kpiForwarded').textContent = d.forwarded_for_analysis || 0;
+
+      // Classification
+      const cls = d.classification_summary || [];
+      let clsHtml = '';
+      cls.forEach(c => { clsHtml += `<div class="d-flex justify-content-between mb-1"><span class="small">${c.classification||'Unknown'}</span><span><strong>${c.count}</strong> <small class="text-muted">\u20B9${(parseFloat(c.total_revenue)||0).toLocaleString('en-IN')}</small></span></div>`; });
+      document.getElementById('classificationSummary').innerHTML = clsHtml || '<p class="text-muted small">No classifications yet</p>';
+
+      // Storage
+      const stor = d.storage_summary || [];
+      let storHtml = '';
+      stor.forEach(s => { storHtml += `<div class="d-flex justify-content-between mb-1"><span class="small">${s.storage_location||'Unassigned'}</span><strong>${s.count}</strong></div>`; });
+      document.getElementById('storageSummary').innerHTML = storHtml || '<p class="text-muted small">No storage assigned</p>';
+
+      // Lifecycle (from KPI data)
+      const lcHtml = `
+        <div class="d-flex justify-content-between mb-1"><span class="small">Pending Storage</span><strong>${d.pending_storage||0}</strong></div>
+        <div class="d-flex justify-content-between mb-1"><span class="small">Under Analysis</span><strong>${d.under_analysis||0}</strong></div>
+        <div class="d-flex justify-content-between mb-1"><span class="small">Completed</span><strong>${d.completed_items||0}</strong></div>`;
+      document.getElementById('lifecycleSummary').innerHTML = lcHtml;
+
+      // Recent deliveries
+      const tbody = document.getElementById('recentDeliveriesBody');
+      const deliveries = d.recent_deliveries || [];
+      if (!deliveries.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">No recent deliveries</td></tr>';
+      } else {
+        tbody.innerHTML = deliveries.map(del => {
+          const inv = del.inventory_item || {};
+          const statusColor = { delivered_to_hub:'warning', received:'primary', reusability_analysis:'info' }[del.status] || 'secondary';
+          return `<tr><td>${del.deal_number||'#'+del.id}</td>
+            <td>${del.product_catalog?.name||del.brand||'-'}</td>
+            <td>${del.user?.full_name||'-'}</td>
+            <td><span class="badge bg-${statusColor}">${del.status.replace(/_/g,' ')}</span></td>
+            <td>${inv.batch_number ? `<span class="badge bg-secondary">${inv.batch_number}</span>` : '<span class="text-muted">-</span>'}</td>
+            <td><a href="receiving.html" class="btn btn-sm btn-outline-primary-green"><i class="bi bi-arrow-right"></i></a></td></tr>`;
+        }).join('');
       }
-      loadNotifBadge();
-    } catch(e) { document.getElementById('recentDeliveries').innerHTML = '<p class="text-danger">Failed to load</p>'; }
+
+      // Notifications
+      try { const nr = await fetch('/api/notifications/unread-count', { headers: h }); const nd = await nr.json(); const b = document.getElementById('hubNotifCount'); if (nd.count>0) { b.textContent=nd.count; b.style.display=''; } } catch(e) {}
+    } catch(e) { document.getElementById('recentDeliveriesBody').innerHTML = '<tr><td colspan="6" class="text-center text-danger py-3">Failed to load</td></tr>'; }
   })();
   </script>
 </body>

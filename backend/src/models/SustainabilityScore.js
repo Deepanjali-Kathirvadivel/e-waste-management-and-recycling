@@ -9,6 +9,8 @@ const SustainabilityScore = sequelize.define('sustainability_scores', {
   recovery_rate: { type: DataTypes.DECIMAL(5, 2) },
   transportation_efficiency: { type: DataTypes.DECIMAL(5, 2) },
   facility_utilization: { type: DataTypes.DECIMAL(5, 2) },
+  environmental_impact: { type: DataTypes.JSON },
+  recovery_rate_history: { type: DataTypes.JSON },
   calculated_at: { type: DataTypes.DATE },
 });
 

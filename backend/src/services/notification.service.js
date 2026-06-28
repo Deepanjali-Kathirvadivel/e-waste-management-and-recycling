@@ -36,7 +36,7 @@ exports.notifyEmployee = async (assessment, type, managerName) => {
              type === 'modified' ? 'Quotation Modified' :
              type === 'hub_assigned' ? 'Hub Assigned' : 'Notification',
       message: type === 'approved'
-        ? `Your quotation #${assessment.id} for ${assessment.customer_name} has been approved by ${managerName} with value ₹${(assessment.hr_approved_value || 0).toLocaleString('en-IN')}.`
+        ? `Your quotation #${assessment.id} for ${assessment.customer_name} has been approved by ${managerName} with value \u20B9${(assessment.hr_approved_value || 0).toLocaleString('en-IN')}.`
         : type === 'rejected'
         ? `Your quotation #${assessment.id} for ${assessment.customer_name} has been rejected by ${managerName}. Reason: ${assessment.rejection_reason || ''}`
         : type === 'modified'
@@ -74,6 +74,69 @@ exports.notifySupplyChain = async (assessment, hubName) => {
 exports.sendReceipt = async (customer, receiptHtml) => {
   console.log(`[EMAIL] Receipt to ${customer.customer_email || customer.customer_phone} (${customer.customer_name}): sent`);
   return true;
+};
+
+exports.notifyForecastReady = async (userId, forecastSummary) => {
+  try {
+    await Notification.create({
+      user_id: userId,
+      type: 'forecast_ready',
+      title: 'Forecast Generation Complete',
+      message: `Forecast for ${forecastSummary.year_range || 'next period'} has been generated. Predicted waste: ${(forecastSummary.total_waste || 0).toLocaleString()} kg.`,
+      metadata: forecastSummary,
+    });
+  } catch (err) {
+    console.error('Notification error:', err.message);
+  }
+};
+
+exports.notifyInventoryAlert = async (inventoryItem, alertType) => {
+  try {
+    const managers = await User.findAll({ where: { role: 'manager', is_active: true }, attributes: ['id'] });
+    const title = alertType === 'low_stock' ? 'Low Stock Alert' : 'Inventory Alert';
+    const message = alertType === 'low_stock'
+      ? `Inventory item #${inventoryItem.id} (Assessment #${inventoryItem.assessment_id}) is low on stock at facility #${inventoryItem.facility_id}.`
+      : `Inventory alert for item #${inventoryItem.id}`;
+    for (const m of managers) {
+      await Notification.create({
+        user_id: m.id,
+        type: alertType,
+        title,
+        message,
+        metadata: { inventory_item_id: inventoryItem.id, assessment_id: inventoryItem.assessment_id, facility_id: inventoryItem.facility_id },
+      });
+    }
+  } catch (err) {
+    console.error('Notification error:', err.message);
+  }
+};
+
+exports.notifySimulationComplete = async (userId, simulationResult) => {
+  try {
+    await Notification.create({
+      user_id: userId,
+      type: 'simulation_complete',
+      title: 'Scenario Simulation Complete',
+      message: `Simulation "${simulationResult.scenario_name}" completed. Projected profit impact: ${simulationResult.projected_profit > 0 ? '+' : ''}\u20B9${(simulationResult.projected_profit || 0).toLocaleString('en-IN')}.`,
+      metadata: simulationResult,
+    });
+  } catch (err) {
+    console.error('Notification error:', err.message);
+  }
+};
+
+exports.notifyAuditAlert = async (userId, auditEvent) => {
+  try {
+    await Notification.create({
+      user_id: userId,
+      type: 'audit_alert',
+      title: auditEvent.title || 'Audit Event',
+      message: auditEvent.message || '',
+      metadata: auditEvent.metadata || {},
+    });
+  } catch (err) {
+    console.error('Notification error:', err.message);
+  }
 };
 
 const buildReceiptHtml = (dealInfo, customer) => `

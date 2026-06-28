@@ -14,6 +14,9 @@
       <a class="navbar-brand" href="dashboard.html"><i class="bi bi-recycle"></i> Green Era Recyclers</a>
       <div class="d-flex align-items-center gap-3">
         <span class="text-muted d-none d-md-inline">Assessment History</span>
+        <a class="text-dark text-decoration-none position-relative" href="assessment-history.html" id="notifBell" title="Notifications">
+          <i class="bi bi-bell fs-5 text-green"></i>
+        </a>
         <div class="dropdown">
           <a class="text-dark text-decoration-none d-flex align-items-center gap-2 dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
             <i class="bi bi-person-circle fs-5 text-green"></i>
@@ -474,6 +477,7 @@
       };
 
       loadAssessments();
+      startNotificationPolling();
     })();
   </script>
 </body>

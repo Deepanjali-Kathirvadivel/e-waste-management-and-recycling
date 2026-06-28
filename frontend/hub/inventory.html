@@ -12,7 +12,7 @@
 <body class="dashboard-body">
   <nav class="navbar navbar-expand-lg fixed-top">
     <div class="container-fluid px-4">
-      <a class="navbar-brand" href="dashboard.html"><i class="bi bi-building"></i> Green Era <span class="badge bg-warning ms-2">Hub</span></a>
+      <a class="navbar-brand" href="dashboard.html"><i class="bi bi-building"></i> Green Era <span class="badge bg-info ms-2">Hub</span></a>
       <div class="d-flex align-items-center gap-3">
         <span class="text-muted d-none d-md-inline" id="dashboardDate"></span>
         <div class="dropdown">
@@ -31,28 +31,46 @@
     <div class="row">
       <nav class="col-md-2 d-none d-md-block sidebar"><div class="pt-4">
         <a href="dashboard.html" class="nav-link"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-        <a href="receiving.html" class="nav-link"><i class="bi bi-inbox me-2"></i>Pending Receiving</a>
+        <a href="receiving.html" class="nav-link"><i class="bi bi-inbox me-2"></i>Receiving</a>
         <a href="inventory.html" class="nav-link active"><i class="bi bi-boxes me-2"></i>Inventory</a>
-      </div>
-      <hr>
-      <div class="px-3"><small class="text-muted">Notifications</small><div id="hubNotifBadge" class="mt-1"></div></div>
-    </nav>
+        <hr>
+        <div class="px-3"><a href="../dashboard.html" class="nav-link"><i class="bi bi-arrow-left me-2"></i>Back</a></div>
+      </div></nav>
       <main class="col-md-10 ms-sm-auto px-4">
-        <div class="pt-4 pb-2 mb-3 border-bottom"><h1 class="h4">Hub Inventory</h1></div>
-        <div class="row g-3 mb-3" id="summaryCards"></div>
+        <div class="pt-4 pb-2 mb-3 border-bottom d-flex justify-content-between align-items-center">
+          <h1 class="h4 mb-0"><i class="bi bi-boxes me-2"></i>Hub Inventory</h1>
+          <div class="d-flex gap-2">
+            <select class="form-select form-select-sm" id="classificationFilter" onchange="loadInventory(1)" style="width:auto">
+              <option value="">All Classifications</option>
+              <option value="reusable">Reusable</option>
+              <option value="repairable">Repairable</option>
+              <option value="recyclable">Recyclable</option>
+              <option value="scrap">Scrap</option>
+            </select>
+            <select class="form-select form-select-sm" id="stockFilter2" onchange="loadInventory(1)" style="width:auto">
+              <option value="">All Status</option>
+              <option value="in_stock">In Stock</option>
+              <option value="under_analysis">Under Analysis</option>
+              <option value="recovered">Recovered</option>
+              <option value="disposed">Disposed</option>
+            </select>
+            <button class="btn btn-sm btn-outline-primary-green" onclick="loadInventory(currentPage)"><i class="bi bi-arrow-clockwise"></i></button>
+          </div>
+        </div>
+        <div class="row g-2 mb-3">
+          <div class="col-md-8" id="classificationCards"></div>
+          <div class="col-md-4"><div class="card bg-light border-0"><div class="card-body py-2 text-center"><span class="fw-bold fs-5" id="totalItemsCount">0</span> <small class="text-muted">Total Items</small></div></div></div>
+        </div>
         <div id="inventoryContent"><p class="text-muted">Loading...</p></div>
       </main>
     </div>
   </div>
-  <!-- History Modal -->
-  <div class="modal fade" id="historyModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Product Movement History</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body" id="historyContent">Loading...</div>
-      </div>
-    </div>
-  </div>
+
+  <!-- Item Detail Modal -->
+  <div class="modal fade" id="itemDetailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title">Inventory Item Detail</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body" id="itemDetailBody">Loading...</div>
+  </div></div></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../assets/js/main.js"></script>
@@ -64,105 +82,115 @@
 
   async function loadInventory(page) {
     try {
-      const res = await fetch('/api/hub/inventory?page=' + (page || currentPage) + '&limit=15', { headers });
+      const cf = document.getElementById('classificationFilter').value;
+      const sf = document.getElementById('stockFilter2').value;
+      const params = new URLSearchParams({ page: page||1, limit: 20 });
+      if (cf) params.set('classification', cf);
+      if (sf) params.set('stock_status', sf);
+      const res = await fetch('/api/hub/inventory?'+params, { headers });
       const data = await res.json();
-      currentPage = data.page || 1;
-      totalPages = data.total_pages || 1;
+      currentPage = data.page || 1; totalPages = data.total_pages || 1;
 
-      if (data.summary) {
-        const colors = { reusable: 'success', repairable: 'info', recyclable: 'warning', scrap: 'danger' };
-        let summaryHtml = '';
-        data.summary.forEach(s => {
-          summaryHtml += '<div class="col-md-3"><div class="card border-' + (colors[s.classification] || 'secondary') + ' bg-opacity-10"><div class="card-body text-center"><h3 class="fw-bold text-' + (colors[s.classification] || 'secondary') + '">' + s.count + '</h3><small>' + s.classification + '</small></div></div></div>';
-        });
-        document.getElementById('summaryCards').innerHTML = summaryHtml;
-      }
-
-      let html = '<table class="table table-hover"><thead><tr><th>ID</th><th>Product</th><th>Classification</th><th>Status</th><th>History</th><th>Actions</th></tr></thead><tbody>';
-      (data.items || []).forEach(item => {
-        const movementCount = item.movement_history ? (typeof item.movement_history === 'string' ? JSON.parse(item.movement_history).length : item.movement_history.length) : 0;
-        const classColor = item.classification === 'reusable' ? 'success' : item.classification === 'repairable' ? 'info' : item.classification === 'recyclable' ? 'warning' : 'danger';
-        html += '<tr>\
-          <td>#' + item.id + '</td>\
-          <td>' + (item.product_catalog?.name || item.brand || '-') + '</td>\
-          <td><span class="badge bg-' + classColor + '">' + (item.classification || 'N/A') + '</span></td>\
-          <td>' + (item.status || '').replace(/_/g, ' ') + '</td>\
-          <td><button class="btn btn-sm btn-outline-secondary" onclick="showHistory(' + item.id + ')"><i class="bi bi-clock-history"></i> ' + movementCount + '</button></td>\
-          <td>\
-            ' + (item.status === 'received' ? '<button class="btn btn-sm btn-outline-primary" onclick="forwardAnalysis(' + item.id + ')"><i class="bi bi-send"></i> Analyze</button>' : '') + '\
-            ' + (item.status === 'reusability_analysis' ? '<button class="btn btn-sm btn-outline-success" onclick="completeAnalysis(' + item.id + ')"><i class="bi bi-check-lg"></i> Complete</button>' : '') + '\
-          </td>\
-        </tr>';
+      // Classification summary cards
+      const cls = data.classification_summary || [];
+      let clsHtml = '<div class="row g-1">';
+      const colorMap = { reusable: 'success', repairable: 'warning', recyclable: 'info', scrap: 'secondary' };
+      cls.forEach(c => {
+        clsHtml += `<div class="col-3"><div class="card border-0 bg-${colorMap[c.classification]||'light'} bg-opacity-10"><div class="card-body text-center py-2"><div class="fw-bold">${c.count}</div><small class="text-muted">${c.classification||'Unknown'}</small><br><small class="fw-bold text-green">\u20B9${(parseFloat(c.total_revenue)||0).toLocaleString('en-IN')}</small></div></div></div>`;
       });
-      html += '</tbody></table>';
+      document.getElementById('classificationCards').innerHTML = clsHtml + '</div>';
+      document.getElementById('totalItemsCount').textContent = data.total || 0;
+
+      // Items table
+      let html = '<div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr><th>Batch</th><th>Product</th><th>Category</th><th>Weight</th><th>Location</th><th>Classification</th><th>Status</th><th>Revenue</th><th>Actions</th></tr></thead><tbody>';
+      (data.items || []).forEach(item => {
+        const a = item.assessment || {};
+        const analysis = a.analysis_result || {};
+        const statusColor = { in_stock:'success', under_analysis:'warning', recovered:'primary', disposed:'secondary', forwarded:'info' }[item.stock_status] || 'secondary';
+        const clsColor = { reusable:'success', repairable:'warning', recyclable:'info', scrap:'secondary' }[analysis.classification] || 'light';
+        const rev = parseFloat(analysis.estimated_revenue) || 0;
+        html += `<tr>
+          <td><small class="text-muted">${item.batch_number||'-'}</small></td>
+          <td><strong>${a.product_catalog?.name||a.brand||'-'}</strong><br><small class="text-muted">${a.brand||''} ${a.model||''}</small></td>
+          <td>${a.product_category||'-'}</td>
+          <td>${item.weight_kg||a.weight_kg||'-'} kg</td>
+          <td>${item.storage_location||'<span class="text-warning">Not set</span>'}</td>
+          <td>${analysis.classification ? `<span class="badge bg-${clsColor}">${analysis.classification}</span>` : '<span class="badge bg-light text-muted">Pending</span>'}</td>
+          <td><span class="badge bg-${statusColor}">${item.stock_status.replace(/_/g,' ')}</span></td>
+          <td class="fw-bold ${rev>0?'text-success':'text-muted'}">${rev>0 ? '\u20B9'+rev.toLocaleString('en-IN') : '-'}</td>
+          <td><button class="btn btn-sm btn-outline-primary-green" onclick="viewItem(${item.id})"><i class="bi bi-eye"></i></button></td>
+        </tr>`;
+      });
+      html += '</tbody></table></div>';
       if (totalPages > 1) {
-        html += '<nav><ul class="pagination pagination-sm justify-content-center mt-3">';
-        html += '<li class="page-item ' + (currentPage <= 1 ? 'disabled' : '') + '"><a class="page-link" href="#" onclick="loadInventory(' + (currentPage - 1) + ');return false">Previous</a></li>';
-        html += '<li class="page-item disabled"><span class="page-link">Page ' + currentPage + ' of ' + totalPages + '</span></li>';
-        html += '<li class="page-item ' + (currentPage >= totalPages ? 'disabled' : '') + '"><a class="page-link" href="#" onclick="loadInventory(' + (currentPage + 1) + ');return false">Next</a></li>';
-        html += '</ul></nav>';
+        html += `<nav><ul class="pagination pagination-sm justify-content-center"><li class="page-item ${currentPage<=1?'disabled':''}"><a class="page-link" href="#" onclick="loadInventory(${currentPage-1});return false">Prev</a></li>
+          <li class="page-item disabled"><span class="page-link">${currentPage}/${totalPages}</span></li>
+          <li class="page-item ${currentPage>=totalPages?'disabled':''}"><a class="page-link" href="#" onclick="loadInventory(${currentPage+1});return false">Next</a></li></ul></nav>`;
       }
-      if (!data.items?.length) html = '<div class="alert alert-info">No items in inventory</div>';
-      document.getElementById('inventoryContent').innerHTML = html;
-    } catch(e) { document.getElementById('inventoryContent').innerHTML = '<p class="text-danger">Failed to load</p>'; }
+      document.getElementById('inventoryContent').innerHTML = html || '<div class="alert alert-info">No inventory items</div>';
+    } catch(e) { document.getElementById('inventoryContent').innerHTML = '<p class="text-danger">Failed: '+e.message+'</p>'; }
   }
 
-  window.showHistory = async function(id) {
+  window.viewItem = async function(id) {
     try {
-      const res = await fetch('/api/supply-chain/deals/' + id, { headers: { 'Authorization': 'Bearer ' + token } });
-      if (!res.ok) throw new Error((await res.json()).error);
-      const data = await res.json();
-      const deal = data.deal || data;
-      const history = typeof deal.movement_history === 'string' ? JSON.parse(deal.movement_history) : (deal.movement_history || []);
-      let html = '<div class="list-group">';
-      if (history.length === 0) {
-        html += '<div class="list-group-item text-muted">No movement history recorded</div>';
-      } else {
-        history.forEach(h => {
-          const time = h.assigned_at || h.collected_at || h.verified_at || h.received_at || h.forwarded_at || h.completed_at || h.updated_at || '';
-          html += '<div class="list-group-item"><strong>' + (h.action || '').replace(/_/g, ' ') + '</strong><br><small class="text-muted">' + (time ? new Date(time).toLocaleString() : '') + '</small></div>';
-        });
-      }
-      html += '</div>';
-      document.getElementById('historyContent').innerHTML = html;
-      new bootstrap.Modal(document.getElementById('historyModal')).show();
-    } catch(e) { alert('Error: ' + e.message); }
+      const r = await fetch('/api/supply-chain/inventory/'+id, { headers });
+      const data = await r.json();
+      const item = data.item, movements = data.movements || [], a = item.assessment || {}, analysis = a.analysis_result || {};
+      const body = document.getElementById('itemDetailBody');
+      body.innerHTML = `
+        <div class="row g-3">
+          <div class="col-md-6"><h6 class="fw-bold text-green border-bottom pb-1">Product</h6>
+            <table class="table table-sm small mb-0"><tr><td>Name</td><td class="fw-bold">${a.product_catalog?.name||a.brand||'-'}</td></tr>
+            <tr><td>Brand/Model</td><td>${a.brand||'-'} ${a.model||''}</td></tr>
+            <tr><td>Category</td><td>${a.product_category||'-'}</td></tr>
+            <tr><td>Serial</td><td>${a.serial_number||'-'}</td></tr>
+            <tr><td>Condition</td><td>${a.condition||'-'}</td></tr>
+            <tr><td>Weight</td><td>${item.weight_kg||a.weight_kg||'-'} kg</td></tr></table></div>
+          <div class="col-md-6"><h6 class="fw-bold text-green border-bottom pb-1">Inventory</h6>
+            <table class="table table-sm small mb-0"><tr><td>Batch</td><td class="fw-bold">${item.batch_number||'-'}</td></tr>
+            <tr><td>Location</td><td>${item.storage_location||'<span class="text-warning">Not assigned</span>'}</td></tr>
+            <tr><td>Status</td><td><span class="badge bg-${item.stock_status==='in_stock'?'success':'warning'}">${item.stock_status?.replace(/_/g,' ')}</span></td></tr>
+            <tr><td>Lifecycle</td><td><span class="badge bg-secondary">${item.lifecycle_stage||'-'}</span></td></tr>
+            <tr><td>Facility</td><td>${item.facility?.name||'-'}</td></tr>
+            <tr><td>Received</td><td>${item.received_at?new Date(item.received_at).toLocaleString('en-IN'):'-'}</td></tr></table></div>
+          ${analysis.id ? `<div class="col-12"><hr class="my-1"><h6 class="fw-bold text-green">Reusability Analysis</h6>
+            <div class="row g-2 mb-2">
+              <div class="col-3"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Classification</small><h5 class="fw-bold mb-0">${analysis.classification}</h5></div></div>
+              <div class="col-3"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Recovery</small><h5 class="fw-bold mb-0 text-success">${analysis.recovery_potential||0}%</h5></div></div>
+              <div class="col-3"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Est. Revenue</small><h5 class="fw-bold mb-0 text-primary">\u20B9${(analysis.estimated_revenue||0).toLocaleString('en-IN')}</h5></div></div>
+              <div class="col-3"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Material Recovery</small><h5 class="fw-bold mb-0 text-info">${analysis.material_recovery_percentage||0}%</h5></div></div>
+            </div>
+            ${analysis.condition_assessment?`<p class="small mb-1"><strong>Assessment:</strong> ${analysis.condition_assessment}</p>`:''}
+            ${analysis.repairable_components?.length?`<p class="small mb-1"><strong>Repairable Components:</strong> ${analysis.repairable_components.join(', ')}</p>`:''}
+            ${analysis.recoverable_materials?.length?`<p class="small mb-1"><strong>Recoverable Materials:</strong> ${analysis.recoverable_materials.join(', ')}</p>`:''}
+            ${analysis.hazardous_materials?.length?`<p class="small mb-1"><strong>Hazardous Materials:</strong> ${analysis.hazardous_materials.join(', ')}</p>`:''}
+            <p class="small text-muted">Analysed by: ${analysis.analyser?.full_name||'-'} | ${analysis.analysed_at?new Date(analysis.analysed_at).toLocaleString('en-IN'):'-'}</p>
+          </div>` : ''}
+          <div class="col-12"><hr class="my-1">
+            <div class="row g-2"><div class="col-6"><input class="form-control form-control-sm" id="detailLocation" placeholder="Storage location" value="${item.storage_location||''}"></div>
+            <div class="col-3"><button class="btn btn-sm btn-primary-green w-100" onclick="updateLocation(${item.id})"><i class="bi bi-save me-1"></i>Save</button></div></div></div>
+          <div class="col-12"><hr class="my-1"><h6 class="fw-bold text-green">Movement History</h6>
+            <div class="small" style="max-height:200px;overflow-y:auto">${movements.length ? movements.map(m =>
+              `<div class="d-flex gap-2 mb-1"><i class="bi bi-arrow-return-right text-green" style="margin-top:4px"></i><div><strong>${m.action.replace(/_/g,' ')}</strong> ${m.from_location||m.from_status?'('+(m.from_location||m.from_status||'')+' → '+(m.to_location||m.to_status||'')+')':''}<br><span class="text-muted">${m.performer?.full_name||'System'} | ${new Date(m.moved_at).toLocaleString('en-IN')}</span>${m.notes?`<br><em>${m.notes}</em>`:''}</div></div>`
+            ).join('') : '<span class="text-muted">No movement history</span>'}</div></div>
+        </div>`;
+      new bootstrap.Modal(document.getElementById('itemDetailModal')).show();
+    } catch(e) { showToast(e.message, 'error'); }
   };
 
-  window.forwardAnalysis = async function(id) {
-    if (!confirm('Forward this product for reusability analysis?')) return;
+  window.updateLocation = async function(id) {
+    const loc = document.getElementById('detailLocation').value.trim();
+    if (!loc) { showToast('Enter a storage location', 'error'); return; }
     try {
-      const res = await fetch('/api/hub/' + id + '/forward-analysis', { method: 'POST', headers });
-      if (!res.ok) throw new Error((await res.json()).error);
-      showToast('Forwarded for analysis!');
+      const r = await fetch('/api/hub/inventory/'+id+'/assign-location', { method:'POST', headers, body: JSON.stringify({ storage_location: loc }) });
+      if (!r.ok) throw new Error((await r.json()).error);
+      showToast('Location assigned');
+      bootstrap.Modal.getInstance(document.getElementById('itemDetailModal')).hide();
       loadInventory(currentPage);
-    } catch(e) { alert('Error: ' + e.message); }
+    } catch(e) { showToast(e.message, 'error'); }
   };
-
-  window.completeAnalysis = async function(id) {
-    const classification = prompt('Enter classification (reusable/repairable/recyclable/scrap):');
-    if (!classification || !['reusable', 'repairable', 'recyclable', 'scrap'].includes(classification)) {
-      alert('Invalid classification');
-      return;
-    }
-    try {
-      const res = await fetch('/api/hub/' + id + '/complete-analysis', { method: 'POST', headers, body: JSON.stringify({ classification }) });
-      if (!res.ok) throw new Error((await res.json()).error);
-      showToast('Analysis completed!');
-      loadInventory(currentPage);
-    } catch(e) { alert('Error: ' + e.message); }
-  };
-
-  async function loadNotifBadge() {
-    try {
-      const r = await fetch('/api/notifications/unread-count', { headers: { 'Authorization': 'Bearer ' + token } });
-      const d = await r.json();
-      document.getElementById('hubNotifBadge').innerHTML = '<span class="badge bg-danger">' + (d.count || 0) + ' new</span>';
-    } catch(e) { /* ignore */ }
-  }
 
   loadInventory(1);
-  loadNotifBadge();
   </script>
 </body>
 </html>

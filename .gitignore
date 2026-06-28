@@ -1,13 +1,32 @@
-.env
+# Node modules
 node_modules/
+
+# Environment files
+.env
+.env.*
+
+# Logs
+logs/
 *.log
+
+# Build folders
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
 .vscode/
-# WhatsApp session
-backend/.wwebjs_auth/
+.idea/
 
-# Puppeteer Chrome
-backend/chrome/
+# Python
+__pycache__/
+*.pyc
 
-# Browser cache
-backend/.cache/
-backend/node_modules/
+# Uploads
+uploads/
+
+# Coverage
+coverage/

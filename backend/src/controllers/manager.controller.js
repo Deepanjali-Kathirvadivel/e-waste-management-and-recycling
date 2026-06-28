@@ -19,6 +19,7 @@ const CATEGORY_LABELS = {
 exports.dashboard = catchAsync(async (req, res) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
   const [pending, approvedToday, rejectedToday, total, approvedTotal, rejectedTotal] = await Promise.all([
     Assessment.count({ where: { status: 'pending_manager_review' } }),
@@ -31,6 +32,17 @@ exports.dashboard = catchAsync(async (req, res) => {
 
   const revenueSum = await Assessment.sum('hr_approved_value', {
     where: { status: { [Op.in]: ['approved', 'hub_assigned', 'completed'] } },
+  });
+
+  const monthRevenue = await Assessment.sum('hr_approved_value', {
+    where: { hr_acted_at: { [Op.gte]: monthStart }, status: { [Op.in]: ['approved', 'hub_assigned', 'completed'] } },
+  });
+
+  const totalValueSum = await Assessment.sum('hr_approved_value', {
+    where: { hr_approved_value: { [Op.ne]: null } },
+  });
+  const totalWithValue = await Assessment.count({
+    where: { hr_approved_value: { [Op.ne]: null }, status: { [Op.in]: ['approved', 'hub_assigned', 'completed'] } },
   });
 
   const branchRows = await Assessment.findAll({
@@ -46,9 +58,9 @@ exports.dashboard = catchAsync(async (req, res) => {
 
   const facilityIds = branchRows.map((row) => row.destination_id).filter(Boolean);
   const facilities = facilityIds.length
-    ? await Facility.findAll({ where: { id: facilityIds }, attributes: ['id', 'name'] })
+    ? await Facility.findAll({ where: { id: facilityIds }, attributes: ['id', 'name', 'type', 'location'] })
     : [];
-  const facilityMap = Object.fromEntries(facilities.map((f) => [f.id, f.name]));
+  const facilityMap = Object.fromEntries(facilities.map((f) => [f.id, f]));
 
   const categoryRows = await Assessment.findAll({
     attributes: ['product_category', [fn('COUNT', col('assessments.id')), 'count']],
@@ -86,16 +98,25 @@ exports.dashboard = catchAsync(async (req, res) => {
 
   const totalDecided = approvedTotal + rejectedTotal;
   const approvalRate = totalDecided > 0 ? Math.round((approvedTotal / totalDecided) * 100) : 0;
+  const rejectionRate = totalDecided > 0 ? Math.round((rejectedTotal / totalDecided) * 100) : 0;
+  const avgDealValue = totalWithValue > 0 ? Math.round((totalValueSum || 0) / totalWithValue) : 0;
 
   res.json({
     pending_reviews: pending,
     approved_today: approvedToday,
     rejected_today: rejectedToday,
     total_quotations: total,
+    approved_total: approvedTotal,
+    rejected_total: rejectedTotal,
     approval_rate: approvalRate,
+    rejection_rate: rejectionRate,
     branch_revenue: revenueSum || 0,
+    monthly_revenue: monthRevenue || 0,
+    average_deal_value: avgDealValue,
     branch_performance: branchRows.map((row) => ({
-      branch: facilityMap[row.destination_id] || 'Unassigned',
+      branch: facilityMap[row.destination_id]?.name || 'Unassigned',
+      type: facilityMap[row.destination_id]?.type || null,
+      location: facilityMap[row.destination_id]?.location || null,
       count: Number(row.count || 0),
       revenue: Number(row.revenue || 0),
     })),
@@ -259,6 +280,17 @@ exports.assignHub = catchAsync(async (req, res) => {
   } catch (e) { console.error('Notify error:', e.message); }
 
   res.json({ message: 'Hub assigned successfully', quotation: assessment });
+});
+
+exports.getHistory = catchAsync(async (req, res) => {
+  const assessment = await Assessment.findByPk(req.params.id);
+  if (!assessment) throw new AppError('Assessment not found', 404);
+  const logs = await ActivityLog.findAll({
+    where: { entity_type: 'assessment', entity_id: assessment.id },
+    order: [['created_at', 'DESC']],
+    include: [{ model: User, attributes: ['full_name', 'role'] }],
+  });
+  res.json({ history: logs });
 });
 
 exports.modifyQuotation = catchAsync(async (req, res) => {

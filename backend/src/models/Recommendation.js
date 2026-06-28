@@ -4,6 +4,8 @@ const { RECOMMENDATION_TYPES, RECOMMENDATION_FEASIBILITY, RECOMMENDATION_STATUS 
 
 const Recommendation = sequelize.define('recommendations', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  region_id: { type: DataTypes.INTEGER, allowNull: true },
+  user_id: { type: DataTypes.INTEGER, allowNull: true },
   type: { type: DataTypes.ENUM(...RECOMMENDATION_TYPES), allowNull: false },
   title: { type: DataTypes.STRING(200), allowNull: false },
   description: { type: DataTypes.TEXT },
@@ -11,6 +13,7 @@ const Recommendation = sequelize.define('recommendations', {
   estimated_cost: { type: DataTypes.DECIMAL(15, 2) },
   estimated_benefit: { type: DataTypes.DECIMAL(15, 2) },
   status: { type: DataTypes.ENUM(...RECOMMENDATION_STATUS), defaultValue: 'pending' },
+  metadata: { type: DataTypes.JSON },
 });
 
 module.exports = Recommendation;

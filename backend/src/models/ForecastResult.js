@@ -9,6 +9,9 @@ const ForecastResult = sequelize.define('forecast_results', {
   growth_rate: { type: DataTypes.DECIMAL(5, 2) },
   opportunity_score: { type: DataTypes.DECIMAL(5, 2) },
   predicted_revenue: { type: DataTypes.DECIMAL(15, 2) },
+  collection_prediction: { type: DataTypes.JSON },
+  demand_forecast: { type: DataTypes.JSON },
+  data_source_weights: { type: DataTypes.JSON },
 });
 
 module.exports = ForecastResult;

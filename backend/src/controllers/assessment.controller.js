@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { Assessment, AssessmentImage, AssessmentDetail, ProductCatalog, User } = require('../models');
+const { Assessment, AssessmentImage, AssessmentDetail, ProductCatalog, User, ActivityLog } = require('../models');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const pagination = require('../utils/pagination');
@@ -14,6 +14,7 @@ function sanitizeAssessment(assessment, role) {
     plain.value_estimate = null;
     plain.value_min = null;
     plain.value_max = null;
+    plain.recommended_value = null;
     plain.hr_approved_value = null;
   }
   return plain;
@@ -139,11 +140,14 @@ exports.submit = catchAsync(async (req, res) => {
   const valueMin = Math.round(valuation.estimated_value * 0.7);
   const valueMax = Math.round(valuation.estimated_value * 1.3);
 
+  const recommendedValue = valuation.recommended_value ?? Math.round(valuation.estimated_value);
+
   await assessment.update({
     status: 'pending_manager_review',
     value_estimate: valuation.estimated_value,
     value_min: valueMin,
     value_max: valueMax,
+    recommended_value: recommendedValue,
     submitted_at: new Date(),
   });
 
@@ -158,7 +162,7 @@ exports.submit = catchAsync(async (req, res) => {
       assessment: sanitizeAssessment(assessment, req.user.role),
     });
   } else {
-    res.json({ assessment, valuation, value_min: valueMin, value_max: valueMax });
+    res.json({ assessment, valuation, value_min: valueMin, value_max: valueMax, recommended_value: recommendedValue });
   }
 });
 
@@ -210,15 +214,43 @@ exports.estimate = catchAsync(async (req, res) => {
 exports.uploadImage = catchAsync(async (req, res) => {
   if (!req.file) throw new AppError('No file uploaded', 400);
   const imageType = req.body.image_type || 'general';
+
+  let autoAiResult = null;
+  try {
+    const aiAnalysis = aiStub.analyzeImage();
+    const oResults = aiAnalysis.detection_details || [];
+    autoAiResult = {
+      image_type: imageType,
+      product_type: aiAnalysis.product_type,
+      brand: aiAnalysis.brand,
+      model: aiAnalysis.model,
+      condition_score: aiAnalysis.condition_score,
+      category: aiAnalysis.category,
+      suggested_condition: aiAnalysis.suggested_condition,
+      confidence: oResults.length > 0 ? Math.round(oResults.reduce((s, d) => s + d.confidence, 0) / oResults.length) : 75,
+      observations: oResults.map(d => ({
+        component: d.component,
+        confidence: d.confidence,
+        status: d.confidence >= 80 ? 'good' : d.confidence >= 60 ? 'fair' : 'needs_attention',
+      })),
+      recyclability: aiAnalysis.recyclability,
+      data_risk: aiAnalysis.data_risk,
+      analyzed_at: new Date().toISOString(),
+    };
+  } catch (e) {
+    autoAiResult = { image_type: imageType, error: e.message, analyzed_at: new Date().toISOString() };
+  }
+
   const image = await AssessmentImage.create({
     assessment_id: req.body.assessment_id || 0,
     filename: req.file.filename,
     original_name: req.file.originalname,
     mime_type: req.file.mimetype,
     file_size: req.file.size,
-    ai_analysis: { image_type: imageType },
+    ai_analysis: autoAiResult,
   });
-  res.status(201).json({ image, url: `/uploads/assessments/${req.file.filename}` });
+
+  res.status(201).json({ image, url: `/uploads/assessments/${req.file.filename}`, ai_analysis: autoAiResult });
 });
 
 exports.deleteImage = catchAsync(async (req, res) => {
@@ -259,18 +291,28 @@ exports.aiAnalyze = catchAsync(async (req, res) => {
     ? (pd.hasStorage !== false ? 'high' : 'medium')
     : 'low';
 
+  const oResults = detection.detection_details || [];
+  const confidenceScore = oResults.length > 0 ? Math.round(oResults.reduce((s, d) => s + d.confidence, 0) / oResults.length) : 75;
+
   const result = {
     brand: detection.brand,
     model: detection.model,
     product_type: product_type || 'Mobile',
     condition_score,
+    confidence_score: confidenceScore,
     category,
+    classification: category,
     recyclability: recyclability + '%',
     data_risk,
     retailPrice: detection.retailPrice,
     rebuyValue: detection.rebuyValue,
     expectedLifetime: detection.expectedLifetime,
-    scrapValue: detection.scrapValue
+    scrapValue: detection.scrapValue,
+    observations: oResults.map(d => ({
+      component: d.component,
+      confidence: d.confidence,
+      status: d.confidence >= 80 ? 'good' : d.confidence >= 60 ? 'fair' : 'needs_attention',
+    })),
   };
   res.json({ analysis: result });
 });
@@ -328,4 +370,15 @@ exports.updateDetails = catchAsync(async (req, res) => {
   }
 
   res.json({ detail });
+});
+
+exports.getHistory = catchAsync(async (req, res) => {
+  const assessment = await Assessment.findByPk(req.params.id);
+  if (!assessment) throw new AppError('Assessment not found', 404);
+  const logs = await ActivityLog.findAll({
+    where: { entity_type: 'assessment', entity_id: assessment.id },
+    order: [['created_at', 'DESC']],
+    include: [{ model: User, attributes: ['full_name', 'role'] }],
+  });
+  res.json({ history: logs });
 });

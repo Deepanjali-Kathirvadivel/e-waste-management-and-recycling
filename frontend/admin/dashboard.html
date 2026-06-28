@@ -100,6 +100,15 @@
           <div class="col-md-4 col-xl-2">
             <div class="admin-kpi"><div class="kpi-icon cyan"><i class="bi bi-graph-up-arrow"></i></div><p class="kpi-label">Forecast Accuracy</p><h3 class="kpi-value" id="kpiForecast">85%</h3><span class="kpi-sub">Last 12 months</span></div>
           </div>
+          <div class="col-md-4 col-xl-2">
+            <div class="admin-kpi"><div class="kpi-icon warning"><i class="bi bi-hourglass-split"></i></div><p class="kpi-label">Pending Approvals</p><h3 class="kpi-value" id="kpiPending">0</h3><span class="kpi-sub">Awaiting review</span></div>
+          </div>
+          <div class="col-md-4 col-xl-2">
+            <div class="admin-kpi"><div class="kpi-icon blue"><i class="bi bi-building"></i></div><p class="kpi-label">Active Hubs</p><h3 class="kpi-value" id="kpiHubs">0</h3><span class="kpi-sub">Collection centers</span></div>
+          </div>
+          <div class="col-md-4 col-xl-2">
+            <div class="admin-kpi"><div class="kpi-icon purple"><i class="bi bi-check-circle"></i></div><p class="kpi-label">Collected</p><h3 class="kpi-value" id="kpiCollected">0</h3><span class="kpi-sub">Ready for transport</span></div>
+          </div>
         </div>
 
         <!-- Charts Row -->
@@ -129,6 +138,23 @@
             <div class="admin-card">
               <div class="admin-card-header"><h6><i class="bi bi-arrow-repeat text-green me-1"></i> Reusability Distribution</h6></div>
               <div class="admin-card-body"><canvas id="reusabilityChart" height="220"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-lg-6">
+            <div class="admin-card">
+              <div class="admin-card-header"><h6><i class="bi bi-building text-green me-1"></i> Hub Utilization</h6></div>
+              <div class="admin-card-body"><canvas id="hubUtilChart" height="220"></canvas></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="admin-card">
+              <div class="admin-card-header"><h6><i class="bi bi-geo text-green me-1"></i> Collection Heatmap</h6><span class="badge bg-green" id="heatmapCount">0 points</span></div>
+              <div class="admin-card-body" id="heatmapBody">
+                <div class="text-center text-muted py-4"><i class="bi bi-map fs-1 d-block mb-2"></i> Loading heatmap data...</div>
+              </div>
             </div>
           </div>
         </div>

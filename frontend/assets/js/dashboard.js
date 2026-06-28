@@ -142,4 +142,5 @@
   }
 
   loadDashboard();
+  startNotificationPolling();
 })();

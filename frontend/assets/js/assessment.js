@@ -4,7 +4,7 @@
   const isStaff = user && user.role === 'employee';
 
   let currentStep = 1;
-  const totalSteps = 9;
+  const totalSteps = 8;
   let categoryCatalog = [];
 
   let data = {
@@ -274,14 +274,14 @@
     renderProductList();
     updateProductTabs();
     updateUI();
-    if (currentStep >= 3 && currentStep <= 8) {
+    if (currentStep >= 3 && currentStep <= 7) {
       if (currentStep === 3) refreshProductDetails();
-      if (currentStep === 4) refreshImagePreview(); // toggle active zone + render preview
+      if (currentStep === 4) refreshImagePreview();
       if (currentStep === 5) refreshQuestions();
       if (currentStep === 6 && !isStaff) runAIAnalysis();
       if (currentStep === 7) calculateValue();
-      if (currentStep === 8) updateCustomerQuoteStep();
     }
+    if (currentStep === 8) { updateCustomerQuoteStep(); buildSummary(); }
   };
 
   window.removeProduct = function (idx) {
@@ -463,8 +463,8 @@
     if (newStep < 1 || newStep > totalSteps) return;
 
     if (isStaff) {
-      if (dir === 1 && currentStep === 5) newStep = 8;
-      if (dir === -1 && currentStep === 8) newStep = 5;
+      if (dir === 1 && currentStep === 5) newStep = 7;
+      if (dir === -1 && currentStep === 7) newStep = 5;
     }
 
     saveActiveProduct();
@@ -487,9 +487,8 @@
     if (newStep === 4) refreshImageUpload();
     if (newStep === 5) refreshQuestions();
     if (newStep === 6 && !isStaff) runAIAnalysis();
-    if (newStep === 7 || (isStaff && newStep === 8)) calculateValue();
-    if (newStep === 8) updateCustomerQuoteStep();
-    if (newStep === 9) buildSummary();
+    if (newStep === 7) calculateValue();
+    if (newStep === 8) { updateCustomerQuoteStep(); buildSummary(); }
 
     currentStep = newStep;
     updateUI();
@@ -545,7 +544,7 @@
   function updateUI() {
     document.querySelectorAll('.wizard-step').forEach(el => {
       const step = parseInt(el.dataset.step);
-      if (isStaff && (step === 6 || step === 7)) {
+      if (isStaff && step === 6) {
         el.classList.add('d-none');
         return;
       } else {
@@ -556,7 +555,7 @@
       else if (step < currentStep) el.classList.add('completed');
     });
     document.querySelectorAll('.wizard-step-content').forEach(el => {
-      if (isStaff && (parseInt(el.dataset.step) === 6 || parseInt(el.dataset.step) === 7)) {
+      if (isStaff && parseInt(el.dataset.step) === 6) {
         el.classList.add('d-none');
         return;
       }
@@ -1112,10 +1111,6 @@
     data.products.forEach((p, i) => computeProductValue(p, i));
     const container = document.getElementById('allProductsValuation');
     if (!container) return;
-    if (isStaff) {
-      container.innerHTML = '<div class="alert alert-info mb-0"><i class="bi bi-lock me-2"></i>Valuation is calculated automatically and is not visible to field staff. Proceed to capture customer expected value.</div>';
-      return;
-    }
     let totalMin = 0, totalMax = 0;
     let html = '';
     data.products.forEach((p, i) => {
@@ -1142,7 +1137,7 @@
     container.innerHTML = html;
   }
 
-  // ───────── Step 8: Expected Value ─────────
+  // ───────── Step 8: Expected Value (Customer Quote) ─────────
   function updateCustomerQuoteStep() {
     if (!data.products.length) return;
     const container = document.getElementById('allProductsQuotation');
@@ -1164,7 +1159,7 @@
     container.innerHTML = html;
   }
 
-  // ───────── Step 9: Summary ─────────
+  // ───────── Step 8: Summary ─────────
   function buildSummary() {
     saveActiveProduct();
     const c = data.customer;

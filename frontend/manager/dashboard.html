@@ -56,34 +56,40 @@
           <div class="col-md-3"><div class="card bg-warning bg-opacity-10 border-warning"><div class="card-body text-center"><h3 class="fw-bold text-warning" id="kpiPending">0</h3><small class="text-muted">Pending Reviews</small></div></div></div>
           <div class="col-md-3"><div class="card bg-success bg-opacity-10 border-success"><div class="card-body text-center"><h3 class="fw-bold text-success" id="kpiApproved">0</h3><small class="text-muted">Approved Today</small></div></div></div>
           <div class="col-md-3"><div class="card bg-danger bg-opacity-10 border-danger"><div class="card-body text-center"><h3 class="fw-bold text-danger" id="kpiRejected">0</h3><small class="text-muted">Rejected Today</small></div></div></div>
-          <div class="col-md-2"><div class="card bg-primary bg-opacity-10 border-primary"><div class="card-body text-center"><h3 class="fw-bold text-primary" id="kpiRate">0%</h3><small class="text-muted">Approval Rate</small></div></div></div>
-          <div class="col-md-2"><div class="card bg-info bg-opacity-10 border-info"><div class="card-body text-center"><h3 class="fw-bold text-info" id="kpiRevenue">₹0</h3><small class="text-muted">Branch Revenue</small></div></div></div>
-          <div class="col-md-2"><div class="card bg-secondary bg-opacity-10 border-secondary"><div class="card-body text-center"><h3 class="fw-bold text-secondary" id="kpiTotal">0</h3><small class="text-muted">Total Quotations</small></div></div></div>
+          <div class="col-md-3"><div class="card bg-primary bg-opacity-10 border-primary"><div class="card-body text-center"><h3 class="fw-bold text-primary" id="kpiRevenue">₹0</h3><small class="text-muted">Branch Revenue</small></div></div></div>
+          <div class="col-md-2"><div class="card bg-info bg-opacity-10 border-info"><div class="card-body text-center"><h3 class="fw-bold text-info" id="kpiRate">0%</h3><small class="text-muted">Approval Rate</small></div></div></div>
+          <div class="col-md-2"><div class="card bg-danger bg-opacity-10 border-danger-subtle"><div class="card-body text-center"><h3 class="fw-bold text-danger-emphasis" id="kpiRejectRate">0%</h3><small class="text-muted">Rejection Rate</small></div></div></div>
+          <div class="col-md-2"><div class="card bg-secondary bg-opacity-10 border-secondary"><div class="card-body text-center"><h3 class="fw-bold text-secondary" id="kpiAvgDeal">₹0</h3><small class="text-muted">Avg Deal Value</small></div></div></div>
+          <div class="col-md-2"><div class="card bg-success bg-opacity-10 border-success"><div class="card-body text-center"><h3 class="fw-bold text-success" id="kpiMonthRev">₹0</h3><small class="text-muted">This Month</small></div></div></div>
+          <div class="col-md-2"><div class="card bg-dark bg-opacity-10 border-dark"><div class="card-body text-center"><h3 class="fw-bold text-dark" id="kpiTotal">0</h3><small class="text-muted">Total Quotations</small></div></div></div>
+          <div class="col-md-2"><div class="card bg-primary bg-opacity-10 border-primary-subtle"><div class="card-body text-center"><h3 class="fw-bold text-primary-emphasis" id="kpiApprovedTotal">0</h3><small class="text-muted">Approved Total</small></div></div></div>
         </div>
 
         <div class="row g-3 mb-4">
-          <div class="col-md-6">
+          <div class="col-md-5">
             <div class="card"><div class="card-body">
-              <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart me-2"></i>Quotation Trends</h6>
-              <canvas id="trendChart" height="180"></canvas>
+              <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart me-2"></i>Monthly Performance</h6>
+              <canvas id="trendChart" height="200"></canvas>
             </div></div>
           </div>
           <div class="col-md-3">
             <div class="card"><div class="card-body">
               <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i>Categories</h6>
-              <canvas id="categoryChart" height="180"></canvas>
+              <canvas id="categoryChart" height="200"></canvas>
             </div></div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-4">
             <div class="card"><div class="card-body">
-              <h6 class="fw-bold mb-3"><i class="bi bi-building me-2"></i>Branch Performance</h6>
+              <h6 class="fw-bold mb-3"><i class="bi bi-building me-2"></i>Branch Analytics</h6>
               <div id="branchList"></div>
             </div></div>
           </div>
         </div>
 
         <div class="card mb-4">
-          <div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-people me-2"></i>Employee KPIs</h6></div>
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-people me-2"></i>Employee KPI</h6>
+          </div>
           <div class="card-body"><div id="employeeKpiTable"><p class="text-muted">Loading...</p></div></div>
         </div>
       </main>
@@ -128,7 +134,9 @@
     const token = localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token');
     if (!token) { window.location.href = '../login.html'; return; }
     const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
-
+    try {
+      document.getElementById('dashboardDate').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    } catch(e) {}
     try {
       const [kpiRes, empRes] = await Promise.all([
         fetch('/api/manager/dashboard', { headers }),
@@ -141,34 +149,61 @@
       document.getElementById('kpiApproved').textContent = kpi.approved_today || 0;
       document.getElementById('kpiRejected').textContent = kpi.rejected_today || 0;
       document.getElementById('kpiTotal').textContent = kpi.total_quotations || 0;
+      document.getElementById('kpiApprovedTotal').textContent = kpi.approved_total || 0;
       document.getElementById('kpiRate').textContent = (kpi.approval_rate || 0) + '%';
+      document.getElementById('kpiRejectRate').textContent = (kpi.rejection_rate || 0) + '%';
       document.getElementById('kpiRevenue').textContent = '\u20B9' + (kpi.branch_revenue || 0).toLocaleString('en-IN');
+      document.getElementById('kpiMonthRev').textContent = '\u20B9' + (kpi.monthly_revenue || 0).toLocaleString('en-IN');
+      document.getElementById('kpiAvgDeal').textContent = '\u20B9' + (kpi.average_deal_value || 0).toLocaleString('en-IN');
 
       if (kpi.quotation_trends) {
-        new Chart(document.getElementById('trendChart'), {
-          type: 'line',
-          data: { labels: kpi.quotation_trends.labels, datasets: [{ label: 'Quotations', data: kpi.quotation_trends.counts, borderColor: '#16A34A', fill: false }] },
-          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
-        });
+        const trendCtx = document.getElementById('trendChart');
+        if (trendCtx) {
+          new Chart(trendCtx, {
+            type: 'line',
+            data: { labels: kpi.quotation_trends.labels, datasets: [
+              { label: 'Quotations', data: kpi.quotation_trends.counts, borderColor: '#16A34A', backgroundColor: 'rgba(22,163,74,0.1)', fill: true, tension: 0.3 }
+            ]},
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+          });
+        }
       }
 
       if (kpi.category_distribution) {
-        new Chart(document.getElementById('categoryChart'), {
-          type: 'doughnut',
-          data: { labels: kpi.category_distribution.map(c => c.category), datasets: [{ data: kpi.category_distribution.map(c => c.count), backgroundColor: ['#16A34A', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899', '#14B8A6'] }] },
-          options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
-        });
+        const catCtx = document.getElementById('categoryChart');
+        if (catCtx) {
+          new Chart(catCtx, {
+            type: 'doughnut',
+            data: { labels: kpi.category_distribution.map(c => c.category), datasets: [{ data: kpi.category_distribution.map(c => c.count), backgroundColor: ['#16A34A', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899', '#14B8A6'] }] },
+            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+          });
+        }
       }
 
       if (kpi.branch_performance) {
         const branchDiv = document.getElementById('branchList');
-        branchDiv.innerHTML = kpi.branch_performance.map(b => `<div class="d-flex justify-content-between mb-1"><span>${b.branch}</span><span class="fw-bold">${b.count} (₹${(b.revenue||0).toLocaleString('en-IN')})</span></div>`).join('');
+        if (branchDiv) {
+          branchDiv.innerHTML = kpi.branch_performance.map(b => `
+            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+              <div>
+                <strong class="small">${b.branch}</strong>
+                ${b.type ? `<span class="badge bg-secondary ms-1" style="font-size:0.6rem">${b.type}</span>` : ''}
+                <div class="text-muted" style="font-size:0.7rem">${b.location || ''}</div>
+              </div>
+              <div class="text-end">
+                <div class="fw-bold">${b.count}</div>
+                <small class="text-success">\u20B9${(b.revenue||0).toLocaleString('en-IN')}</small>
+              </div>
+            </div>`).join('');
+        }
       }
 
       if (empData.employees) {
-        let html = `<table class="table table-sm"><thead><tr><th>Employee</th><th>Total</th><th>Approved</th><th>Rejected</th><th>Approval Rate</th><th>Avg Deal</th></tr></thead><tbody>`;
+        let html = `<table class="table table-sm table-hover"><thead><tr><th>Employee</th><th>Total</th><th>Approved</th><th>Rejected</th><th>Approval Rate</th><th>Rejection Rate</th><th>Avg Deal</th></tr></thead><tbody>`;
         empData.employees.forEach(e => {
-          html += `<tr><td>${e.name}</td><td>${e.total_assessments}</td><td class="text-success">${e.approved}</td><td class="text-danger">${e.rejected}</td><td>${e.approval_rate}%</td><td>₹${(e.average_deal_value||0).toLocaleString('en-IN')}</td></tr>`;
+          html += `<tr><td>${e.name}</td><td>${e.total_assessments}</td><td class="text-success">${e.approved}</td><td class="text-danger">${e.rejected}</td><td>${e.approval_rate}%</td><td>${e.rejection_rate}%</td><td>\u20B9${(e.average_deal_value||0).toLocaleString('en-IN')}</td></tr>`;
         });
         html += '</tbody></table>';
         document.getElementById('employeeKpiTable').innerHTML = html;

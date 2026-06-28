@@ -1,0 +1,84 @@
+(node:20244) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+AppError: Invalid credentials
+    at D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\src\controllers\auth.controller.js:15:39 {
+  statusCode: 401,
+  isOperational: true
+}
+AppError: Invalid credentials
+    at D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\src\controllers\auth.controller.js:17:21 {
+  statusCode: 401,
+  isOperational: true
+}
+Error
+    at Database.<anonymous> (D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\node_modules\sequelize\lib\dialects\sqlite\query.js:185:27)
+    at D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\node_modules\sequelize\lib\dialects\sqlite\query.js:183:50
+    at new Promise (<anonymous>)
+    at Query.run (D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\node_modules\sequelize\lib\dialects\sqlite\query.js:183:12)
+    at D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\node_modules\sequelize\lib\sequelize.js:315:28
+    at async D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\src\controllers\supplychain.controller.js:279:27 {
+  name: 'SequelizeDatabaseError',
+  parent: [Error: SQLITE_ERROR: no such table: product_catalogs] {
+    errno: 1,
+    code: 'SQLITE_ERROR',
+    sql: 'SELECT pc.name as category, COUNT(*) as count\n' +
+      '    FROM inventory_items ii\n' +
+      '    JOIN assessments a ON a.id = ii.assessment_id\n' +
+      '    LEFT JOIN product_catalogs pc ON pc.id = a.product_type_id\n' +
+      '    \n' +
+      '    GROUP BY pc.name ORDER BY count DESC'
+  },
+  original: [Error: SQLITE_ERROR: no such table: product_catalogs] {
+    errno: 1,
+    code: 'SQLITE_ERROR',
+    sql: 'SELECT pc.name as category, COUNT(*) as count\n' +
+      '    FROM inventory_items ii\n' +
+      '    JOIN assessments a ON a.id = ii.assessment_id\n' +
+      '    LEFT JOIN product_catalogs pc ON pc.id = a.product_type_id\n' +
+      '    \n' +
+      '    GROUP BY pc.name ORDER BY count DESC'
+  },
+  sql: 'SELECT pc.name as category, COUNT(*) as count\n' +
+    '    FROM inventory_items ii\n' +
+    '    JOIN assessments a ON a.id = ii.assessment_id\n' +
+    '    LEFT JOIN product_catalogs pc ON pc.id = a.product_type_id\n' +
+    '    \n' +
+    '    GROUP BY pc.name ORDER BY count DESC',
+  parameters: {}
+}
+Error
+    at Database.<anonymous> (D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\node_modules\sequelize\lib\dialects\sqlite\query.js:185:27)
+    at D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\node_modules\sequelize\lib\dialects\sqlite\query.js:183:50
+    at new Promise (<anonymous>)
+    at Query.run (D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\node_modules\sequelize\lib\dialects\sqlite\query.js:183:12)
+    at D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\node_modules\sequelize\lib\sequelize.js:315:28
+    at async D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\src\controllers\supplychain.controller.js:279:27 {
+  name: 'SequelizeDatabaseError',
+  parent: [Error: SQLITE_ERROR: no such table: product_catalogs] {
+    errno: 1,
+    code: 'SQLITE_ERROR',
+    sql: 'SELECT pc.name as category, COUNT(*) as count\n' +
+      '    FROM inventory_items ii\n' +
+      '    JOIN assessments a ON a.id = ii.assessment_id\n' +
+      '    LEFT JOIN product_catalogs pc ON pc.id = a.product_type_id\n' +
+      '    \n' +
+      '    GROUP BY pc.name ORDER BY count DESC'
+  },
+  original: [Error: SQLITE_ERROR: no such table: product_catalogs] {
+    errno: 1,
+    code: 'SQLITE_ERROR',
+    sql: 'SELECT pc.name as category, COUNT(*) as count\n' +
+      '    FROM inventory_items ii\n' +
+      '    JOIN assessments a ON a.id = ii.assessment_id\n' +
+      '    LEFT JOIN product_catalogs pc ON pc.id = a.product_type_id\n' +
+      '    \n' +
+      '    GROUP BY pc.name ORDER BY count DESC'
+  },
+  sql: 'SELECT pc.name as category, COUNT(*) as count\n' +
+    '    FROM inventory_items ii\n' +
+    '    JOIN assessments a ON a.id = ii.assessment_id\n' +
+    '    LEFT JOIN product_catalogs pc ON pc.id = a.product_type_id\n' +
+    '    \n' +
+    '    GROUP BY pc.name ORDER BY count DESC',
+  parameters: {}
+}

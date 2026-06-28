@@ -38,7 +38,9 @@
         <a href="receipt-history.html" class="nav-link"><i class="bi bi-receipt me-2"></i>Receipts</a>
       </div></nav>
       <main class="col-md-10 ms-sm-auto px-4">
-        <div class="pt-4 pb-2 mb-3 border-bottom"><h1 class="h4">Rejected Quotations</h1></div>
+        <div class="pt-4 pb-2 mb-3 border-bottom d-flex justify-content-between align-items-center">
+          <h1 class="h4 mb-0"><i class="bi bi-x-circle text-danger me-2"></i>Rejected Quotations</h1>
+        </div>
         <div id="rejectedContent"><p class="text-muted">Loading...</p></div>
       </main>
     </div>
@@ -46,23 +48,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../assets/js/main.js"></script>
   <script>
-  const notifHeaders = { 'Authorization': 'Bearer ' + (localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token')), 'Content-Type': 'application/json' };
-  async function fetchNotifCount() {
-    try {
-      const res = await fetch('/api/notifications/unread-count', { headers: notifHeaders });
-      const data = await res.json(); const badge = document.getElementById('notifBadge');
-      if (badge) { if (data.count > 0) { badge.textContent = data.count; badge.style.display = 'inline'; } else badge.style.display = 'none'; }
-    } catch(e) {}
-  }
-  async function toggleNotifModal() {
-    try {
-      const res = await fetch('/api/notifications', { headers: notifHeaders });
-      const data = await res.json(); const notifs = data.notifications || [];
-      if (!notifs.length) { alert('No notifications'); return; }
-      let msg = notifs.slice(0, 10).map((n, i) => `${i+1}. [${n.type.toUpperCase()}] ${n.title}\n  ${n.message || ''}${n.is_read ? '' : ' (NEW)'}`).join('\n\n');
-      if (confirm(msg + '\n\nMark all as read?')) { await fetch('/api/notifications/read-all', { method: 'POST', headers: notifHeaders }); fetchNotifCount(); }
-    } catch(e) { alert('Failed to load notifications'); }
-  }
   (async function() {
     const token = localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token');
     if (!token) { window.location.href = '../login.html'; return; }
@@ -70,22 +55,27 @@
     try {
       const res = await fetch('/api/manager/rejected?limit=100', { headers });
       const data = await res.json();
-      let html = '<table class="table table-hover"><thead><tr><th>ID</th><th>Customer</th><th>Product</th><th>Reason</th><th>Rejected By</th><th>Date</th></tr></thead><tbody>';
-      (data.quotations || []).forEach(q => {
+      const list = data.quotations || [];
+      let html = '<div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr><th>ID</th><th>Customer</th><th>Product</th><th>Rejection Reason</th><th>Rejected By</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+      list.forEach(q => {
+        const date = q.hr_acted_at ? new Date(q.hr_acted_at).toLocaleDateString('en-IN') : '-';
+        const reason = q.hr_rejection_reason || 'No reason provided';
         html += `<tr>
-          <td>#${q.id}</td>
+          <td><strong>#${q.id}</strong></td>
           <td>${q.customer_name || '-'}</td>
-          <td>${q.product_catalog?.name || q.brand || '-'}</td>
-          <td><span class="text-danger">${q.rejection_reason || q.hr_rejection_reason || '-'}</span></td>
+          <td>${q.product_catalog?.name || q.product_category || '-'}<br><small class="text-muted">${q.brand || ''} ${q.model || ''}</small></td>
+          <td><span class="text-danger" title="${reason.replace(/"/g, '&quot;')}">${reason.length > 60 ? reason.substring(0,60)+'...' : reason}</span></td>
           <td>${q.approver?.full_name || '-'}</td>
-          <td>${q.hr_acted_at ? new Date(q.hr_acted_at).toLocaleDateString() : '-'}</td>
+          <td>${date}</td>
+          <td><span class="badge bg-danger">Rejected</span></td>
+          <td><a href="review.html?id=${q.id}" class="btn btn-sm btn-outline-primary-green"><i class="bi bi-eye me-1"></i>View</a></td>
         </tr>`;
       });
-      html += '</tbody></table>';
-      if (!data.quotations?.length) html = '<div class="alert alert-info">No rejected quotations</div>';
-      document.getElementById('rejectedContent').innerHTML = html;
-      fetchNotifCount(); setInterval(fetchNotifCount, 30000);
-    } catch(e) { document.getElementById('rejectedContent').innerHTML = '<p class="text-danger">Failed to load</p>'; }
+      html += '</tbody></table></div>';
+      document.getElementById('rejectedContent').innerHTML = html || '<div class="alert alert-success mb-0"><i class="bi bi-check-circle me-2"></i>No rejected quotations.</div>';
+    } catch(e) {
+      document.getElementById('rejectedContent').innerHTML = '<p class="text-danger">Failed to load: ' + e.message + '</p>';
+    }
   })();
   </script>
 </body>

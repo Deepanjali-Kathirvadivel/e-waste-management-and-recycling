@@ -19,5 +19,6 @@ router.delete('/:id/images/:imageId', auth, ctrl.deleteImage);
 router.post('/ai-analyze', auth, ctrl.aiAnalyze);
 router.get('/catalog/:category', auth, ctrl.getCatalogByCategory);
 router.put('/:id/details', auth, ctrl.updateDetails);
+router.get('/:id/history', auth, ctrl.getHistory);
 
 module.exports = router;

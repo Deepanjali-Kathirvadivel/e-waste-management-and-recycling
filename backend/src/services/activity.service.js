@@ -1,8 +1,18 @@
 const { ActivityLog, User } = require('../models');
 
-const log = async ({ userId, action, entityType, entityId, metadata }) => {
+const log = async ({ userId, action, entityType, entityId, metadata, ipAddress, userAgent, oldValue, newValue }) => {
   try {
-    await ActivityLog.create({ user_id: userId, action, entity_type: entityType, entity_id: entityId, metadata });
+    await ActivityLog.create({
+      user_id: userId,
+      action,
+      entity_type: entityType,
+      entity_id: entityId,
+      metadata,
+      ip_address: ipAddress || null,
+      user_agent: userAgent || null,
+      old_value: oldValue || null,
+      new_value: newValue || null,
+    });
   } catch (err) {
     console.error('Activity log error:', err.message);
   }

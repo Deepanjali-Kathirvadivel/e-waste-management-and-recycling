@@ -15,5 +15,6 @@ router.post('/quotations/:id/modify', auth, rbac('manager', 'admin'), ctrl.modif
 router.post('/quotations/:id/assign-hub', auth, rbac('manager', 'admin'), ctrl.assignHub);
 router.get('/facilities', auth, rbac('manager', 'admin'), ctrl.getFacilities);
 router.get('/employee-kpi', auth, rbac('manager', 'admin'), ctrl.employeeKPIs);
+router.get('/history/:id', auth, rbac('manager', 'admin'), ctrl.getHistory);
 
 module.exports = router;

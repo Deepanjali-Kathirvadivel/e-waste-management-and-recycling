@@ -53,15 +53,16 @@
           <div class="mb-3">
             <label class="form-label">Approved Value (₹)</label>
             <input type="number" class="form-control" id="approveValue">
+            <div class="form-text">Leave empty to use customer expected value or estimated value.</div>
           </div>
           <div class="mb-3">
-            <label class="form-label">Assign Collection Hub</label>
+            <label class="form-label">Assign Collection Center / Processing Hub</label>
             <select class="form-select" id="approveHub"></select>
           </div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button class="btn btn-success" onclick="approveQuotation()"><i class="bi bi-check-lg"></i> Approve</button>
+          <button class="btn btn-success" onclick="approveQuotation()"><i class="bi bi-check-lg"></i> Approve & Assign</button>
         </div>
       </div>
     </div>
@@ -107,7 +108,11 @@
           <div class="mb-3">
             <label class="form-label">Rejection Reason <span class="text-danger">*</span></label>
             <textarea class="form-control" id="rejectReason" rows="3" required></textarea>
-            <div class="form-text">Provide a clear reason. The employee will be notified to re-negotiate.</div>
+            <div class="form-text">Provide a clear, mandatory reason. The employee will be notified and can re-negotiate.</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Suggested Revised Value (Optional)</label>
+            <input type="number" class="form-control" id="rejectSuggestedValue" min="0" placeholder="Suggest a revised amount">
           </div>
         </div>
         <div class="modal-footer">
@@ -123,22 +128,6 @@
   <script>
   let currentQuotation = null;
   const notifHeaders = { 'Authorization': 'Bearer ' + (localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token')), 'Content-Type': 'application/json' };
-  async function fetchNotifCount() {
-    try {
-      const res = await fetch('/api/notifications/unread-count', { headers: notifHeaders });
-      const data = await res.json(); const badge = document.getElementById('notifBadge');
-      if (badge) { if (data.count > 0) { badge.textContent = data.count; badge.style.display = 'inline'; } else badge.style.display = 'none'; }
-    } catch(e) {}
-  }
-  async function toggleNotifModal() {
-    try {
-      const res = await fetch('/api/notifications', { headers: notifHeaders });
-      const data = await res.json(); const notifs = data.notifications || [];
-      if (!notifs.length) { alert('No notifications'); return; }
-      let msg = notifs.slice(0, 10).map((n, i) => `${i+1}. [${n.type.toUpperCase()}] ${n.title}\n  ${n.message || ''}${n.is_read ? '' : ' (NEW)'}`).join('\n\n');
-      if (confirm(msg + '\n\nMark all as read?')) { await fetch('/api/notifications/read-all', { method: 'POST', headers: notifHeaders }); fetchNotifCount(); }
-    } catch(e) { alert('Failed to load notifications'); }
-  }
   const token = localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token');
   if (!token) { window.location.href = '../login.html'; }
   const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
@@ -148,78 +137,143 @@
     const id = params.get('id');
     if (!id) { document.getElementById('reviewContent').innerHTML = '<div class="alert alert-warning">No quotation ID provided</div>'; return; }
     try {
-      const [qRes, facRes] = await Promise.all([
+      const [qRes, facRes, histRes] = await Promise.all([
         fetch('/api/manager/quotations/' + id, { headers }),
-        fetch('/api/manager/facilities', { headers })
+        fetch('/api/manager/facilities', { headers }),
+        fetch('/api/manager/history/' + id, { headers }),
       ]);
       const qData = await qRes.json();
       const facData = await facRes.json();
+      const histData = await histRes.json();
       currentQuotation = qData.quotation;
 
-      // Populate hub dropdown
       const hubSelect = document.getElementById('approveHub');
       hubSelect.innerHTML = '<option value="">Select Hub</option>' + (facData.facilities || []).map(f =>
         `<option value="${f.id}">${f.name} (${f.type})</option>`
       ).join('');
 
       const q = qData.quotation;
-      let html = `
-        <div class="card mb-4"><div class="card-header"><strong>#${q.id} - ${q.customer_name || 'Unknown'}</strong> <span class="badge bg-warning">${q.status}</span></div>
-        <div class="card-body">
-          <div class="row">
-            <div class="col-md-6">
-              <h6 class="fw-bold">Customer Info</h6>
-              <table class="table table-sm"><tr><td>Name</td><td>${q.customer_name || '-'}</td></tr>
-              <tr><td>Phone</td><td>${q.customer_phone || '-'}</td></tr>
-              <tr><td>Email</td><td>${q.customer_email || '-'}</td></tr>
-              <tr><td>Address</td><td>${q.customer_address || '-'}</td></tr>
-              <tr><td>District</td><td>${q.customer_district || '-'}</td></tr>
-              <tr><td>State</td><td>${q.customer_state || '-'}</td></tr>
-              <tr><td>Pincode</td><td>${q.customer_pincode || '-'}</td></tr></table>
-            </div>
-            <div class="col-md-6">
-              <h6 class="fw-bold">Product Info</h6>
-              <table class="table table-sm"><tr><td>Product</td><td>${q.product_catalog?.name || q.brand || '-'}</td></tr>
-              <tr><td>Category</td><td>${q.product_category || '-'}</td></tr>
-              <tr><td>Brand</td><td>${q.brand || '-'}</td></tr>
-              <tr><td>Model</td><td>${q.model || '-'}</td></tr>
-              <tr><td>Serial No</td><td>${q.serial_number || '-'}</td></tr>
-              <tr><td>Condition</td><td>${q.condition || '-'}</td></tr>
-              <tr><td>Weight</td><td>${q.weight_kg || '-'} kg</td></tr>
-              <tr><td>Warranty</td><td>${q.warranty_status || '-'}</td></tr></table>
-            </div>
-          </div>
-          <div class="row mt-3">
-            <div class="col-md-6">
-              <h6 class="fw-bold">Employee</h6>
-              <p>${q.user?.full_name || '-'} (${q.user?.username || '-'})</p>
-            </div>
-            <div class="col-md-6">
-              <h6 class="fw-bold">Valuation</h6>
-              <table class="table table-sm">
-                <tr><td>Estimated Value</td><td>₹${(q.value_estimate || 0).toLocaleString('en-IN')}</td></tr>
-                <tr><td>Min Value</td><td>₹${(q.value_min || 0).toLocaleString('en-IN')}</td></tr>
-                <tr><td>Max Value</td><td>₹${(q.value_max || 0).toLocaleString('en-IN')}</td></tr>
-                <tr><td>Customer Expected</td><td>₹${(q.customer_expected_value || 0).toLocaleString('en-IN')}</td></tr>
-              </table>
-            </div>
-          </div>
-        </div></div>`;
+      const history = histData.history || [];
+      let html = '';
 
-      // Images
+      // Customer & Product Info
+      html += `<div class="card mb-4"><div class="card-header d-flex justify-content-between align-items-center">
+        <strong><i class="bi bi-file-text me-2"></i>#${q.id} - ${q.customer_name || 'Unknown'}</strong>
+        <span class="badge bg-${q.status === 'pending_manager_review' ? 'warning' : q.status === 'approved' ? 'success' : 'danger'} fs-6">${q.status}</span>
+      </div><div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6 class="fw-bold text-green"><i class="bi bi-person me-2"></i>Customer Info</h6>
+            <table class="table table-sm table-borderless">
+              <tr><td class="text-muted" style="width:30%">Name</td><td class="fw-semibold">${q.customer_name || '-'}</td></tr>
+              <tr><td class="text-muted">Phone</td><td>${q.customer_phone || '-'}</td></tr>
+              <tr><td class="text-muted">Email</td><td>${q.customer_email || '-'}</td></tr>
+              <tr><td class="text-muted">Address</td><td>${q.customer_address || '-'}${q.customer_district ? ', ' + q.customer_district : ''}${q.customer_state ? ', ' + q.customer_state : ''}</td></tr>
+              <tr><td class="text-muted">Pincode</td><td>${q.customer_pincode || '-'}</td></tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <h6 class="fw-bold text-green"><i class="bi bi-box me-2"></i>Product Info</h6>
+            <table class="table table-sm table-borderless">
+              <tr><td class="text-muted" style="width:30%">Product</td><td class="fw-semibold">${q.product_catalog?.name || q.product_category || '-'}</td></tr>
+              <tr><td class="text-muted">Brand</td><td>${q.brand || '-'}</td></tr>
+              <tr><td class="text-muted">Model</td><td>${q.model || '-'}</td></tr>
+              <tr><td class="text-muted">Serial No</td><td>${q.serial_number || '-'}</td></tr>
+              <tr><td class="text-muted">Condition</td><td><span class="badge bg-${q.condition === 'excellent' ? 'success' : q.condition === 'good' ? 'info' : q.condition === 'fair' ? 'warning' : 'danger'}">${q.condition || '-'}</span></td></tr>
+              <tr><td class="text-muted">Weight</td><td>${q.weight_kg || '-'} kg</td></tr>
+            </table>
+          </div>
+        </div>
+        <div class="row mt-2">
+          <div class="col-md-6">
+            <h6 class="fw-bold text-green"><i class="bi bi-person-badge me-2"></i>Employee</h6>
+            <p class="mb-1">${q.user?.full_name || '-'} <span class="text-muted">(@${q.user?.username || '-'})</span></p>
+            ${q.notes ? `<div class="mt-2"><strong class="small text-muted">Employee Notes:</strong><p class="mb-0 small">${q.notes}</p></div>` : ''}
+          </div>
+          <div class="col-md-6">
+            <h6 class="fw-bold text-green"><i class="bi bi-currency-rupee me-2"></i>Valuation</h6>
+            <div class="row g-2">
+              <div class="col-4 text-center p-2 bg-light rounded">
+                <div class="small text-muted">Min</div>
+                <div class="fw-bold text-danger">\u20B9${(q.value_min || 0).toLocaleString('en-IN')}</div>
+              </div>
+              <div class="col-4 text-center p-2 bg-success bg-opacity-10 rounded">
+                <div class="small text-muted">Recommended</div>
+                <div class="fw-bold text-success">\u20B9${(q.recommended_value || q.value_estimate || 0).toLocaleString('en-IN')}</div>
+              </div>
+              <div class="col-4 text-center p-2 bg-light rounded">
+                <div class="small text-muted">Max</div>
+                <div class="fw-bold text-primary">\u20B9${(q.value_max || 0).toLocaleString('en-IN')}</div>
+              </div>
+            </div>
+            ${q.customer_expected_value ? `<div class="mt-2 p-2 bg-info bg-opacity-10 rounded"><strong class="small">Customer Expected:</strong> \u20B9${(q.customer_expected_value).toLocaleString('en-IN')}</div>` : ''}
+          </div>
+        </div>
+      </div></div>`;
+
+      // Images with AI Analysis
       if (q.assessment_images && q.assessment_images.length) {
-        html += '<div class="card mb-4"><div class="card-header"><strong>Images</strong></div><div class="card-body"><div class="row">';
-        q.assessment_images.forEach(img => {
-          html += `<div class="col-md-3 mb-2"><img src="/uploads/assessments/${img.filename}" class="img-fluid rounded" style="max-height:150px;object-fit:cover"></div>`;
+        html += '<div class="card mb-4"><div class="card-header"><strong><i class="bi bi-images me-2"></i>Uploaded Images & AI Analysis</strong></div><div class="card-body">';
+        q.assessment_images.forEach((img, idx) => {
+          const ai = img.ai_analysis;
+          const aiBadge = ai && !ai.error ? `<span class="badge bg-success ms-2">AI Analyzed</span>` : `<span class="badge bg-secondary ms-2">Pending AI</span>`;
+          html += `<div class="row mb-3 pb-3 border-bottom">
+            <div class="col-md-3">
+              <img src="/uploads/assessments/${img.filename}" class="img-fluid rounded border" style="max-height:120px;object-fit:cover">
+              <div class="small text-muted mt-1">${img.original_name || img.filename}</div>
+            </div>
+            <div class="col-md-9">
+              <div class="d-flex align-items-center gap-2 mb-2"><strong>Image ${idx+1}</strong> ${aiBadge}</div>`;
+          if (ai && !ai.error) {
+            html += `<div class="row g-2 small">
+              <div class="col-4"><span class="text-muted">Detected:</span> <strong>${ai.brand || 'N/A'} ${ai.model || ''}</strong></div>
+              <div class="col-4"><span class="text-muted">Type:</span> <strong>${ai.product_type || 'N/A'}</strong></div>
+              <div class="col-4"><span class="text-muted">Condition Score:</span> <span class="badge bg-${ai.condition_score >= 70 ? 'success' : ai.condition_score >= 40 ? 'warning' : 'danger'}">${ai.condition_score || 'N/A'}/100</span></div>
+              <div class="col-4"><span class="text-muted">Confidence:</span> <strong>${ai.confidence || 'N/A'}%</strong></div>
+              <div class="col-4"><span class="text-muted">Classification:</span> <strong>${ai.category || ai.classification || 'N/A'}</strong></div>
+              <div class="col-4"><span class="text-muted">Data Risk:</span> <strong>${ai.data_risk || 'N/A'}</strong></div>
+            </div>`;
+            if (ai.observations && ai.observations.length) {
+              html += `<div class="mt-2"><strong class="small">Component Analysis:</strong><div class="d-flex flex-wrap gap-1 mt-1">`;
+              ai.observations.forEach(o => {
+                const col = o.status === 'good' ? 'success' : o.status === 'fair' ? 'warning' : 'danger';
+                html += `<span class="badge bg-${col} bg-opacity-10 text-${col}">${o.component}: ${o.confidence}%</span>`;
+              });
+              html += `</div></div>`;
+            }
+          } else if (ai && ai.error) {
+            html += `<div class="text-danger small">AI Error: ${ai.error}</div>`;
+          } else {
+            html += `<div class="text-muted small">No AI analysis available</div>`;
+          }
+          html += `</div></div>`;
         });
-        html += '</div></div></div>';
+        html += '</div></div>';
       }
 
-      // Dynamic Questionnaire (Verification Answers)
+      // Specifications & Accessories
+      if (q.specifications || q.accessories_available) {
+        html += '<div class="card mb-4"><div class="card-header"><strong><i class="bi bi-list-check me-2"></i>Specifications & Accessories</strong></div><div class="card-body">';
+        if (q.specifications) {
+          let specs = q.specifications;
+          if (typeof specs === 'string') { try { specs = JSON.parse(specs); } catch(e) {} }
+          if (typeof specs === 'object' && !Array.isArray(specs)) {
+            html += '<h6 class="small text-muted">Specifications</h6><div class="row g-1 small mb-3">';
+            Object.entries(specs).forEach(([k, v]) => { html += `<div class="col-4"><strong>${k}:</strong> ${v}</div>`; });
+            html += '</div>';
+          }
+        }
+        if (q.accessories_available) {
+          html += `<h6 class="small text-muted">Accessories Included</h6><p class="small mb-0">${q.accessories_available}</p>`;
+        }
+        html += '</div></div>';
+      }
+
+      // Dynamic Questionnaire
       const detail = q.assessment_detail;
       if (detail && detail.verification_answers) {
         const va = detail.verification_answers;
-        html += `<div class="card mb-4"><div class="card-header"><strong>Dynamic Questionnaire</strong></div><div class="card-body">
+        html += `<div class="card mb-4"><div class="card-header"><strong><i class="bi bi-question-circle me-2"></i>Dynamic Questionnaire</strong></div><div class="card-body">
           <div class="row g-2 small">
             <div class="col-3"><strong>Power On:</strong> ${va.power_on || '-'}</div>
             <div class="col-3"><strong>Damage:</strong> ${va.damage || '-'}</div>
@@ -233,34 +287,77 @@
         html += `</div></div>`;
       }
 
-      // AI Analysis
+      // AI Analysis Summary
       if (q.ai_score) {
-        html += `<div class="card mb-4"><div class="card-header"><strong>AI Analysis</strong></div>
+        html += `<div class="card mb-4"><div class="card-header"><strong><i class="bi bi-robot me-2"></i>AI Analysis Summary</strong></div>
         <div class="card-body">
-          <div class="row g-2 small">
-            <div class="col-4"><strong>Score:</strong> ${q.ai_score}</div>
-            <div class="col-4"><strong>Classification:</strong> ${q.classification || 'N/A'}</div>
-          </div>
-        </div></div>`;
+          <div class="row g-3">
+            <div class="col-3 text-center"><div class="display-6 fw-bold text-green">${q.ai_score}</div><small class="text-muted">AI Score</small></div>
+            <div class="col-3 text-center"><div class="display-6 fw-bold text-${q.classification === 'reusable' ? 'success' : q.classification === 'repairable' ? 'warning' : 'info'}">${q.classification || 'N/A'}</div><small class="text-muted">Classification</small></div>
+            <div class="col-6">`;
+        if (q.assessment_images) {
+          q.assessment_images.forEach(img => {
+            const ai = img.ai_analysis;
+            if (ai && ai.observations) {
+              html += '<div class="d-flex flex-wrap gap-1">';
+              ai.observations.forEach(o => {
+                const col = o.status === 'good' ? 'success' : o.status === 'fair' ? 'warning' : 'danger';
+                html += `<span class="badge bg-${col} bg-opacity-10 text-${col} border border-${col}">${o.component}: ${o.confidence}%</span>`;
+              });
+              html += '</div>';
+            }
+          });
+        }
+        html += `</div></div></div></div>`;
       }
 
-      // Employee Notes
-      if (q.notes) {
-        html += `<div class="card mb-4"><div class="card-header"><strong>Employee Notes</strong></div>
-        <div class="card-body"><p class="mb-0">${q.notes}</p></div></div>`;
+      // Audit Trail / Activity History
+      if (history.length > 0) {
+        html += '<div class="card mb-4"><div class="card-header"><strong><i class="bi bi-clock-history me-2"></i>Activity History & Audit Trail</strong></div><div class="card-body p-0"><div class="list-group list-group-flush">';
+        history.forEach((log, i) => {
+          const actionIcons = {
+            assessment_created: 'bi-plus-circle text-success',
+            assessment_submitted: 'bi-send text-primary',
+            quotation_approved: 'bi-check-circle text-success',
+            quotation_rejected: 'bi-x-circle text-danger',
+            quotation_modified: 'bi-pencil text-warning',
+            hub_assigned: 'bi-building text-info',
+            assessment_resubmitted: 'bi-arrow-repeat text-primary',
+          };
+          const icon = actionIcons[log.action] || 'bi-info-circle text-secondary';
+          const meta = log.metadata || {};
+          const metaStr = meta.value ? ` - Value: \u20B9${Number(meta.value).toLocaleString('en-IN')}` : (meta.reason ? ` - Reason: ${meta.reason}` : (meta.changes ? ' - Values modified' : ''));
+          const actionLabel = log.action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          html += `<div class="list-group-item py-2 px-3 d-flex align-items-start gap-3">
+            <i class="${icon} fs-5 mt-1"></i>
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between">
+                <strong class="small">${actionLabel}</strong>
+                <small class="text-muted">${new Date(log.created_at).toLocaleString('en-IN')}</small>
+              </div>
+              <div class="small text-muted">${log.user?.full_name || 'System'} (${log.user?.role || 'system'})${metaStr}</div>
+              ${meta.customer ? `<div class="small text-muted">Customer: ${meta.customer}</div>` : ''}
+            </div>
+          </div>`;
+        });
+        html += '</div></div></div>';
       }
 
-      // Actions
+      // Actions for pending quotations
       if (q.status === 'pending_manager_review') {
-        html += `<div class="d-flex gap-2 flex-wrap">
-          <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#approveModal"><i class="bi bi-check-circle me-2"></i>Approve</button>
-          <button class="btn btn-warning btn-lg text-white" data-bs-toggle="modal" data-bs-target="#modifyModal"><i class="bi bi-pencil me-2"></i>Modify</button>
-          <button class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#rejectModal"><i class="bi bi-x-circle me-2"></i>Reject</button>
+        html += `<div class="d-flex gap-2 flex-wrap mb-4">
+          <button class="btn btn-success btn-lg flex-fill" data-bs-toggle="modal" data-bs-target="#approveModal"><i class="bi bi-check-circle me-2"></i>Approve</button>
+          <button class="btn btn-warning btn-lg text-white flex-fill" data-bs-toggle="modal" data-bs-target="#modifyModal"><i class="bi bi-pencil me-2"></i>Modify</button>
+          <button class="btn btn-danger btn-lg flex-fill" data-bs-toggle="modal" data-bs-target="#rejectModal"><i class="bi bi-x-circle me-2"></i>Reject</button>
         </div>`;
       }
 
+      // Show assigned hub info if already approved
+      if (q.assigned_hub) {
+        html += `<div class="alert alert-info"><i class="bi bi-building me-2"></i><strong>Assigned Hub:</strong> ${q.assigned_hub.name} (${q.assigned_hub.type || 'N/A'})</div>`;
+      }
+
       document.getElementById('reviewContent').innerHTML = html;
-      fetchNotifCount();
     } catch(e) {
       document.getElementById('reviewContent').innerHTML = '<p class="text-danger">Failed to load: ' + e.message + '</p>';
     }
@@ -275,16 +372,16 @@
       });
       if (!res.ok) throw new Error((await res.json()).error);
       if (hubId) {
-        await fetch('/api/manager/quotations/' + currentQuotation.id + '/assign-hub', {
+        const hubRes = await fetch('/api/manager/quotations/' + currentQuotation.id + '/assign-hub', {
           method: 'POST', headers, body: JSON.stringify({ hub_id: hubId })
         });
+        if (!hubRes.ok) throw new Error('Hub assignment failed');
       }
       alert('Quotation approved successfully!');
       window.location.href = 'approved.html';
     } catch(e) { alert('Error: ' + e.message); }
   };
 
-  // Populate modify modal when opened
   document.getElementById('modifyModal').addEventListener('show.bs.modal', function () {
     if (!currentQuotation) return;
     document.getElementById('modifyEstimate').value = currentQuotation.value_estimate || '';
@@ -317,13 +414,16 @@
 
   window.rejectQuotation = async function() {
     const reason = document.getElementById('rejectReason').value.trim();
-    if (!reason) { alert('Please provide a rejection reason'); return; }
+    if (!reason) { alert('Please provide a mandatory rejection reason'); return; }
+    const suggestedValue = document.getElementById('rejectSuggestedValue').value;
+    const payload = { reason };
+    if (suggestedValue) payload.suggested_value = parseFloat(suggestedValue);
     try {
       const res = await fetch('/api/manager/quotations/' + currentQuotation.id + '/reject', {
-        method: 'POST', headers, body: JSON.stringify({ reason })
+        method: 'POST', headers, body: JSON.stringify(payload)
       });
       if (!res.ok) throw new Error((await res.json()).error);
-      alert('Quotation rejected');
+      alert('Quotation rejected. Employee will be notified to revise.');
       window.location.href = 'rejected.html';
     } catch(e) { alert('Error: ' + e.message); }
   };

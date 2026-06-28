@@ -5,6 +5,7 @@ const { ASSESSMENT_STATUS, PRODUCT_CONDITIONS, CLASSIFICATIONS } = require('../u
 const Assessment = sequelize.define('assessments', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
   user_id: { type: DataTypes.INTEGER, allowNull: false },
+  region_id: { type: DataTypes.INTEGER, allowNull: true },
   customer_name: { type: DataTypes.STRING(100) },
   customer_email: { type: DataTypes.STRING(100) },
   customer_phone: { type: DataTypes.STRING(20) },
@@ -43,14 +44,13 @@ const Assessment = sequelize.define('assessments', {
   value_max: { type: DataTypes.DECIMAL(12, 2) },
   recommended_value: { type: DataTypes.DECIMAL(12, 2) },
   final_value: { type: DataTypes.DECIMAL(12, 2) },
-  // Customer expected value for renegotiation
   customer_expected_value: { type: DataTypes.DECIMAL(12, 2) },
   // Manager review fields
   rejection_reason: { type: DataTypes.TEXT },
   approved_by: { type: DataTypes.INTEGER },
   hr_approved_value: { type: DataTypes.DECIMAL(12, 2) },
   hr_rejection_reason: { type: DataTypes.TEXT },
-  // Hub and supply‑chain assignment
+  // Hub and supply-chain assignment
   assigned_hub_id: { type: DataTypes.INTEGER },
   supply_chain_user_id: { type: DataTypes.INTEGER },
   // OTP verification
@@ -58,10 +58,34 @@ const Assessment = sequelize.define('assessments', {
   otp_code: { type: DataTypes.STRING(10) },
   otp_generated_at: { type: DataTypes.DATE },
   otp_verified: { type: DataTypes.BOOLEAN, defaultValue: false },
+  otp_retry_count: { type: DataTypes.INTEGER, defaultValue: 0 },
   // Logistics tracking
   destination_id: { type: DataTypes.INTEGER },
   destination_type: { type: DataTypes.STRING(50) },
   movement_history: { type: DataTypes.JSON },
+  // Pickup scheduling fields
+  pickup_priority: { type: DataTypes.STRING(20), defaultValue: 'normal' },
+  scheduled_pickup_date: { type: DataTypes.DATEONLY },
+  scheduled_pickup_time: { type: DataTypes.STRING(10) },
+  pickup_remarks: { type: DataTypes.TEXT },
+  // Journey tracking
+  departure_time: { type: DataTypes.DATE },
+  vehicle_number: { type: DataTypes.STRING(30) },
+  driver_name: { type: DataTypes.STRING(100) },
+  executive_name: { type: DataTypes.STRING(100) },
+  arrival_time: { type: DataTypes.DATE },
+  gps_coordinates: { type: DataTypes.STRING(100) },
+  distance_travelled: { type: DataTypes.DECIMAL(10, 2) },
+  // Product verification
+  product_verified: { type: DataTypes.BOOLEAN, defaultValue: false },
+  verification_notes: { type: DataTypes.TEXT },
+  // Collection details
+  collection_time: { type: DataTypes.DATE },
+  package_count: { type: DataTypes.INTEGER },
+  packaging_condition: { type: DataTypes.STRING(50) },
+  collection_notes: { type: DataTypes.TEXT },
+  // Exception handling
+  exception_reason: { type: DataTypes.TEXT },
   // AI scoring & classification
   ai_score: { type: DataTypes.DECIMAL(5, 2) },
   classification: { type: DataTypes.ENUM(...CLASSIFICATIONS) },

@@ -53,10 +53,9 @@
       sessionStorage.removeItem('greenera_admin_token');
       sessionStorage.removeItem('greenera_admin');
 
-      // Role-based redirect
       const role = data.user.role;
       if (role === 'manager') {
-        window.location.href = 'hr/dashboard.html';
+        window.location.href = 'manager/dashboard.html';
       } else if (role === 'supply_chain') {
         window.location.href = 'supply-chain/dashboard.html';
       } else if (role === 'center_manager') {

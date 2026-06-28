@@ -12,6 +12,9 @@ const ForecastData = require('./ForecastData');
 const ForecastResult = require('./ForecastResult');
 const SustainabilityScore = require('./SustainabilityScore');
 const Recommendation = require('./Recommendation');
+const InventoryItem = require('./InventoryItem');
+const InventoryMovement = require('./InventoryMovement');
+const AnalysisResult = require('./AnalysisResult');
 
 User.belongsTo(Region, { foreignKey: 'region_id' });
 Region.hasMany(User, { foreignKey: 'region_id' });
@@ -25,7 +28,8 @@ Assessment.belongsTo(ProductCatalog, { foreignKey: 'product_type_id' });
 ProductCatalog.hasMany(Assessment, { foreignKey: 'product_type_id' });
 Assessment.belongsTo(Facility, { as: 'assigned_hub', foreignKey: 'assigned_hub_id' });
 Assessment.belongsTo(User, { as: 'supply_chain_user', foreignKey: 'supply_chain_user_id' });
-
+Assessment.belongsTo(Region, { foreignKey: 'region_id' });
+Region.hasMany(Assessment, { foreignKey: 'region_id' });
 
 Assessment.hasMany(AssessmentImage, { foreignKey: 'assessment_id' });
 AssessmentImage.belongsTo(Assessment, { foreignKey: 'assessment_id' });
@@ -54,8 +58,28 @@ Region.hasMany(ForecastResult, { foreignKey: 'region_id' });
 SustainabilityScore.belongsTo(Region, { foreignKey: 'region_id' });
 Region.hasMany(SustainabilityScore, { foreignKey: 'region_id' });
 
+Recommendation.belongsTo(Region, { foreignKey: 'region_id' });
+Region.hasMany(Recommendation, { foreignKey: 'region_id' });
+Recommendation.belongsTo(User, { foreignKey: 'user_id' });
+User.hasMany(Recommendation, { foreignKey: 'user_id' });
+
+InventoryItem.belongsTo(Assessment, { foreignKey: 'assessment_id' });
+Assessment.hasOne(InventoryItem, { foreignKey: 'assessment_id' });
+InventoryItem.belongsTo(Facility, { foreignKey: 'facility_id' });
+Facility.hasMany(InventoryItem, { foreignKey: 'facility_id' });
+InventoryItem.belongsTo(User, { as: 'receiver', foreignKey: 'received_by' });
+
+InventoryMovement.belongsTo(InventoryItem, { foreignKey: 'inventory_item_id' });
+InventoryMovement.belongsTo(Assessment, { foreignKey: 'assessment_id' });
+InventoryMovement.belongsTo(User, { as: 'performer', foreignKey: 'performed_by' });
+
+AnalysisResult.belongsTo(Assessment, { foreignKey: 'assessment_id' });
+Assessment.hasOne(AnalysisResult, { foreignKey: 'assessment_id' });
+AnalysisResult.belongsTo(User, { as: 'analyser', foreignKey: 'analysed_by' });
+
 module.exports = {
   User, Region, Facility, LogisticsRoute, ProductCatalog,
   Assessment, AssessmentImage, AssessmentDetail, ActivityLog, Notification,
   ForecastData, ForecastResult, SustainabilityScore, Recommendation,
+  InventoryItem, InventoryMovement, AnalysisResult,
 };

@@ -29,18 +29,18 @@
   </nav>
   <div class="container-fluid">
     <div class="row">
-      <nav class="col-md-2 d-none d-md-block sidebar">
-        <div class="pt-4">
-          <a href="dashboard.html" class="nav-link"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-          <a href="pending.html" class="nav-link"><i class="bi bi-clock me-2"></i>Pending Reviews</a>
-          <a href="approved.html" class="nav-link active"><i class="bi bi-check-circle me-2"></i>Approved</a>
-          <a href="rejected.html" class="nav-link"><i class="bi bi-x-circle me-2"></i>Rejected</a>
-          <a href="review.html" class="nav-link"><i class="bi bi-eye me-2"></i>Review</a>
-          <a href="receipt-history.html" class="nav-link"><i class="bi bi-receipt me-2"></i>Receipts</a>
-        </div>
-      </nav>
+      <nav class="col-md-2 d-none d-md-block sidebar"><div class="pt-4">
+        <a href="dashboard.html" class="nav-link"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+        <a href="pending.html" class="nav-link"><i class="bi bi-clock me-2"></i>Pending Reviews</a>
+        <a href="approved.html" class="nav-link active"><i class="bi bi-check-circle me-2"></i>Approved</a>
+        <a href="rejected.html" class="nav-link"><i class="bi bi-x-circle me-2"></i>Rejected</a>
+        <a href="review.html" class="nav-link"><i class="bi bi-eye me-2"></i>Review</a>
+        <a href="receipt-history.html" class="nav-link"><i class="bi bi-receipt me-2"></i>Receipts</a>
+      </div></nav>
       <main class="col-md-10 ms-sm-auto px-4">
-        <div class="pt-4 pb-2 mb-3 border-bottom"><h1 class="h4">Approved Quotations</h1></div>
+        <div class="pt-4 pb-2 mb-3 border-bottom d-flex justify-content-between align-items-center">
+          <h1 class="h4 mb-0"><i class="bi bi-check-circle text-success me-2"></i>Approved Quotations</h1>
+        </div>
         <div id="approvedContent"><p class="text-muted">Loading...</p></div>
       </main>
     </div>
@@ -48,23 +48,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="../assets/js/main.js"></script>
   <script>
-  const notifHeaders = { 'Authorization': 'Bearer ' + (localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token')), 'Content-Type': 'application/json' };
-  async function fetchNotifCount() {
-    try {
-      const res = await fetch('/api/notifications/unread-count', { headers: notifHeaders });
-      const data = await res.json(); const badge = document.getElementById('notifBadge');
-      if (badge) { if (data.count > 0) { badge.textContent = data.count; badge.style.display = 'inline'; } else badge.style.display = 'none'; }
-    } catch(e) {}
-  }
-  async function toggleNotifModal() {
-    try {
-      const res = await fetch('/api/notifications', { headers: notifHeaders });
-      const data = await res.json(); const notifs = data.notifications || [];
-      if (!notifs.length) { alert('No notifications'); return; }
-      let msg = notifs.slice(0, 10).map((n, i) => `${i+1}. [${n.type.toUpperCase()}] ${n.title}\n  ${n.message || ''}${n.is_read ? '' : ' (NEW)'}`).join('\n\n');
-      if (confirm(msg + '\n\nMark all as read?')) { await fetch('/api/notifications/read-all', { method: 'POST', headers: notifHeaders }); fetchNotifCount(); }
-    } catch(e) { alert('Failed to load notifications'); }
-  }
   (async function() {
     const token = localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token');
     if (!token) { window.location.href = '../login.html'; return; }
@@ -72,25 +55,26 @@
     try {
       const res = await fetch('/api/manager/approved?limit=100', { headers });
       const data = await res.json();
-      let html = '<div class="table-responsive"><table class="table table-hover"><thead><tr><th>ID</th><th>Customer</th><th>Product</th><th>Value</th><th>Approved By</th><th>Assigned Hub</th><th>Supply Chain</th><th>Date</th></tr></thead><tbody>';
-      (data.quotations || []).forEach(q => {
+      const list = data.quotations || [];
+      let html = '<div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr><th>ID</th><th>Customer</th><th>Product</th><th>Approved Value</th><th>Approved By</th><th>Hub</th><th>Date</th><th>Action</th></tr></thead><tbody>';
+      list.forEach(q => {
+        const date = q.hr_acted_at ? new Date(q.hr_acted_at).toLocaleDateString('en-IN') : '-';
         html += `<tr>
-          <td>#${q.id}</td>
+          <td><strong>#${q.id}</strong></td>
           <td>${q.customer_name || '-'}</td>
-          <td>${q.product_catalog?.name || q.brand || '-'}</td>
-          <td>₹${(q.hr_approved_value || 0).toLocaleString('en-IN')}</td>
+          <td>${q.product_catalog?.name || q.product_category || '-'}<br><small class="text-muted">${q.brand || ''} ${q.model || ''}</small></td>
+          <td class="fw-bold text-success">\u20B9${(q.hr_approved_value || 0).toLocaleString('en-IN')}</td>
           <td>${q.approver?.full_name || '-'}</td>
           <td>${q.assigned_hub?.name || '-'}</td>
-          <td>${q.supply_chain_user?.full_name || '-'}</td>
-          <td>${q.hr_acted_at ? new Date(q.hr_acted_at).toLocaleDateString() : '-'}</td>
+          <td>${date}</td>
+          <td><a href="review.html?id=${q.id}" class="btn btn-sm btn-outline-primary-green"><i class="bi bi-eye me-1"></i>View</a></td>
         </tr>`;
       });
       html += '</tbody></table></div>';
-      html += '</tbody></table>';
-      if (!data.quotations?.length) html = '<div class="alert alert-info">No approved quotations</div>';
-      document.getElementById('approvedContent').innerHTML = html;
-      fetchNotifCount(); setInterval(fetchNotifCount, 30000);
-    } catch(e) { document.getElementById('approvedContent').innerHTML = '<p class="text-danger">Failed to load</p>'; }
+      document.getElementById('approvedContent').innerHTML = html || '<div class="alert alert-info mb-0"><i class="bi bi-info-circle me-2"></i>No approved quotations yet.</div>';
+    } catch(e) {
+      document.getElementById('approvedContent').innerHTML = '<p class="text-danger">Failed to load: ' + e.message + '</p>';
+    }
   })();
   </script>
 </body>
