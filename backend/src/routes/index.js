@@ -15,5 +15,10 @@ router.use('/facilities', require('./facility.routes'));
 router.use('/logistics', require('./logistics.routes'));
 router.use('/data/import', require('./dataImport.routes'));
 router.use('/hr', require('./hr.routes'));
+router.use('/employee', require('./employee.routes'));
+router.use('/manager', require('./manager.routes'));
+router.use('/supply-chain', require('./supplychain.routes'));
+router.use('/hub', require('./hub.routes'));
+router.use('/notifications', require('./notification.routes'));
 
 module.exports = router;

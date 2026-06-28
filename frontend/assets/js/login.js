@@ -6,8 +6,11 @@
 
   if (!loginForm) return;
 
-  if (localStorage.getItem('greenera_token')) {
-    window.location.href = 'dashboard.html';
+  if (localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token')) {
+    const user = JSON.parse(localStorage.getItem('greenera_user') || sessionStorage.getItem('greenera_user') || 'null');
+    if (user?.role === 'manager') window.location.href = 'hr/dashboard.html';
+    else if (user?.role === 'supply_chain') window.location.href = 'supply-chain/dashboard.html';
+    else window.location.href = 'dashboard.html';
     return;
   }
 
@@ -51,8 +54,13 @@
       sessionStorage.removeItem('greenera_admin');
 
       // Role-based redirect
-      if (data.user.role === 'hr') {
+      const role = data.user.role;
+      if (role === 'manager') {
         window.location.href = 'hr/dashboard.html';
+      } else if (role === 'supply_chain') {
+        window.location.href = 'supply-chain/dashboard.html';
+      } else if (role === 'center_manager') {
+        window.location.href = 'hub/dashboard.html';
       } else {
         window.location.href = 'dashboard.html';
       }

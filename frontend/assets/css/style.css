@@ -1194,6 +1194,6 @@ a:hover { color: var(--primary-green-dark); }
 .badge-hr { background: #F59E0B; color: #fff; }
 
 /* Status badges for HR workflow */
-.status-badge.pending_hr_approval { background: #FEF3C7; color: #92400E; }
-.status-badge.hr_approved { background: #D1FAE5; color: #065F46; }
-.status-badge.hr_rejected { background: #FEE2E2; color: #991B1B; }
+.status-badge.pending_manager_review { background: #FEF3C7; color: #92400E; }
+.status-badge.approved { background: #D1FAE5; color: #065F46; }
+.status-badge.rejected { background: #FEE2E2; color: #991B1B; }

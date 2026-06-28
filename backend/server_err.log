@@ -1,0 +1,8 @@
+AppError: Insufficient permissions
+    at D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\src\middleware\auth.js:27:17
+    at Layer.handle [as handle_request] (D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\node_modules\express\lib\router\layer.js:95:5)
+    at next (D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\node_modules\express\lib\router\route.js:149:13)
+    at auth (D:\Projects\GreenEra\e-waste-management-and-recycling - ver0\backend\src\middleware\auth.js:19:5) {
+  statusCode: 403,
+  isOperational: true
+}
