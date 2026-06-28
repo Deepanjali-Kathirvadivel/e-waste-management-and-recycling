@@ -6,16 +6,18 @@ const createStaffSchema = Joi.object({
   password: Joi.string().min(4).max(100).required(),
   full_name: Joi.string().max(100).required(),
   phone: Joi.string().max(20).allow('', null),
-  role: Joi.string().valid('admin', 'center_manager', 'employee').required(),
+  role: Joi.string().valid('admin', 'manager', 'hr', 'center_manager', 'employee', 'supply_chain').required(),
   region_id: Joi.number().integer().allow(null),
+  facility_id: Joi.number().integer().allow(null),
 });
 
 const updateStaffSchema = Joi.object({
   full_name: Joi.string().max(100),
   email: Joi.string().email(),
   phone: Joi.string().max(20).allow('', null),
-  role: Joi.string().valid('admin', 'center_manager', 'employee'),
+  role: Joi.string().valid('admin', 'manager', 'hr', 'center_manager', 'employee', 'supply_chain'),
   region_id: Joi.number().integer().allow(null),
+  facility_id: Joi.number().integer().allow(null),
   is_active: Joi.boolean(),
   password: Joi.string().min(4).max(100),
 });

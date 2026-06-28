@@ -3,6 +3,7 @@ const { Assessment, AssessmentImage, AssessmentDetail, ProductCatalog, User, Fac
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const { log } = require('../services/activity.service');
+const notificationService = require('../services/notification.service');
 const pagination = require('../utils/pagination');
 
 const CATEGORY_LABELS = {
@@ -20,9 +21,9 @@ exports.dashboard = catchAsync(async (req, res) => {
   today.setHours(0, 0, 0, 0);
 
   const [pending, approvedToday, rejectedToday, total] = await Promise.all([
-    Assessment.count({ where: { status: 'pending_hr_approval' } }),
-    Assessment.count({ where: { status: 'hr_approved', hr_acted_at: { [Op.gte]: today } } }),
-    Assessment.count({ where: { status: 'hr_rejected', hr_acted_at: { [Op.gte]: today } } }),
+    Assessment.count({ where: { status: 'pending_manager_review' } }),
+    Assessment.count({ where: { status: 'approved', hr_acted_at: { [Op.gte]: today } } }),
+    Assessment.count({ where: { status: 'rejected', hr_acted_at: { [Op.gte]: today } } }),
     Assessment.count(),
   ]);
 
@@ -104,7 +105,7 @@ exports.dashboard = catchAsync(async (req, res) => {
 exports.pendingQuotations = catchAsync(async (req, res) => {
   const { page, limit, offset } = pagination(req.query);
   const { rows, count } = await Assessment.findAndCountAll({
-    where: { status: 'pending_hr_approval' },
+    where: { status: 'pending_manager_review' },
     limit, offset, order: [['submitted_at', 'DESC']],
     include: [
       { model: ProductCatalog, attributes: ['name', 'icon'] },
@@ -116,8 +117,14 @@ exports.pendingQuotations = catchAsync(async (req, res) => {
 
 exports.approvedQuotations = catchAsync(async (req, res) => {
   const { page, limit, offset } = pagination(req.query);
+  // For employee role, include both old HR-approved and new manager-approved statuses
+  const statusFilter = req.user.role === 'employee'
+    ? { [Op.in]: ['approved'] }
+    : 'approved';
+  const where = { status: statusFilter };
+  if (req.user.role === 'employee') where.user_id = req.user.id;
   const { rows, count } = await Assessment.findAndCountAll({
-    where: { status: 'hr_approved' },
+    where,
     limit, offset, order: [['hr_acted_at', 'DESC']],
     include: [
       { model: ProductCatalog, attributes: ['name', 'icon'] },
@@ -130,8 +137,13 @@ exports.approvedQuotations = catchAsync(async (req, res) => {
 
 exports.rejectedQuotations = catchAsync(async (req, res) => {
   const { page, limit, offset } = pagination(req.query);
+  const statusFilter = req.user.role === 'employee'
+    ? { [Op.in]: ['rejected'] }
+    : 'rejected';
+  const where = { status: statusFilter };
+  if (req.user.role === 'employee') where.user_id = req.user.id;
   const { rows, count } = await Assessment.findAndCountAll({
-    where: { status: 'hr_rejected' },
+    where,
     limit, offset, order: [['hr_acted_at', 'DESC']],
     include: [
       { model: ProductCatalog, attributes: ['name', 'icon'] },
@@ -160,11 +172,11 @@ exports.getQuotation = catchAsync(async (req, res) => {
 exports.approveQuotation = catchAsync(async (req, res) => {
   const assessment = await Assessment.findByPk(req.params.id);
   if (!assessment) throw new AppError('Quotation not found', 404);
-  if (assessment.status !== 'pending_hr_approval') throw new AppError('Quotation is not pending approval', 400);
+  if (assessment.status !== 'pending_manager_review') throw new AppError('Quotation is not pending approval', 400);
 
   const { approved_value } = req.body;
   await assessment.update({
-    status: 'hr_approved',
+    status: 'approved',
     hr_approved_value: approved_value || assessment.customer_expected_value || assessment.value_estimate,
     approved_by: req.user.id,
     hr_acted_at: new Date(),
@@ -179,11 +191,11 @@ exports.approveQuotation = catchAsync(async (req, res) => {
 exports.rejectQuotation = catchAsync(async (req, res) => {
   const assessment = await Assessment.findByPk(req.params.id);
   if (!assessment) throw new AppError('Quotation not found', 404);
-  if (assessment.status !== 'pending_hr_approval') throw new AppError('Quotation is not pending approval', 400);
+  if (assessment.status !== 'pending_manager_review') throw new AppError('Quotation is not pending approval', 400);
 
   const { reason } = req.body;
   await assessment.update({
-    status: 'hr_rejected',
+    status: 'rejected',
     hr_rejection_reason: reason || 'No reason provided',
     approved_by: req.user.id,
     hr_acted_at: new Date(),
@@ -198,12 +210,12 @@ exports.rejectQuotation = catchAsync(async (req, res) => {
 exports.generateOTP = catchAsync(async (req, res) => {
   const assessment = await Assessment.findByPk(req.params.id);
   if (!assessment) throw new AppError('Quotation not found', 404);
-  if (assessment.status !== 'hr_approved') throw new AppError('Quotation must be approved first', 400);
+  if (assessment.status !== 'approved') throw new AppError('Quotation must be approved first', 400);
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   await assessment.update({ otp_code: otp, otp_verified: false });
 
-  console.log(`[SMS] OTP for ${assessment.customer_phone}: ${otp}`);
+  await notificationService.sendOTP(assessment.customer_phone, otp, assessment.customer_name);
 
   res.json({ message: 'OTP sent to customer', otp }); 
 });
@@ -221,7 +233,12 @@ exports.verifyOTP = catchAsync(async (req, res) => {
 });
 
 exports.closeDeal = catchAsync(async (req, res) => {
-  const assessment = await Assessment.findByPk(req.params.id);
+  const assessment = await Assessment.findByPk(req.params.id, {
+    include: [
+      { model: ProductCatalog, attributes: ['name'] },
+      { model: Facility, as: 'destination', attributes: ['name'] },
+    ],
+  });
   if (!assessment) throw new AppError('Quotation not found', 404);
   if (!assessment.otp_verified) throw new AppError('Customer OTP not verified', 400);
 
@@ -239,8 +256,24 @@ exports.closeDeal = catchAsync(async (req, res) => {
   await log({ userId: req.user.id, action: 'deal_closed', entityType: 'assessment', entityId: assessment.id,
     metadata: { customer: assessment.customer_name, deal_number: dealNum, receipt_number: receiptNum } });
 
+  const dealInfo = {
+    deal_number: dealNum,
+    receipt_number: receiptNum,
+    collection_number: collNum,
+    product_name: assessment.product_catalog?.name || assessment.brand || '-',
+    approved_value: assessment.hr_approved_value || assessment.value_estimate || 0,
+    branch_name: assessment.destination?.name || 'Not assigned',
+    deal_closed_at: new Date(),
+  };
+
+  await notificationService.sendDealClosedNotification(
+    { customer_name: assessment.customer_name, customer_email: assessment.customer_email, customer_phone: assessment.customer_phone },
+    dealInfo,
+    ''
+  );
+
   res.json({
-    message: 'Deal closed successfully',
+    message: 'Deal closed successfully. Receipt sent to customer.',
     deal_number: dealNum,
     receipt_number: receiptNum,
     collection_number: collNum,
@@ -301,27 +334,120 @@ exports.getReceipt = catchAsync(async (req, res) => {
   res.send(receiptHtml);
 });
 
+exports.getFacilities = catchAsync(async (req, res) => {
+  const facilities = await Facility.findAll({
+    where: { status: 'active' },
+    attributes: ['id', 'name', 'type', 'location'],
+    order: [['name', 'ASC']],
+  });
+  res.json({ facilities });
+});
+
 exports.assignDestination = catchAsync(async (req, res) => {
   const assessment = await Assessment.findByPk(req.params.id);
   if (!assessment) throw new AppError('Assessment not found', 404);
 
-  const { destination_id, destination_type } = req.body;
+  const { facility_id } = req.body;
+  if (!facility_id) throw new AppError('facility_id is required', 400);
+
+  const facility = await Facility.findByPk(facility_id);
+  if (!facility) throw new AppError('Facility not found', 404);
+
   const history = assessment.movement_history || [];
   history.push({
     from: assessment.destination_id || null,
-    to: destination_id,
-    type: destination_type,
+    to: facility_id,
+    type: facility.type,
     assigned_by: req.user.id,
     assigned_at: new Date().toISOString(),
   });
 
   await assessment.update({
-    destination_id,
-    destination_type,
+    destination_id: facility_id,
+    destination_type: facility.type,
     movement_history: history,
   });
 
   res.json({ message: 'Destination assigned', quotation: assessment });
+});
+
+exports.batchCloseDeal = catchAsync(async (req, res) => {
+  const { deal_group_id } = req.body;
+  if (!deal_group_id) throw new AppError('deal_group_id required', 400);
+
+  const assessments = await Assessment.findAll({
+    where: { deal_group_id },
+    include: [
+      { model: ProductCatalog, attributes: ['name'] },
+      { model: Facility, as: 'destination', attributes: ['name'] },
+    ],
+  });
+
+  if (!assessments.length) throw new AppError('No products found for this deal group', 404);
+
+  const notVerified = assessments.filter(a => !a.otp_verified);
+  if (notVerified.length) {
+    throw new AppError(`${notVerified.length} product(s) have unverified OTP. Verify OTP for all products first.`, 400);
+  }
+
+  const results = [];
+  for (const assessment of assessments) {
+    if (assessment.deal_number) continue;
+
+    const dealNum = `DEAL-${String(assessment.id).padStart(6, '0')}`;
+    const receiptNum = `RCPT-${String(assessment.id).padStart(6, '0')}-${Date.now().toString(36).toUpperCase()}`;
+    const collNum = `COL-${String(assessment.id).padStart(6, '0')}`;
+
+    await assessment.update({
+      deal_number: dealNum,
+      receipt_number: receiptNum,
+      collection_number: collNum,
+      deal_closed_at: new Date(),
+    });
+
+    await log({ userId: req.user.id, action: 'deal_closed', entityType: 'assessment', entityId: assessment.id,
+      metadata: { customer: assessment.customer_name, deal_number: dealNum, receipt_number: receiptNum } });
+
+    const dealInfo = {
+      deal_number: dealNum,
+      receipt_number: receiptNum,
+      collection_number: collNum,
+      product_name: assessment.product_catalog?.name || assessment.brand || '-',
+      approved_value: assessment.hr_approved_value || assessment.value_estimate || 0,
+      branch_name: assessment.destination?.name || 'Not assigned',
+      deal_closed_at: new Date(),
+    };
+
+    await notificationService.sendDealClosedNotification(
+      { customer_name: assessment.customer_name, customer_email: assessment.customer_email, customer_phone: assessment.customer_phone },
+      dealInfo,
+      ''
+    );
+
+    results.push({ id: assessment.id, deal_number: dealNum, receipt_number: receiptNum });
+  }
+
+  res.json({ message: `${results.length} product(s) closed successfully`, deals: results });
+});
+
+exports.batchGenerateOTP = catchAsync(async (req, res) => {
+  const { ids } = req.body;
+  if (!ids || !ids.length) throw new AppError('No product IDs provided', 400);
+
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+
+  for (const id of ids) {
+    const assessment = await Assessment.findByPk(id);
+    if (!assessment) continue;
+    if (assessment.otp_verified) continue;
+    assessment.otp_code = otp;
+    assessment.otp_generated_at = new Date();
+    await assessment.save();
+
+    await notificationService.sendOTP(assessment.customer_phone, otp, assessment.customer_name);
+  }
+
+  res.json({ message: 'OTP generated for ' + ids.length + ' product(s)', otp });
 });
 
 exports.getDealGroup = catchAsync(async (req, res) => {

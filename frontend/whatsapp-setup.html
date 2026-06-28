@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Setup - Green Era Recyclers</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card" style="max-width:500px">
+      <div class="login-logo">
+        <i class="bi bi-whatsapp"></i>
+        <h3>WhatsApp OTP Setup</h3>
+        <p>Scan this QR code with your phone's WhatsApp to enable OTP delivery via WhatsApp.</p>
+      </div>
+      <div id="qrContainer" class="text-center mb-4">
+        <div class="spinner-border text-green" role="status"></div>
+      </div>
+      <div id="statusBadge" class="text-center mb-3"></div>
+      <p class="small text-muted text-center">Open WhatsApp on your phone → Menu (⋮) → Linked Devices → Link a Device</p>
+      <div class="text-center">
+        <button class="btn btn-outline-secondary btn-sm" onclick="location.reload()">Refresh QR</button>
+        <a href="login.html" class="btn btn-primary-green btn-sm ms-2"><i class="bi bi-arrow-left me-1"></i> Back to Login</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/whatsapp-status');
+        const data = await res.json();
+        const container = document.getElementById('qrContainer');
+        const badge = document.getElementById('statusBadge');
+
+        if (data.ready) {
+          container.innerHTML = '<div class="display-1 text-success"><i class="bi bi-check-circle"></i></div>';
+          badge.innerHTML = '<span class="badge bg-success fs-6">Connected</span>';
+        } else if (data.hasQR && data.qrDataUrl) {
+          container.innerHTML = '<img src="' + data.qrDataUrl + '" alt="QR Code" class="img-fluid" style="max-width:300px">';
+          badge.innerHTML = '<span class="badge bg-warning text-dark fs-6">Scan QR to connect</span>';
+        } else {
+          container.innerHTML = '<div class="text-muted">Initializing WhatsApp client...</div>';
+          badge.innerHTML = '<span class="badge bg-secondary fs-6">Starting...</span>';
+        }
+      } catch (e) {
+        document.getElementById('qrContainer').innerHTML = '<div class="text-danger">Server not reachable</div>';
+      }
+    }
+    checkStatus();
+    setInterval(checkStatus, 3000);
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</body>
+</html>

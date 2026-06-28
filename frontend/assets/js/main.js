@@ -24,9 +24,19 @@ function checkAuth() {
     return null;
   }
   const path = window.location.pathname.replace(/\\/g, '/');
-  if (user.role === 'hr' && !path.includes('/hr/') && !path.includes('login.html') && !path.includes('admin/')) {
+  if (user.role === 'manager' && !path.includes('/hr/') && !path.includes('login.html') && !path.includes('admin/')) {
     const base = path.substring(0, path.lastIndexOf('/') + 1);
     window.location.href = base + 'hr/dashboard.html';
+    return null;
+  }
+  if (user.role === 'supply_chain' && !path.includes('/supply-chain/') && !path.includes('login.html') && !path.includes('admin/')) {
+    const base = path.substring(0, path.lastIndexOf('/') + 1);
+    window.location.href = base + 'supply-chain/dashboard.html';
+    return null;
+  }
+  if (user.role === 'center_manager' && !path.includes('/hub/') && !path.includes('login.html') && !path.includes('admin/')) {
+    const base = path.substring(0, path.lastIndexOf('/') + 1);
+    window.location.href = base + 'hub/dashboard.html';
     return null;
   }
   return user;

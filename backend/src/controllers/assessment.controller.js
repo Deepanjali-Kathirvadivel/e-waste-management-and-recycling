@@ -8,6 +8,17 @@ const valuationService = require('../services/valuation.service');
 const aiStub = require('../services/ai-stub.service');
 const reportService = require('../services/report.service');
 
+function sanitizeAssessment(assessment, role) {
+  const plain = assessment.toJSON ? assessment.toJSON() : { ...assessment };
+  if (role === 'employee') {
+    plain.value_estimate = null;
+    plain.value_min = null;
+    plain.value_max = null;
+    plain.hr_approved_value = null;
+  }
+  return plain;
+}
+
 exports.create = catchAsync(async (req, res) => {
   const body = { ...req.body };
 
@@ -38,7 +49,9 @@ exports.create = catchAsync(async (req, res) => {
 
   delete body.product_type;
   const assessment = await Assessment.create({ ...body, user_id: req.user.id });
-  await log({ userId: req.user.id, action: 'assessment_created', entityType: 'assessment', entityId: assessment.id });
+  const catalogEntry = body.product_type_id ? await ProductCatalog.findByPk(body.product_type_id) : null;
+  await log({ userId: req.user.id, action: 'assessment_created', entityType: 'assessment', entityId: assessment.id,
+    metadata: { customer: body.customer_name || 'Unknown', product: catalogEntry?.name || body.product_category || 'Unknown' } });
   res.status(201).json({ assessment });
 });
 
@@ -61,11 +74,12 @@ exports.list = catchAsync(async (req, res) => {
   }
 
   const { rows, count } = await Assessment.findAndCountAll({
-    where, limit, offset, order: [['created_at', 'DESC']],
+    where, limit, offset, order: [['id', 'DESC']],
     include: [{ model: ProductCatalog, attributes: ['name'] }],
   });
 
-  res.json({ assessments: rows, total: count, page, total_pages: Math.ceil(count / limit) });
+  const assessments = rows.map((row) => sanitizeAssessment(row, req.user.role));
+  res.json({ assessments, total: count, page, total_pages: Math.ceil(count / limit) });
 });
 
 exports.getOne = catchAsync(async (req, res) => {
@@ -79,7 +93,7 @@ exports.getOne = catchAsync(async (req, res) => {
   });
   if (!assessment) throw new AppError('Assessment not found', 404);
   if (req.user.role === 'employee' && assessment.user_id !== req.user.id) throw new AppError('Unauthorized', 403);
-  res.json({ assessment });
+  res.json({ assessment: sanitizeAssessment(assessment, req.user.role) });
 });
 
 exports.update = catchAsync(async (req, res) => {
@@ -99,7 +113,7 @@ exports.remove = catchAsync(async (req, res) => {
 });
 
 exports.submit = catchAsync(async (req, res) => {
-  const assessment = await Assessment.findByPk(req.params.id);
+  const assessment = await Assessment.findByPk(req.params.id, { include: [{ model: ProductCatalog, attributes: ['name'] }] });
   if (!assessment) throw new AppError('Assessment not found', 404);
   if (req.user.role === 'employee' && assessment.user_id !== req.user.id) throw new AppError('Unauthorized', 403);
 
@@ -113,7 +127,7 @@ exports.submit = catchAsync(async (req, res) => {
       estimated_value: parseFloat(assessment.value_estimate)
     };
   } else {
-    const product = await ProductCatalog.findByPk(assessment.product_type_id);
+    const product = assessment.product_catalog || await ProductCatalog.findByPk(assessment.product_type_id);
     const productName = product ? product.name : 'General';
     valuation = valuationService.calculate(
       productName,
@@ -126,17 +140,59 @@ exports.submit = catchAsync(async (req, res) => {
   const valueMax = Math.round(valuation.estimated_value * 1.3);
 
   await assessment.update({
-    status: 'pending_hr_approval',
+    status: 'pending_manager_review',
     value_estimate: valuation.estimated_value,
     value_min: valueMin,
     value_max: valueMax,
     submitted_at: new Date(),
   });
 
+  const productName = assessment.product_catalog?.name || 'General';
   await log({ userId: req.user.id, action: 'assessment_submitted', entityType: 'assessment', entityId: assessment.id,
-    metadata: { customer: assessment.customer_name, value: valuation.estimated_value, value_min: valueMin, value_max: valueMax } });
+    metadata: { customer: assessment.customer_name, product: productName, value: valuation.estimated_value, value_min: valueMin, value_max: valueMax } });
 
-  res.json({ assessment, valuation, value_min: valueMin, value_max: valueMax });
+  // Hide valuation details from employees, only show submission confirmation
+  if (req.user.role === 'employee') {
+    res.json({
+      message: 'Quotation submitted for Manager approval.',
+      assessment: sanitizeAssessment(assessment, req.user.role),
+    });
+  } else {
+    res.json({ assessment, valuation, value_min: valueMin, value_max: valueMax });
+  }
+});
+
+exports.resubmit = catchAsync(async (req, res) => {
+  const assessment = await Assessment.findByPk(req.params.id);
+  if (!assessment) throw new AppError('Assessment not found', 404);
+  if (req.user.role === 'employee' && assessment.user_id !== req.user.id) throw new AppError('Unauthorized', 403);
+  if (assessment.status !== 'rejected') throw new AppError('Only rejected assessments can be resubmitted', 400);
+
+  const { customer_expected_value } = req.body;
+  if (customer_expected_value === undefined || customer_expected_value === null) {
+    throw new AppError('Customer expected value is required', 400);
+  }
+
+  await assessment.update({
+    customer_expected_value,
+    status: 'pending_manager_review',
+    rejection_reason: null,
+    hr_rejection_reason: null,
+    submitted_at: new Date(),
+  });
+
+  await log({
+    userId: req.user.id,
+    action: 'assessment_resubmitted',
+    entityType: 'assessment',
+    entityId: assessment.id,
+    metadata: { customer: assessment.customer_name, customer_expected_value },
+  });
+
+  res.json({
+    message: 'Assessment resubmitted for Manager approval.',
+    assessment: sanitizeAssessment(assessment, req.user.role),
+  });
 });
 
 exports.estimate = catchAsync(async (req, res) => {
@@ -153,12 +209,14 @@ exports.estimate = catchAsync(async (req, res) => {
 
 exports.uploadImage = catchAsync(async (req, res) => {
   if (!req.file) throw new AppError('No file uploaded', 400);
+  const imageType = req.body.image_type || 'general';
   const image = await AssessmentImage.create({
     assessment_id: req.body.assessment_id || 0,
     filename: req.file.filename,
     original_name: req.file.originalname,
     mime_type: req.file.mimetype,
     file_size: req.file.size,
+    ai_analysis: { image_type: imageType },
   });
   res.status(201).json({ image, url: `/uploads/assessments/${req.file.filename}` });
 });

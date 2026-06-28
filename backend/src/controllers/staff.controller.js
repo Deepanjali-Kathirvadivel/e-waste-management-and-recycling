@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { Op, fn, col } = require('sequelize');
-const { User, Assessment, Region } = require('../models');
+const { User, Assessment, Region, Facility } = require('../models');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const pagination = require('../utils/pagination');
@@ -25,17 +25,20 @@ exports.list = catchAsync(async (req, res) => {
   const { rows, count } = await User.findAndCountAll({
     where, limit, offset, order: [['created_at', 'DESC']],
     attributes: { exclude: ['password_hash'] },
-    include: [{ model: Region, attributes: ['name'] }],
+    include: [
+      { model: Region, attributes: ['name'] },
+      { model: Facility, attributes: ['name'] },
+    ],
   });
   res.json({ staff: rows, total: count, page, total_pages: Math.ceil(count / limit) });
 });
 
 exports.create = catchAsync(async (req, res) => {
-  const { username, email, password, full_name, phone, role, region_id } = req.body;
+  const { username, email, password, full_name, phone, role, region_id, facility_id } = req.body;
   const existing = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
   if (existing) throw new AppError('Username or email already exists', 400);
   const password_hash = await bcrypt.hash(password, 10);
-  const user = await User.create({ username, email, password_hash, full_name, phone, role, region_id });
+  const user = await User.create({ username, email, password_hash, full_name, phone, role, region_id, facility_id });
   await log({ userId: req.user.id, action: 'staff_created', entityType: 'staff', entityId: user.id,
     metadata: { full_name, role } });
   res.status(201).json({ user: { ...user.toJSON(), password_hash: undefined } });
@@ -44,7 +47,10 @@ exports.create = catchAsync(async (req, res) => {
 exports.getOne = catchAsync(async (req, res) => {
   const user = await User.findByPk(req.params.id, {
     attributes: { exclude: ['password_hash'] },
-    include: [{ model: Region, attributes: ['name'] }],
+    include: [
+      { model: Region, attributes: ['name'] },
+      { model: Facility, attributes: ['name'] },
+    ],
   });
   if (!user) throw new AppError('Staff not found', 404);
 

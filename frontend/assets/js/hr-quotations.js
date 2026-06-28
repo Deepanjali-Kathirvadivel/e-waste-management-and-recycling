@@ -1,7 +1,7 @@
 (function() {
   const user = checkAuth();
   if (!user) return;
-  if (user.role !== 'hr' && user.role !== 'admin') { window.location.href = '../dashboard.html'; return; }
+  if (user.role !== 'manager' && user.role !== 'admin') { window.location.href = '../dashboard.html'; return; }
 
   const userNameEl = document.getElementById('userName');
   if (userNameEl) userNameEl.textContent = user.full_name || user.username;

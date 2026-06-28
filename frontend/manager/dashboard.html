@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manager Dashboard - Green Era Recyclers</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body class="dashboard-body">
+  <nav class="navbar navbar-expand-lg fixed-top">
+    <div class="container-fluid px-4">
+      <a class="navbar-brand" href="#"><i class="bi bi-recycle"></i> Green Era <span class="badge bg-warning ms-2">Manager</span></a>
+      <div class="d-flex align-items-center gap-3">
+        <span class="text-muted d-none d-md-inline" id="dashboardDate"></span>
+        <a class="text-dark position-relative" href="#" onclick="event.preventDefault(); toggleNotifications()">
+          <i class="bi bi-bell fs-5 text-green"></i>
+          <span id="notifBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.6rem;display:none">0</span>
+        </a>
+        <div class="dropdown">
+          <a class="text-dark text-decoration-none d-flex align-items-center gap-2 dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+            <i class="bi bi-person-circle fs-5 text-green"></i>
+            <span id="userName">Manager</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row">
+      <nav class="col-md-2 d-none d-md-block sidebar">
+        <div class="pt-4">
+          <a href="dashboard.html" class="nav-link active"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+          <a href="pending.html" class="nav-link"><i class="bi bi-clock me-2"></i>Pending Reviews</a>
+          <a href="approved.html" class="nav-link"><i class="bi bi-check-circle me-2"></i>Approved</a>
+          <a href="rejected.html" class="nav-link"><i class="bi bi-x-circle me-2"></i>Rejected</a>
+          <a href="review.html" class="nav-link"><i class="bi bi-eye me-2"></i>Review</a>
+          <a href="receipt-history.html" class="nav-link"><i class="bi bi-receipt me-2"></i>Receipts</a>
+          <hr>
+          <a href="../dashboard.html" class="nav-link"><i class="bi bi-arrow-left me-2"></i>Back to Staff</a>
+        </div>
+      </nav>
+
+      <main class="col-md-10 ms-sm-auto px-4">
+        <div class="pt-4 pb-2 mb-3 border-bottom">
+          <h1 class="h4">Manager Dashboard</h1>
+        </div>
+
+        <div class="row g-3 mb-4" id="kpiCards">
+          <div class="col-md-3"><div class="card bg-warning bg-opacity-10 border-warning"><div class="card-body text-center"><h3 class="fw-bold text-warning" id="kpiPending">0</h3><small class="text-muted">Pending Reviews</small></div></div></div>
+          <div class="col-md-3"><div class="card bg-success bg-opacity-10 border-success"><div class="card-body text-center"><h3 class="fw-bold text-success" id="kpiApproved">0</h3><small class="text-muted">Approved Today</small></div></div></div>
+          <div class="col-md-3"><div class="card bg-danger bg-opacity-10 border-danger"><div class="card-body text-center"><h3 class="fw-bold text-danger" id="kpiRejected">0</h3><small class="text-muted">Rejected Today</small></div></div></div>
+          <div class="col-md-2"><div class="card bg-primary bg-opacity-10 border-primary"><div class="card-body text-center"><h3 class="fw-bold text-primary" id="kpiRate">0%</h3><small class="text-muted">Approval Rate</small></div></div></div>
+          <div class="col-md-2"><div class="card bg-info bg-opacity-10 border-info"><div class="card-body text-center"><h3 class="fw-bold text-info" id="kpiRevenue">₹0</h3><small class="text-muted">Branch Revenue</small></div></div></div>
+          <div class="col-md-2"><div class="card bg-secondary bg-opacity-10 border-secondary"><div class="card-body text-center"><h3 class="fw-bold text-secondary" id="kpiTotal">0</h3><small class="text-muted">Total Quotations</small></div></div></div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <div class="card"><div class="card-body">
+              <h6 class="fw-bold mb-3"><i class="bi bi-bar-chart me-2"></i>Quotation Trends</h6>
+              <canvas id="trendChart" height="180"></canvas>
+            </div></div>
+          </div>
+          <div class="col-md-3">
+            <div class="card"><div class="card-body">
+              <h6 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2"></i>Categories</h6>
+              <canvas id="categoryChart" height="180"></canvas>
+            </div></div>
+          </div>
+          <div class="col-md-3">
+            <div class="card"><div class="card-body">
+              <h6 class="fw-bold mb-3"><i class="bi bi-building me-2"></i>Branch Performance</h6>
+              <div id="branchList"></div>
+            </div></div>
+          </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header"><h6 class="mb-0 fw-bold"><i class="bi bi-people me-2"></i>Employee KPIs</h6></div>
+          <div class="card-body"><div id="employeeKpiTable"><p class="text-muted">Loading...</p></div></div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script>
+  const notifHeaders = { 'Authorization': 'Bearer ' + (localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token')), 'Content-Type': 'application/json' };
+
+  async function fetchNotifCount() {
+    try {
+      const res = await fetch('/api/notifications/unread-count', { headers: notifHeaders });
+      const data = await res.json();
+      const badge = document.getElementById('notifBadge');
+      if (badge) {
+        if (data.count > 0) { badge.textContent = data.count; badge.style.display = 'inline'; }
+        else badge.style.display = 'none';
+      }
+    } catch(e) {}
+  }
+
+  async function toggleNotifications() {
+    try {
+      const res = await fetch('/api/notifications', { headers: notifHeaders });
+      const data = await res.json();
+      const notifs = data.notifications || [];
+      if (!notifs.length) { alert('No notifications'); return; }
+      let msg = notifs.slice(0, 10).map((n, i) =>
+        `${i+1}. [${n.type.toUpperCase()}] ${n.title}\n  ${n.message || ''}${n.is_read ? '' : ' (NEW)'}`
+      ).join('\n\n');
+      if (confirm(msg + '\n\nMark all as read?')) {
+        await fetch('/api/notifications/read-all', { method: 'POST', headers: notifHeaders });
+        fetchNotifCount();
+      }
+    } catch(e) { alert('Failed to load notifications'); }
+  }
+
+  (async function() {
+    const token = localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token');
+    if (!token) { window.location.href = '../login.html'; return; }
+    const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
+
+    try {
+      const [kpiRes, empRes] = await Promise.all([
+        fetch('/api/manager/dashboard', { headers }),
+        fetch('/api/manager/employee-kpi', { headers }),
+      ]);
+      const kpi = await kpiRes.json();
+      const empData = await empRes.json();
+
+      document.getElementById('kpiPending').textContent = kpi.pending_reviews || 0;
+      document.getElementById('kpiApproved').textContent = kpi.approved_today || 0;
+      document.getElementById('kpiRejected').textContent = kpi.rejected_today || 0;
+      document.getElementById('kpiTotal').textContent = kpi.total_quotations || 0;
+      document.getElementById('kpiRate').textContent = (kpi.approval_rate || 0) + '%';
+      document.getElementById('kpiRevenue').textContent = '\u20B9' + (kpi.branch_revenue || 0).toLocaleString('en-IN');
+
+      if (kpi.quotation_trends) {
+        new Chart(document.getElementById('trendChart'), {
+          type: 'line',
+          data: { labels: kpi.quotation_trends.labels, datasets: [{ label: 'Quotations', data: kpi.quotation_trends.counts, borderColor: '#16A34A', fill: false }] },
+          options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
+        });
+      }
+
+      if (kpi.category_distribution) {
+        new Chart(document.getElementById('categoryChart'), {
+          type: 'doughnut',
+          data: { labels: kpi.category_distribution.map(c => c.category), datasets: [{ data: kpi.category_distribution.map(c => c.count), backgroundColor: ['#16A34A', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', '#EC4899', '#14B8A6'] }] },
+          options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+        });
+      }
+
+      if (kpi.branch_performance) {
+        const branchDiv = document.getElementById('branchList');
+        branchDiv.innerHTML = kpi.branch_performance.map(b => `<div class="d-flex justify-content-between mb-1"><span>${b.branch}</span><span class="fw-bold">${b.count} (₹${(b.revenue||0).toLocaleString('en-IN')})</span></div>`).join('');
+      }
+
+      if (empData.employees) {
+        let html = `<table class="table table-sm"><thead><tr><th>Employee</th><th>Total</th><th>Approved</th><th>Rejected</th><th>Approval Rate</th><th>Avg Deal</th></tr></thead><tbody>`;
+        empData.employees.forEach(e => {
+          html += `<tr><td>${e.name}</td><td>${e.total_assessments}</td><td class="text-success">${e.approved}</td><td class="text-danger">${e.rejected}</td><td>${e.approval_rate}%</td><td>₹${(e.average_deal_value||0).toLocaleString('en-IN')}</td></tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('employeeKpiTable').innerHTML = html;
+      }
+      fetchNotifCount();
+      setInterval(fetchNotifCount, 30000);
+    } catch(e) {
+      document.getElementById('employeeKpiTable').innerHTML = '<p class="text-danger">Failed to load data</p>';
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -60,12 +60,12 @@
             <table class="table mb-0">
               <thead>
                 <tr>
-                  <th>#ID</th>
+                  <th>Deal ID</th>
                   <th>Date</th>
                   <th>Customer</th>
                   <th>Phone</th>
-                  <th>Product</th>
-                  <th>Value</th>
+                  <th>Products</th>
+                  <th>Total Value</th>
                   <th>Status</th>
                   <th>Action</th>
                 </tr>
@@ -87,48 +87,66 @@
     </div>
   </div>
 
-  <!-- Process Deal Modal -->
+  <!-- Process Deal Group Modal -->
   <div class="modal fade" id="processModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fw-bold"><i class="bi bi-gear text-green me-2"></i>Process Deal</h5>
+          <h5 class="modal-title fw-bold"><i class="bi bi-gear text-green me-2"></i>Process Deal Group</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <div id="dealInfo" class="mb-3 p-3 bg-light rounded-3 small"></div>
+
+          <div class="table-responsive mb-3">
+            <table class="table table-sm table-bordered mb-0" id="groupProductsTable">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Product</th>
+                  <th>Brand/Model</th>
+                  <th>Value</th>
+                  <th>OTP Status</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="groupProductsBody"></tbody>
+            </table>
+          </div>
+
           <hr>
-          <div class="mb-3">
-            <label class="fw-semibold small mb-1">Step 1: Generate OTP</label>
-            <button class="btn btn-primary-green btn-sm w-100" id="generateOtpBtn" onclick="generateOTP()">
-              <i class="bi bi-shield-lock me-1"></i> Generate OTP
-            </button>
-            <div id="otpDisplay" class="mt-2 d-none">
-              <div class="alert alert-success py-2 small">OTP sent: <strong id="otpCode"></strong></div>
+          <div class="row g-2">
+            <div class="col-md-4">
+              <label class="fw-semibold small mb-1">Step 1: Generate OTP</label>
+              <button class="btn btn-primary-green btn-sm w-100" id="generateOtpBtn" onclick="generateGroupOTP()">
+                <i class="bi bi-shield-lock me-1"></i> Generate OTP
+              </button>
+              <div id="otpDisplay" class="mt-2 d-none">
+                <div class="alert alert-success py-2 small mb-0">OTP sent: <strong id="otpCode"></strong></div>
+              </div>
             </div>
-          </div>
-          <div class="mb-3">
-            <label class="fw-semibold small mb-1">Step 2: Verify OTP</label>
-            <div class="input-group">
-              <input type="text" class="form-control" id="otpInput" placeholder="Enter 6-digit OTP" maxlength="6">
-              <button class="btn btn-outline-green" id="verifyOtpBtn" onclick="verifyOTP()">Verify</button>
+            <div class="col-md-4">
+              <label class="fw-semibold small mb-1">Step 2: Verify OTP</label>
+              <div class="input-group input-group-sm">
+                <input type="text" class="form-control" id="otpInput" placeholder="Enter OTP" maxlength="6">
+                <button class="btn btn-outline-green" id="verifyOtpBtn" onclick="verifyGroupOTP()">Verify</button>
+              </div>
+              <div id="otpVerified" class="mt-2 d-none">
+                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> All Verified</span>
+              </div>
             </div>
-            <div id="otpVerified" class="mt-2 d-none">
-              <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Verified</span>
+            <div class="col-md-4">
+              <label class="fw-semibold small mb-1">Step 3: Assign Branch</label>
+              <select class="form-select form-select-sm" id="facilitySelect" disabled>
+                <option value="" selected disabled>Select branch / facility</option>
+              </select>
             </div>
-          </div>
-          <div class="mb-3">
-            <label class="fw-semibold small mb-1">Step 3: Assign Branch</label>
-            <input type="text" class="form-control" id="branchInput" placeholder="Enter branch / facility name" disabled>
           </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary-green" id="closeDealBtn" onclick="closeDeal()" disabled>
-            <i class="bi bi-check-lg me-1"></i> Close Deal
-          </button>
-          <button type="button" class="btn btn-outline-green" id="sendReceiptBtn" onclick="sendReceipt()" disabled>
-            <i class="bi bi-envelope me-1"></i> Send Receipt
+          <button type="button" class="btn btn-primary-green" id="closeDealBtn" onclick="closeGroupDeal()" disabled>
+            <i class="bi bi-check-lg me-1"></i> Close All Deals
           </button>
         </div>
       </div>
