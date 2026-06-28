@@ -30,3 +30,6 @@ uploads/
 
 # Coverage
 coverage/
+
+backend/chrome/
+backend/.wwebjs_auth/
