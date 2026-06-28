@@ -11,6 +11,21 @@
 
   let staffData = [];
   let regionData = [];
+  let facilityData = [];
+  const urlRole = new URLSearchParams(window.location.search).get('role');
+  const filterRole = urlRole === 'manager' || urlRole === 'hr' ? urlRole : urlRole || '';
+
+  if (filterRole) {
+    const titles = { manager: 'HR Management <small>Manage HR accounts</small>', hr: 'HR Management <small>Manage HR accounts</small>', supply_chain: 'Supply Chain Staff <small>Field staff management</small>' };
+    document.querySelector('.page-title').innerHTML = titles[filterRole] || 'Staff Management <small>All staff</small>';
+    document.getElementById('staffCount') && (document.getElementById('staffCount').textContent = 'Filtered: ' + filterRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
+    document.querySelectorAll('.nav-link').forEach(a => {
+      const href = a.getAttribute('href') || '';
+      if (href.includes('role=' + filterRole)) a.classList.add('active');
+      else if (!href.includes('role=') && !filterRole) a.classList.add('active');
+      else a.classList.remove('active');
+    });
+  }
 
   async function loadRegions() {
     try {
@@ -34,9 +49,32 @@
     }
   }
 
+  async function loadFacilities() {
+    try {
+      const res = await fetch(API_BASE + '/facilities', { headers });
+      const data = await res.json();
+      facilityData = data.facilities || data || [];
+      const sel = document.getElementById('sFacility');
+      if (sel) {
+        sel.innerHTML = '<option value="">Select Facility</option>';
+        facilityData.forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = f.id;
+          opt.textContent = f.name;
+          sel.appendChild(opt);
+        });
+      }
+    } catch (e) {
+      const sel = document.getElementById('sFacility');
+      if (sel) sel.innerHTML = '<option value="">Facility unavailable</option>';
+    }
+  }
+
   async function loadStaff() {
     try {
-      const res = await fetch(API_BASE + '/admin/staff', { headers });
+      const filter = filterRole === 'hr' ? 'manager' : filterRole;
+      const url = API_BASE + '/admin/staff' + (filter ? '?role=' + filter : '');
+      const res = await fetch(url, { headers });
       const data = await res.json();
       staffData = data.staff || [];
       renderStaff();
@@ -72,6 +110,7 @@
           <td>${s.username}</td>
           <td><span class="detail-tag blue">${s.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span></td>
           <td>${s.region?.name || '-'}</td>
+          <td>${s.facility?.name || '-'}</td>
           <td><span class="status-badge ${s.is_active ? 'completed' : 'cancelled'}">${s.is_active ? 'Active' : 'Disabled'}</span></td>
           <td>
             <div class="d-flex gap-1">
@@ -102,6 +141,7 @@
           <td>${s.username}</td>
           <td><span class="detail-tag blue">${s.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span></td>
           <td>${s.region?.name || '-'}</td>
+          <td>${s.facility?.name || '-'}</td>
           <td><span class="status-badge ${s.is_active ? 'completed' : 'cancelled'}">${s.is_active ? 'Active' : 'Disabled'}</span></td>
           <td>
             <div class="d-flex gap-1">
@@ -112,7 +152,7 @@
             </div>
           </td>
         </tr>
-      `).join('') : '<tr><td colspan="6" class="text-center text-muted py-3">No staff match your search</td></tr>';
+      `).join('') : '<tr><td colspan="7" class="text-center text-muted py-3">No staff match your search</td></tr>';
     }
   };
 
@@ -127,6 +167,7 @@
     document.getElementById('sPhone').value = s.phone || '';
     document.getElementById('sRole').value = s.role;
     document.getElementById('sRegion').value = s.region_id || '';
+    document.getElementById('sFacility').value = s.facility_id || '';
     document.getElementById('passwordField').innerHTML = `<div class="form-floating"><input type="password" class="form-control" id="sPassword" placeholder="Leave blank to keep current"><label>New Password (leave blank to keep)</label></div>`;
     document.getElementById('sPassword').required = false;
     new bootstrap.Modal(document.getElementById('staffModal')).show();
@@ -181,17 +222,18 @@
     const phone = document.getElementById('sPhone').value.trim();
     const role = document.getElementById('sRole').value;
     const region_id = parseInt(document.getElementById('sRegion').value) || null;
+    const facility_id = parseInt(document.getElementById('sFacility').value) || null;
     const password = document.getElementById('sPassword')?.value;
 
     try {
       if (editId) {
-        const body = { full_name, email, phone, role, region_id };
+        const body = { full_name, email, phone, role, region_id, facility_id };
         if (password && password.length >= 4) body.password = password;
         await fetch(API_BASE + '/admin/staff/' + editId, { method: 'PUT', headers, body: JSON.stringify(body) });
         showToast('Staff updated');
       } else {
         if (!password || password.length < 4) { showToast('Password required (4+ chars)', 'error'); return; }
-        await fetch(API_BASE + '/admin/staff', { method: 'POST', headers, body: JSON.stringify({ username, email, password, full_name, phone, role, region_id }) });
+        await fetch(API_BASE + '/admin/staff', { method: 'POST', headers, body: JSON.stringify({ username, email, password, full_name, phone, role, region_id, facility_id }) });
         showToast('Staff created');
       }
       bootstrap.Modal.getInstance(document.getElementById('staffModal')).hide();
@@ -210,4 +252,5 @@
 
   loadStaff();
   loadRegions();
+  loadFacilities();
 })();

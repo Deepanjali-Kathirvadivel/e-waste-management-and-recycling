@@ -24,10 +24,10 @@
   async function loadDashboard() {
     try {
       const kpi = await (await fetch(API_BASE + '/admin/dashboard/kpi', { headers })).json();
-      document.getElementById('kpiStaff').textContent = (kpi.total_staff || 0).toLocaleString();
-      document.getElementById('kpiHr').textContent = (kpi.total_hr || 0).toLocaleString();
-      document.getElementById('kpiCollections').textContent = (kpi.collections || 0).toLocaleString();
-      document.getElementById('kpiProducts').textContent = (kpi.total_products || 0).toLocaleString();
+      document.getElementById('kpiEmployees').textContent = (kpi.total_employees || 0).toLocaleString();
+      document.getElementById('kpiManagers').textContent = (kpi.total_managers || 0).toLocaleString();
+      document.getElementById('kpiSupplyChain').textContent = (kpi.total_supply_chain || 0).toLocaleString();
+      document.getElementById('kpiAssessments').textContent = (kpi.total_assessments || 0).toLocaleString();
       document.getElementById('kpiRevenue').textContent = '\u20B9' + (kpi.revenue || 0).toLocaleString('en-IN');
       document.getElementById('kpiProfit').textContent = '\u20B9' + (kpi.profit || 0).toLocaleString('en-IN');
       document.getElementById('kpiScore').textContent = kpi.sustainability_score || 0;
@@ -170,9 +170,10 @@
       options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' } }, x: { grid: { display: false } } } }
     });
 
+    const rd = data.reusability_distribution || [];
     new Chart(document.getElementById('reusabilityChart'), {
       type: 'doughnut',
-      data: { labels: ['Reusable', 'Repairable', 'Recyclable', 'Scrap'], datasets: [{ data: [28, 35, 25, 12], backgroundColor: ['#16A34A','#3B82F6','#F59E0B','#EF4444'], borderWidth: 0 }] },
+      data: { labels: rd.map(r => r.label) || ['No Data'], datasets: [{ data: rd.map(r => r.value) || [1], backgroundColor: ['#16A34A','#3B82F6','#F59E0B','#EF4444','#8B5CF6'], borderWidth: 0 }] },
       options: { responsive: true, maintainAspectRatio: true, cutout: '60%', plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 8, font: { size: 10 } } } } }
     });
   }

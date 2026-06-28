@@ -24,6 +24,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/api/whatsapp-status', (req, res) => {
+  const whatsapp = require('./services/whatsapp.service');
+  res.json(whatsapp.getStatus());
+});
+
+app.get('/api/product-categories', (req, res) => {
+  const { PRODUCT_CATEGORIES, PRODUCT_QUESTIONS } = require('./utils/enums');
+  res.json({ categories: PRODUCT_CATEGORIES, questions: PRODUCT_QUESTIONS });
+});
+
 app.get('/api/product-types', async (req, res) => {
   const { ProductCatalog } = require('./models');
   const types = await ProductCatalog.findAll({ order: [['name', 'ASC']] });

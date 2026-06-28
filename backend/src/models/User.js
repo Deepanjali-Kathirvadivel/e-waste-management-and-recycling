@@ -11,6 +11,7 @@ const User = sequelize.define('users', {
   phone: { type: DataTypes.STRING(20) },
   role: { type: DataTypes.ENUM(...USER_ROLES), allowNull: false, defaultValue: 'employee' },
   region_id: { type: DataTypes.INTEGER, allowNull: true },
+  facility_id: { type: DataTypes.INTEGER, allowNull: true },
   is_active: { type: DataTypes.BOOLEAN, defaultValue: true },
   avatar_url: { type: DataTypes.STRING(255) },
   last_login: { type: DataTypes.DATE },

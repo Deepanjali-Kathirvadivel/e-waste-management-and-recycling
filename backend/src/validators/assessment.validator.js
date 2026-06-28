@@ -10,6 +10,12 @@ const createAssessmentSchema = Joi.object({
   customer_pincode: Joi.string().max(10).allow('', null),
   customer_area_category: Joi.string().max(30).allow('', null),
   customer_ward_number: Joi.string().max(20).allow('', null),
+  customer_village: Joi.string().max(100).allow('', null),
+  customer_corporation: Joi.string().max(100).allow('', null),
+  customer_municipality: Joi.string().max(100).allow('', null),
+  customer_panchayat: Joi.string().max(100).allow('', null),
+  customer_gps_lat: Joi.number().allow(null),
+  customer_gps_lng: Joi.number().allow(null),
   product_type_id: Joi.number().integer().allow(null),
   product_type: Joi.string().max(100).allow('', null),
   product_category: Joi.string().max(10).allow('', null),
@@ -35,6 +41,7 @@ const createAssessmentSchema = Joi.object({
   value_min: Joi.number().precision(2).allow(null),
   value_max: Joi.number().precision(2).allow(null),
   customer_expected_value: Joi.number().precision(2).allow(null),
+  deal_group_id: Joi.string().max(30).allow('', null),
   status: Joi.string().allow('', null),
 });
 
@@ -54,4 +61,26 @@ const updateAssessmentSchema = Joi.object({
   value_estimate: Joi.number().precision(2).allow(null),
 });
 
-module.exports = { createAssessmentSchema, updateAssessmentSchema };
+const managerReviewSchema = Joi.object({
+  assessment_id: Joi.number().integer().required(),
+  action: Joi.string().valid('approve', 'reject', 'modify').required(),
+  rejection_reason: Joi.string().allow('', null),
+  revised_value: Joi.number().precision(2).allow(null),
+});
+
+const assignHubSchema = Joi.object({
+  assessment_id: Joi.number().integer().required(),
+  assigned_hub_id: Joi.number().integer().required(),
+});
+
+const supplyChainPickupSchema = Joi.object({
+  assessment_id: Joi.number().integer().required(),
+  otp: Joi.string().length(6).required(),
+  status: Joi.string().valid('collected', 'in_transit', 'delivered_to_hub', 'received').required(),
+});
+
+const renegotiateSchema = Joi.object({
+  customer_expected_value: Joi.number().precision(2).required(),
+});
+
+module.exports = { createAssessmentSchema, updateAssessmentSchema, managerReviewSchema, assignHubSchema, supplyChainPickupSchema, renegotiateSchema };

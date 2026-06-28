@@ -1,0 +1,13 @@
+.env
+node_modules/
+*.log
+.vscode/
+# WhatsApp session
+backend/.wwebjs_auth/
+
+# Puppeteer Chrome
+backend/chrome/
+
+# Browser cache
+backend/.cache/
+backend/node_modules/

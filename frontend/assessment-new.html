@@ -143,12 +143,24 @@
                 <div class="col-md-4">
                   <div class="form-floating">
                     <select class="form-select" id="custAreaCategory">
-                      <option value="">Select Area Category</option>
-                      <option value="Village Panchayat">Village Panchayat</option>
-                      <option value="Municipality">Municipality</option>
+                      <option value="">Select Local Body Type</option>
                       <option value="Corporation">Corporation</option>
+                      <option value="Municipality">Municipality</option>
+                      <option value="Panchayat">Panchayat</option>
                     </select>
-                    <label for="custAreaCategory">Area Category</label>
+                    <label for="custAreaCategory">Local Body Type</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" id="custLocalBody" placeholder="Local Body Name">
+                    <label for="custLocalBody">Local Body Name</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" id="custVillage" placeholder="Village">
+                    <label for="custVillage">Village</label>
                   </div>
                 </div>
                 <div class="col-md-4">
@@ -185,6 +197,16 @@
                     <label for="custPincode">Pincode</label>
                   </div>
                 </div>
+                <div class="col-md-8">
+                  <div class="d-flex align-items-center gap-2 h-100">
+                    <button type="button" class="btn btn-outline-green" id="captureGpsBtn" onclick="captureGPS()">
+                      <i class="bi bi-geo-alt me-1"></i> Capture GPS Location
+                    </button>
+                    <small class="text-muted" id="gpsStatus">Optional — click to capture current location</small>
+                    <input type="hidden" id="custGpsLat">
+                    <input type="hidden" id="custGpsLng">
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -207,6 +229,12 @@
                       <option value="">Select Type</option>
                     </select>
                     <label for="catType">Product Type</label>
+                  </div>
+                </div>
+                <div class="col-md-5 d-none" id="customProductNameGroup">
+                  <div class="form-floating">
+                    <input type="text" class="form-control" id="customProductName" placeholder="Enter product name">
+                    <label for="customProductName">Custom Product Name *</label>
                   </div>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
@@ -334,7 +362,7 @@
             <!-- Step 4: Image Upload (per product) -->
             <div class="wizard-step-content d-none" data-step="4">
               <h5 class="fw-bold mb-3"><i class="bi bi-images text-green me-2"></i>Upload Product Images</h5>
-              <p class="text-muted mb-4">Select a product below, then upload its images.</p>
+              <p class="text-muted mb-4">Select a product below, then upload its images (max 10 photos).</p>
               <div class="row mb-3">
                 <div class="col-md-6">
                   <label class="fw-semibold small mb-1">Select Product</label>
@@ -354,7 +382,7 @@
               </div>
               <div id="step5QuestionsContainer">
                 <div class="row">
-                  <div class="col-md-6 border-end">
+                  <div class="col-md-6 border-end" id="generalQuestionsColumn">
                     <h5 class="fw-bold mb-3"><i class="bi bi-question-circle text-green me-2"></i>General Questions</h5>
                     <p class="text-muted mb-4">Answer these basic questions to assess the device's condition.</p>
                     <div class="row g-3">
@@ -433,18 +461,18 @@
               <h5 class="fw-bold mb-3"><i class="bi bi-hand-thumbs-up text-green me-2"></i>Customer Quotation</h5>
               <p class="text-muted mb-4">Discuss the value range with the customer and capture their expected value for each product.</p>
               <div id="allProductsQuotation" class="row g-3 mb-4"></div>
-              <div class="alert alert-info mb-0">
-                <i class="bi bi-info-circle me-2"></i>Enter the value the customer expects for each product. These will be reviewed by HR for final approval.
+              <div class="alert alert-info mb-0" id="quoteStepAlert">
+                <i class="bi bi-info-circle me-2"></i>Enter the value the customer expects for each product. These will be reviewed by the Manager for final approval.
               </div>
             </div>
 
             <!-- Step 9: Review & Submit -->
             <div class="wizard-step-content d-none" data-step="9">
               <h5 class="fw-bold mb-3"><i class="bi bi-check-circle text-green me-2"></i>Review &amp; Submit</h5>
-              <p class="text-muted mb-4">Review all assessment details before final submission to HR.</p>
+              <p class="text-muted mb-4">Review all assessment details before final submission to the Manager.</p>
               <div class="bg-light rounded-3 p-4 mb-4" id="summaryContent"></div>
-              <div class="alert alert-warning mb-0">
-                <i class="bi bi-info-circle me-2"></i>After submission, assessments will be locked and sent for HR review. You cannot edit them afterwards.
+              <div class="alert alert-warning mb-0" id="submitLockAlert">
+                <i class="bi bi-info-circle me-2"></i>After submission, assessments will be locked and sent for Manager review. You cannot edit them afterwards.
               </div>
             </div>
           </div>

@@ -17,7 +17,8 @@
       <nav class="nav flex-column">
         <a class="nav-link" href="dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
         <a class="nav-link active" href="staff-management.html"><i class="bi bi-people"></i> Staff Management</a>
-        <a class="nav-link" href="staff-management.html?role=hr"><i class="bi bi-person-badge"></i> HR Management</a>
+        <a class="nav-link" href="staff-management.html?role=manager"><i class="bi bi-person-badge"></i> HR Management</a>
+        <a class="nav-link" href="staff-management.html?role=supply_chain"><i class="bi bi-truck"></i> Supply Chain Staff</a>
         <a class="nav-link" href="reusability-center.html"><i class="bi bi-arrow-repeat"></i> Reusability Center</a>
         <a class="nav-link" href="analytics.html"><i class="bi bi-graph-up"></i> Reusability Analytics</a>
       </nav>
@@ -84,7 +85,7 @@
           </div>
           <div class="admin-card-body p-0">
             <table class="admin-table">
-              <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Region</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Region</th><th>Facility</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody id="staffTableBody"></tbody>
             </table>
           </div>
@@ -106,8 +107,9 @@
               <div class="col-md-6"><div class="form-floating"><input type="text" class="form-control" id="sUsername" placeholder="Username" required><label for="sUsername">Username</label></div></div>
               <div class="col-md-6"><div class="form-floating"><input type="email" class="form-control" id="sEmail" placeholder="Email"><label for="sEmail">Email</label></div></div>
               <div class="col-md-6"><div class="form-floating"><input type="tel" class="form-control" id="sPhone" placeholder="Phone"><label for="sPhone">Phone</label></div></div>
-                <div class="col-md-6"><div class="form-floating"><select class="form-select" id="sRole"><option value="employee">Employee (Staff)</option><option value="hr">HR Officer</option><option value="center_manager">Center Manager</option><option value="admin">Admin</option></select><label for="sRole">Role</label></div></div>
+                <div class="col-md-6"><div class="form-floating"><select class="form-select" id="sRole"><option value="employee">Employee (Staff)</option><option value="manager">Manager (HR)</option><option value="supply_chain">Supply Chain</option><option value="center_manager">Center Manager</option><option value="admin">Admin</option></select><label for="sRole">Role</label></div></div>
               <div class="col-md-6"><div class="form-floating"><select class="form-select" id="sRegion"><option value="">Select Region</option></select><label for="sRegion">Region</label></div></div>
+              <div class="col-md-6"><div class="form-floating"><select class="form-select" id="sFacility"><option value="">Select Facility</option></select><label for="sFacility">Facility</label></div></div>
               <div class="col-12" id="passwordField"><div class="form-floating"><input type="password" class="form-control" id="sPassword" placeholder="Password" minlength="6"><label for="sPassword">Password</label></div></div>
             </div>
           </div>

@@ -1,13 +1,14 @@
 (function () {
   const user = checkAuth();
   if (user) document.getElementById('userName').textContent = user.full_name || user.username;
+  const isStaff = user && user.role === 'employee';
 
   let currentStep = 1;
   const totalSteps = 9;
   let categoryCatalog = [];
 
   let data = {
-    customer: { name: '', phone: '', email: '', address: '', state: '', district: '', pincode: '', areaCategory: '', ward: '' },
+    customer: { name: '', phone: '', email: '', address: '', state: '', district: '', pincode: '', areaCategory: '', localBodyName: '', village: '', ward: '', gpsLat: '', gpsLng: '' },
     products: [],
   };
   let activeIdx = 0;
@@ -22,11 +23,12 @@
       qPowerOn: 'yes', qDamage: 'none', qAge: 'new', qAccessories: 'all',
       productSpecificChecks: {},
       estimatedValue: 0, valueMin: 0, valueMax: 0, customerExpectedValue: 0,
+      isCustom: false, customProductName: '',
     };
   }
 
   function resetData() {
-    data = { customer: { name: '', phone: '', email: '', address: '', state: '', district: '', pincode: '', areaCategory: '', ward: '' }, products: [] };
+    data = { customer: { name: '', phone: '', email: '', address: '', state: '', district: '', pincode: '', areaCategory: '', localBodyName: '', village: '', ward: '', gpsLat: '', gpsLng: '' }, products: [] };
     activeIdx = 0;
     currentStep = 1;
     categoryCatalog = [];
@@ -276,7 +278,7 @@
       if (currentStep === 3) refreshProductDetails();
       if (currentStep === 4) refreshImagePreview(); // toggle active zone + render preview
       if (currentStep === 5) refreshQuestions();
-      if (currentStep === 6) runAIAnalysis();
+      if (currentStep === 6 && !isStaff) runAIAnalysis();
       if (currentStep === 7) calculateValue();
       if (currentStep === 8) updateCustomerQuoteStep();
     }
@@ -337,6 +339,33 @@
     ).join('');
   }
 
+  const MAX_PHOTOS = 10;
+
+  window.captureGPS = function () {
+    const statusEl = document.getElementById('gpsStatus');
+    if (!navigator.geolocation) {
+      if (statusEl) statusEl.textContent = 'GPS not supported on this device';
+      showToast('GPS not supported', 'error');
+      return;
+    }
+    if (statusEl) statusEl.textContent = 'Capturing location...';
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        data.customer.gpsLat = pos.coords.latitude.toFixed(7);
+        data.customer.gpsLng = pos.coords.longitude.toFixed(7);
+        document.getElementById('custGpsLat').value = data.customer.gpsLat;
+        document.getElementById('custGpsLng').value = data.customer.gpsLng;
+        if (statusEl) statusEl.textContent = `Location captured: ${data.customer.gpsLat}, ${data.customer.gpsLng}`;
+        showToast('GPS location captured', 'success');
+      },
+      () => {
+        if (statusEl) statusEl.textContent = 'Could not capture location';
+        showToast('Failed to capture GPS location', 'error');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
+
   function saveCustomerStep() {
     data.customer.name = document.getElementById('custName').value.trim();
     data.customer.phone = document.getElementById('custPhone').value.trim();
@@ -344,13 +373,31 @@
     data.customer.address = document.getElementById('custAddress').value.trim();
     data.customer.ward = document.getElementById('custWard').value.trim();
     data.customer.areaCategory = document.getElementById('custAreaCategory').value;
+    data.customer.localBodyName = document.getElementById('custLocalBody')?.value.trim() || '';
+    data.customer.village = document.getElementById('custVillage')?.value.trim() || '';
     data.customer.district = document.getElementById('custDistrict').value.trim();
     const streetVal = document.getElementById('custStreet')?.value.trim();
     data.customer.state = document.getElementById('custState').value.trim();
     data.customer.pincode = document.getElementById('custPincode').value.trim();
+    data.customer.gpsLat = document.getElementById('custGpsLat')?.value || data.customer.gpsLat || '';
+    data.customer.gpsLng = document.getElementById('custGpsLng')?.value || data.customer.gpsLng || '';
     if (streetVal && !data.customer.address.includes(streetVal)) {
       data.customer.address = streetVal + ', ' + data.customer.address;
     }
+  }
+
+  function customerLocationPayload(c) {
+    const payload = {};
+    if (c.village) payload.customer_village = c.village;
+    if (c.localBodyName) {
+      if (c.areaCategory === 'Corporation') payload.customer_corporation = c.localBodyName;
+      else if (c.areaCategory === 'Municipality') payload.customer_municipality = c.localBodyName;
+      else if (c.areaCategory === 'Panchayat') payload.customer_panchayat = c.localBodyName;
+      else payload.customer_panchayat = c.localBodyName;
+    }
+    if (c.gpsLat) payload.customer_gps_lat = parseFloat(c.gpsLat);
+    if (c.gpsLng) payload.customer_gps_lng = parseFloat(c.gpsLng);
+    return payload;
   }
 
   function saveDetailsStep() {
@@ -389,7 +436,16 @@
     const container = document.getElementById('productSpecificQuestions');
     if (container) {
       const checks = {};
-      container.querySelectorAll('input[type="checkbox"]').forEach(cb => { checks[cb.id.replace('sqchk_', '')] = cb.checked; });
+      if (p?.isCustom) {
+        const customCondition = document.getElementById('sq_custom_condition');
+        const customFunctionality = document.getElementById('sq_custom_functionality');
+        const customNotes = document.getElementById('sq_custom_notes');
+        checks.customCondition = customCondition ? customCondition.value : 'good';
+        checks.customFunctionality = customFunctionality ? customFunctionality.value : 'full';
+        checks.customNotes = customNotes ? customNotes.value : '';
+      } else {
+        container.querySelectorAll('input[type="checkbox"]').forEach(cb => { checks[cb.id.replace('sqchk_', '')] = cb.checked; });
+      }
       p.productSpecificChecks = checks;
     }
   }
@@ -403,8 +459,13 @@
 
   window.navigateStep = function (dir) {
     if (dir === 1 && !validateStep(currentStep)) return;
-    const newStep = currentStep + dir;
+    let newStep = currentStep + dir;
     if (newStep < 1 || newStep > totalSteps) return;
+
+    if (isStaff) {
+      if (dir === 1 && currentStep === 5) newStep = 8;
+      if (dir === -1 && currentStep === 8) newStep = 5;
+    }
 
     saveActiveProduct();
 
@@ -413,6 +474,9 @@
       return;
     }
 
+    if (newStep === 1) {
+      ['custName','custPhone','custAddress','custEmail','custWard','custAreaCategory','custLocalBody','custVillage','custDistrict','custStreet','custState','custPincode'].forEach(clearFieldError);
+    }
     if (newStep === 3) {
       const p = data.products[activeIdx];
       if (!p.category || !p.type) { showToast('Please set category and type for all products in Step 2', 'error'); return; }
@@ -422,8 +486,8 @@
     }
     if (newStep === 4) refreshImageUpload();
     if (newStep === 5) refreshQuestions();
-    if (newStep === 6) runAIAnalysis();
-    if (newStep === 7) calculateValue();
+    if (newStep === 6 && !isStaff) runAIAnalysis();
+    if (newStep === 7 || (isStaff && newStep === 8)) calculateValue();
     if (newStep === 8) updateCustomerQuoteStep();
     if (newStep === 9) buildSummary();
 
@@ -431,10 +495,43 @@
     updateUI();
   };
 
+  function clearFieldError(id) {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('is-invalid'); }
+  }
+
+  function markFieldError(id) {
+    const el = document.getElementById(id);
+    if (el) { el.classList.add('is-invalid'); el.focus(); }
+  }
+
   function validateStep(step) {
     if (step === 1) {
-      if (!document.getElementById('custName').value.trim()) { showToast('Please enter customer name', 'error'); return false; }
-      if (!document.getElementById('custPhone').value.trim()) { showToast('Please enter customer phone', 'error'); return false; }
+      let valid = true;
+      const fields = [
+        { id: 'custName', label: 'Full Name' },
+        { id: 'custPhone', label: 'Phone Number' },
+        { id: 'custAddress', label: 'Street / Address' },
+        { id: 'custDistrict', label: 'District' },
+        { id: 'custState', label: 'State' },
+      ];
+      ['custName','custPhone','custAddress','custEmail','custWard','custAreaCategory','custLocalBody','custVillage','custDistrict','custStreet','custState','custPincode'].forEach(clearFieldError);
+      for (const f of fields) {
+        const el = document.getElementById(f.id);
+        if (!el || !el.value.trim()) {
+          markFieldError(f.id);
+          showToast('Please enter ' + f.label, 'error');
+          valid = false;
+          break;
+        }
+      }
+      if (!valid) return false;
+      const phone = document.getElementById('custPhone').value.trim();
+      if (phone.length < 10) {
+        markFieldError('custPhone');
+        showToast('Please enter a valid 10-digit phone number', 'error');
+        return false;
+      }
       return true;
     }
     if (step === 2) {
@@ -448,11 +545,21 @@
   function updateUI() {
     document.querySelectorAll('.wizard-step').forEach(el => {
       const step = parseInt(el.dataset.step);
+      if (isStaff && (step === 6 || step === 7)) {
+        el.classList.add('d-none');
+        return;
+      } else {
+        el.classList.remove('d-none');
+      }
       el.classList.remove('active', 'completed');
       if (step === currentStep) el.classList.add('active');
       else if (step < currentStep) el.classList.add('completed');
     });
     document.querySelectorAll('.wizard-step-content').forEach(el => {
+      if (isStaff && (parseInt(el.dataset.step) === 6 || parseInt(el.dataset.step) === 7)) {
+        el.classList.add('d-none');
+        return;
+      }
       el.classList.toggle('d-none', parseInt(el.dataset.step) !== currentStep);
     });
     document.getElementById('stepIndicator').textContent = 'Step ' + currentStep + ' of ' + totalSteps;
@@ -483,6 +590,7 @@
       const cat = this.value;
       typeSel.innerHTML = '<option value="">Select Type</option>';
       typeSel.disabled = !cat;
+      document.getElementById('customProductNameGroup').classList.add('d-none');
       if (cat && catDefs[cat]) {
         catDefs[cat].products.forEach(t => {
           const o = document.createElement('option');
@@ -492,20 +600,36 @@
         });
       }
     });
+
+    typeSel.addEventListener('change', function () {
+      const show = this.value === 'Others';
+      document.getElementById('customProductNameGroup').classList.toggle('d-none', !show);
+      if (!show) document.getElementById('customProductName').value = '';
+    });
   }
 
   window.addProduct = function () {
     const cat = document.getElementById('catCategory').value;
-    const type = document.getElementById('catType').value;
+    let type = document.getElementById('catType').value;
     if (!cat || !type) { showToast('Please select category and type', 'error'); return; }
+    
+    if (type === 'Others') {
+      const customName = document.getElementById('customProductName').value.trim();
+      if (!customName) { showToast('Please enter the product name', 'error'); return; }
+      type = customName;
+    }
+    
     const p = makeProduct();
     p.category = cat;
     p.type = type;
+    p.isCustom = type !== document.getElementById('catType').value || document.getElementById('catType').value === 'Others';
     data.products.push(p);
     activeIdx = data.products.length - 1;
     document.getElementById('catCategory').value = '';
     document.getElementById('catType').innerHTML = '<option value="">Select Type</option>';
     document.getElementById('catType').disabled = true;
+    document.getElementById('customProductName').value = '';
+    document.getElementById('customProductNameGroup').classList.add('d-none');
     renderProductList();
     updateProductTabs();
     showToast('Added: ' + type, 'success');
@@ -532,9 +656,52 @@
     populateProductDetails();
   }
 
+  function toggleCustomProductFields() {
+    const p = data.products[activeIdx];
+    const isCustom = p && p.isCustom;
+    const hideIds = ['productSerial','productYear','productPurchaseYear','productWarranty','productOwnership','productWeight','productNotes'];
+    const hideContainerIds = ['productAccessoriesContainer','productSpecsContainer'];
+    const hideLabels = [
+      'label[for="productAccessoriesContainer"]',
+      'label[for="productSpecsContainer"]',
+      'label[for="productWeight"]',
+      'label[for="productSerial"]',
+      'label[for="productYear"]',
+      'label[for="productPurchaseYear"]',
+      'label[for="productWarranty"]',
+      'label[for="productOwnership"]',
+      'label[for="productNotes"]',
+    ];
+    hideIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const col = el.closest('.col-md-4, .col-md-6, .col-12');
+        if (col) col.style.display = isCustom ? 'none' : '';
+        else el.style.display = isCustom ? 'none' : '';
+      }
+    });
+    hideContainerIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const col = el.closest('.col-12');
+        if (col) col.style.display = isCustom ? 'none' : '';
+        else el.style.display = isCustom ? 'none' : '';
+      }
+    });
+    hideLabels.forEach(sel => {
+      const el = document.querySelector(sel);
+      if (el) {
+        const col = el.closest('.col-12, .col-md-4, .col-md-6');
+        if (col) col.style.display = isCustom ? 'none' : '';
+        else el.style.display = isCustom ? 'none' : '';
+      }
+    });
+  }
+
   async function populateProductDetails() {
     const p = data.products[activeIdx];
     if (!p) return;
+    toggleCustomProductFields();
     const brandSel = document.getElementById('productBrand');
     const modelSel = document.getElementById('productModel');
     const savedBrand = brandSel.value;
@@ -624,7 +791,7 @@
     }).join('');
   }
 
-  // ───────── Step 4: Per-Product Image Upload ─────────
+  // ───────── Step 4: Per-Product Image Upload (Single Box, Max 10) ─────────
   function refreshImageUpload() {
     const select = document.getElementById('step4ProductSelect');
     const zone = document.getElementById('step4UploadZone');
@@ -648,71 +815,62 @@
     const zone = document.getElementById('step4UploadZone');
     const p = data.products[prodIdx];
     if (!zone || !p) return;
+    if (!p.files) p.files = [];
+    const fileCount = p.files.length;
+    let previewHtml = '';
+    p.files.forEach((file, fi) => {
+      previewHtml += `<div class="preview-item">
+        <img src="" id="preview_${prodIdx}_${fi}" data-file-idx="${fi}" class="img-fluid" style="width:100%;height:100%;object-fit:cover;">
+        <button class="remove-btn" onclick="window.removeProductImage(${prodIdx}, ${fi})">&times;</button>
+      </div>`;
+    });
     zone.innerHTML =
       '<div class="product-upload-zone">' +
-      '<div class="d-flex align-items-center gap-2 mb-2">' +
+      '<div class="d-flex align-items-center gap-2 mb-3">' +
       '<span class="badge bg-green">Product ' + (prodIdx + 1) + '</span>' +
       '<strong>' + (p.type || 'Unknown') + '</strong>' +
       (p.brand ? '<small class="text-muted">' + p.brand + (p.model ? ' / ' + p.model : '') + '</small>' : '') +
       '</div>' +
-      '<div class="upload-area" id="uploadArea_' + prodIdx + '">' +
+      '<div class="upload-area" id="uploadArea_' + prodIdx + '" onclick="document.getElementById(\'fileInput_' + prodIdx + '\').click()">' +
       '<i class="bi bi-cloud-arrow-up"></i>' +
-      '<p class="fw-semibold">Click to upload or drag and drop</p>' +
-      '<small class="text-muted upload-count">' + (p.files.length > 0 ? p.files.length + ' file(s) selected' : 'Supported: JPG, PNG, WebP (Max 5MB each)') + '</small>' +
-      '<input type="file" id="fileInput_' + prodIdx + '" accept="image/*" multiple class="d-none">' +
+      '<p class="mb-1 fw-semibold">Click to upload photos</p>' +
+      '<small class="text-muted">' + fileCount + ' of ' + MAX_PHOTOS + ' photos uploaded</small>' +
+      '<input type="file" id="fileInput_' + prodIdx + '" accept="image/*" multiple style="display:none" onchange="window.handleProductImages(' + prodIdx + ', this)">' +
       '</div>' +
-      '<div class="upload-preview" id="uploadPreview_' + prodIdx + '"></div>' +
+      (fileCount > 0 ? '<div class="upload-preview" id="previewContainer_' + prodIdx + '">' + previewHtml + '</div>' : '') +
       '</div>';
-
-    const area = document.getElementById('uploadArea_' + prodIdx);
-    const input = document.getElementById('fileInput_' + prodIdx);
-    if (area && input) {
-      area.onclick = function () { input.click(); };
-      area.ondragover = function (e) { e.preventDefault(); area.style.borderColor = '#16A34A'; area.style.background = '#F0FFF4'; };
-      area.ondragleave = function () { area.style.borderColor = '#D1D5DB'; area.style.background = 'transparent'; };
-      area.ondrop = function (e) { e.preventDefault(); area.style.borderColor = '#D1D5DB'; area.style.background = 'transparent'; handleFiles(e.dataTransfer.files, prodIdx); };
-      input.onchange = function () { handleFiles(input.files, prodIdx); };
-    }
-    renderProductPreview(prodIdx);
-  }
-
-  function handleFiles(files, prodIdx) {
-    const p = data.products[prodIdx];
-    if (!p) return;
-    for (const file of files) {
-      if (!file.type.startsWith('image/')) continue;
-      if (file.size > 5 * 1024 * 1024) { showToast('File too large (max 5MB)', 'error'); continue; }
-      p.files.push(file);
-    }
-    renderProductPreview(prodIdx);
-    const sm = document.querySelector('#uploadArea_' + prodIdx + ' .upload-count');
-    if (sm) sm.textContent = p.files.length + ' file(s) selected';
-  }
-
-  function renderProductPreview(prodIdx) {
-    const p = data.products[prodIdx];
-    const preview = document.getElementById('uploadPreview_' + prodIdx);
-    if (!p || !preview) return;
-    preview.innerHTML = '';
-    p.files.forEach((f, i) => {
+    p.files.forEach((file, fi) => {
       const reader = new FileReader();
       reader.onload = function (e) {
-        const div = document.createElement('div');
-        div.className = 'preview-item';
-        div.innerHTML = '<img src="' + e.target.result + '"><button class="remove-btn" onclick="window.removeImage(' + prodIdx + ', ' + i + ')">&times;</button>';
-        preview.appendChild(div);
+        const img = document.getElementById('preview_' + prodIdx + '_' + fi);
+        if (img) img.src = e.target.result;
       };
-      reader.readAsDataURL(f);
+      reader.readAsDataURL(file);
     });
   }
 
-  window.removeImage = function (prodIdx, idx) {
+  window.handleProductImages = function (prodIdx, input) {
     const p = data.products[prodIdx];
-    if (!p) return;
-    p.files.splice(idx, 1);
-    renderProductPreview(prodIdx);
-    const sm = document.querySelector('#uploadArea_' + prodIdx + ' .upload-count');
-    if (sm) sm.textContent = p.files.length > 0 ? p.files.length + ' file(s) selected' : 'Supported: JPG, PNG, WebP (Max 5MB each)';
+    if (!p || !input.files) return;
+    if (!p.files) p.files = [];
+    const remaining = MAX_PHOTOS - p.files.length;
+    if (remaining <= 0) { showToast('Maximum ' + MAX_PHOTOS + ' photos allowed', 'warning'); return; }
+    const newFiles = Array.from(input.files).slice(0, remaining);
+    for (const file of newFiles) {
+      if (!file.type.startsWith('image/')) { showToast(file.name + ' is not an image', 'error'); continue; }
+      if (file.size > 5 * 1024 * 1024) { showToast(file.name + ' is too large (max 5MB)', 'error'); continue; }
+      p.files.push(file);
+    }
+    input.value = '';
+    renderStep4Zone(prodIdx);
+    if (p.files.length >= MAX_PHOTOS) showToast('Maximum ' + MAX_PHOTOS + ' photos reached', 'info');
+  };
+
+  window.removeProductImage = function (prodIdx, fileIdx) {
+    const p = data.products[prodIdx];
+    if (!p || !p.files) return;
+    p.files.splice(fileIdx, 1);
+    renderStep4Zone(prodIdx);
   };
 
   function refreshImagePreview() {
@@ -734,11 +892,21 @@
       activeIdx = parseInt(this.value);
       loadActiveProduct();
       renderProductSpecificQuestions();
+      toggleGeneralQuestions();
       renderProductList();
       updateProductTabs();
     };
     loadActiveProduct();
     renderProductSpecificQuestions();
+    toggleGeneralQuestions();
+  }
+
+  function toggleGeneralQuestions() {
+    const p = data.products[activeIdx];
+    const col = document.getElementById('generalQuestionsColumn');
+    if (col) {
+      col.style.display = (p && p.isCustom) ? 'none' : '';
+    }
   }
 
   function renderProductSpecificQuestions() {
@@ -746,6 +914,22 @@
     if (!container) return;
     const p = data.products[activeIdx];
     const type = p?.type || 'Fan';
+    
+    if (p?.isCustom) {
+      let html = '<div class="col-12 alert alert-info"><i class="bi bi-info-circle me-2"></i>Custom product - answer general condition questions below.</div>';
+      html += '<div class="col-12"><div class="form-floating mb-3"><select class="form-select" id="sq_custom_condition"><option value="excellent">Excellent - Like New</option><option value="good" selected>Good - Minor Wear</option><option value="fair">Fair - Visible Wear</option><option value="poor">Poor - Heavy Wear</option><option value="damaged">Damaged - Broken</option></select><label>Overall Condition</label></div></div>';
+      html += '<div class="col-12"><div class="form-floating mb-3"><select class="form-select" id="sq_custom_functionality"><option value="full">Fully Functional</option><option value="partial">Partially Functional</option><option value="non">Non-Functional</option></select><label>Functionality Status</label></div></div>';
+      html += '<div class="col-12"><div class="form-floating mb-3"><textarea class="form-control" id="sq_custom_notes" style="height:80px" placeholder="Describe the product condition in detail"></textarea><label>Additional Notes</label></div></div>';
+      container.innerHTML = html;
+      // Restore saved state
+      if (p.productSpecificChecks) {
+        if (document.getElementById('sq_custom_condition')) document.getElementById('sq_custom_condition').value = p.productSpecificChecks.customCondition || 'good';
+        if (document.getElementById('sq_custom_functionality')) document.getElementById('sq_custom_functionality').value = p.productSpecificChecks.customFunctionality || 'full';
+        if (document.getElementById('sq_custom_notes')) document.getElementById('sq_custom_notes').value = p.productSpecificChecks.customNotes || '';
+      }
+      return;
+    }
+    
     const checks = prodChecks[type] || prodChecks['Laptop'];
     let html = '<div class="col-12"><h6 class="fw-bold text-dark mb-2"><i class="bi bi-box-seam me-2 text-green"></i>Physical Condition</h6></div>';
     (checks.physical || []).forEach(item => {
@@ -928,6 +1112,10 @@
     data.products.forEach((p, i) => computeProductValue(p, i));
     const container = document.getElementById('allProductsValuation');
     if (!container) return;
+    if (isStaff) {
+      container.innerHTML = '<div class="alert alert-info mb-0"><i class="bi bi-lock me-2"></i>Valuation is calculated automatically and is not visible to field staff. Proceed to capture customer expected value.</div>';
+      return;
+    }
     let totalMin = 0, totalMax = 0;
     let html = '';
     data.products.forEach((p, i) => {
@@ -959,42 +1147,21 @@
     if (!data.products.length) return;
     const container = document.getElementById('allProductsQuotation');
     if (!container) return;
-    let totalMin = 0, totalMax = 0;
     let html = '';
     data.products.forEach((p, i) => {
-      const minV = p.valueMin || Math.round((p.estimatedValue || 0) * 0.7);
-      const maxV = p.valueMax || Math.round((p.estimatedValue || 0) * 1.3);
-      totalMin += minV;
-      totalMax += maxV;
       html += `<div class="col-md-6">
         <div class="card border-light h-100">
           <div class="card-body py-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="fw-bold mb-0">${i + 1}. ${p.type || '-'}</h6>
-              <span class="text-dark small">Range: \u20B9${minV.toLocaleString('en-IN')} - \u20B9${maxV.toLocaleString('en-IN')}</span>
-            </div>
+            <h6 class="fw-bold mb-1">${i + 1}. ${p.type || '-'}</h6>
             <small class="text-muted">${p.brand || ''}${p.model ? ' / ' + p.model : ''}</small>
-            <div class="form-floating mt-2">
-              <input type="number" class="form-control expected-value-input" id="custExpVal_${i}" placeholder="Expected Value" step="0.01" min="0" value="${p.customerExpectedValue || ''}">
-              <label for="custExpVal_${i}">Customer Expected Value (\u20B9)</label>
-            </div>
+            ${!isStaff ? `<p class="small text-muted mt-2 mb-2">Suggested range: \u20B9${(p.valueMin || 0).toLocaleString('en-IN')} - \u20B9${(p.valueMax || 0).toLocaleString('en-IN')}</p>` : ''}
+            <label class="form-label small mb-1">Customer Expected Value (\u20B9)</label>
+            <input type="number" class="form-control" id="custExpVal_${i}" value="${p.customerExpectedValue || ''}" min="0" step="1" placeholder="Enter amount">
           </div>
         </div>
       </div>`;
     });
-    html += `<div class="col-12">
-      <div class="alert alert-success py-2 mb-0 text-center">
-        <strong>Total Value Range: </strong>\u20B9${totalMin.toLocaleString('en-IN')} - \u20B9${totalMax.toLocaleString('en-IN')}
-      </div>
-    </div>`;
     container.innerHTML = html;
-
-    document.querySelectorAll('.expected-value-input').forEach(inp => {
-      inp.addEventListener('change', function () {
-        const idx = parseInt(this.id.replace('custExpVal_', ''), 10);
-        data.products[idx].customerExpectedValue = parseFloat(this.value) || null;
-      });
-    });
   }
 
   // ───────── Step 9: Summary ─────────
@@ -1005,27 +1172,21 @@
     let html = `
       <div class="mb-3"><h6 class="fw-bold text-green"><i class="bi bi-person me-2"></i>Customer</h6>
       <p class="mb-1">${c.name || '-'} | ${c.phone || '-'}${c.email ? ' | ' + c.email : ''}</p>
-      <p class="text-muted small mb-0">${c.address || ''}${c.areaCategory ? ', ' + c.areaCategory : ''}${c.district ? ', ' + c.district : ''}${c.state ? ', ' + c.state : ''}${c.pincode ? ' - ' + c.pincode : ''}</p></div>
+      <p class="text-muted small mb-0">${c.address || ''}${c.village ? ', ' + c.village : ''}${c.localBodyName ? ', ' + c.localBodyName : ''}${c.areaCategory ? ' (' + c.areaCategory + ')' : ''}${c.district ? ', ' + c.district : ''}${c.state ? ', ' + c.state : ''}${c.pincode ? ' - ' + c.pincode : ''}</p></div>
       <hr>
       <h6 class="fw-bold text-green mb-3"><i class="bi bi-box me-2"></i>Products (${data.products.length})</h6>`;
-    let totalMin = 0, totalMax = 0;
     data.products.forEach((p, i) => {
-      const minV = p.valueMin || 0;
-      const maxV = p.valueMax || 0;
-      totalMin += minV;
-      totalMax += maxV;
       html += `<div class="card mb-2 border-light">
         <div class="card-body py-2 px-3">
           <div class="d-flex justify-content-between align-items-center">
             <div><strong>${i + 1}. ${p.type || '-'}</strong> <span class="badge bg-secondary ms-1">${p.category || ''}</span></div>
-            <div class="text-end"><span class="text-green fw-bold">\u20B9${minV.toLocaleString('en-IN')} - \u20B9${maxV.toLocaleString('en-IN')}</span></div>
+            ${!isStaff ? `<div class="text-end"><span class="text-green fw-bold">\u20B9${(p.valueMin || 0).toLocaleString('en-IN')} - \u20B9${(p.valueMax || 0).toLocaleString('en-IN')}</span></div>` : ''}
           </div>
           <small class="text-muted">${p.brand || ''}${p.brand && p.model ? ' / ' : ''}${p.model || ''}${p.condition ? ' | ' + p.condition : ''}</small>
-          ${p.customerExpectedValue ? `<br><small class="text-info">Expected: \u20B9${p.customerExpectedValue.toLocaleString('en-IN')}</small>` : ''}
+          ${p.customerExpectedValue ? `<br><small class="text-info">Customer Expected: \u20B9${p.customerExpectedValue.toLocaleString('en-IN')}</small>` : ''}
         </div>
       </div>`;
     });
-    html += `<div class="alert alert-success py-2 mt-2"><strong>Total Deal Value: </strong>\u20B9${totalMin.toLocaleString('en-IN')} - \u20B9${totalMax.toLocaleString('en-IN')}</div>`;
     summary.innerHTML = html;
   }
 
@@ -1061,6 +1222,7 @@
           customer_address: c.address, customer_state: c.state, customer_district: c.district,
           customer_pincode: c.pincode, customer_area_category: c.areaCategory,
           customer_ward_number: c.ward,
+          ...customerLocationPayload(c),
           brand: p.brand, model: p.model, serial_number: p.serial,
           year_of_manufacture: p.year ? parseInt(p.year, 10) : null,
           purchase_year: p.purchaseYear ? parseInt(p.purchaseYear, 10) : null,
@@ -1095,17 +1257,17 @@
           });
         } catch (e) { }
 
-        if (p.files && p.files.length > 0) {
-          for (const file of p.files) {
-            const fd = new FormData();
-            fd.append('image', file);
-            fd.append('assessment_id', id);
-            try {
-              await fetch(API_BASE + '/assessments/upload-image', {
-                method: 'POST', headers: { 'Authorization': getAuthHeaders()['Authorization'] }, body: fd
-              });
-            } catch (e) { }
-          }
+        const allFiles = p.files || [];
+        for (const file of allFiles) {
+          const fd = new FormData();
+          fd.append('image', file);
+          fd.append('assessment_id', id);
+          fd.append('image_type', 'general');
+          try {
+            await fetch(API_BASE + '/assessments/upload-image', {
+              method: 'POST', headers: { 'Authorization': getAuthHeaders()['Authorization'] }, body: fd
+            });
+          } catch (e) { }
         }
 
         const subRes = await fetch(API_BASE + '/assessments/' + id + '/submit', {
@@ -1121,7 +1283,10 @@
     }
 
     if (successCount > 0) {
-      showToast(successCount + ' of ' + products.length + ' assessments submitted for HR review!', 'success');
+      const msg = isStaff
+        ? 'Assessment submitted successfully!'
+        : successCount + ' of ' + products.length + ' assessments submitted successfully!';
+      showToast(msg, 'success');
       setTimeout(() => window.location.href = 'assessment-history.html', 1500);
     } else {
       showToast('Submission failed for all products', 'error');
