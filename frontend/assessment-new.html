@@ -241,17 +241,27 @@
               <input type="hidden" id="selectedCategory" value="">
               <div class="row g-3">
                 <div class="col-md-6">
-                  <div class="form-floating">
-                    <input type="text" class="form-control" id="productBrand" list="brandList" placeholder="Search or type brand" autocomplete="off">
-                    <datalist id="brandList"></datalist>
-                    <label for="productBrand">Brand <span class="badge bg-green-light text-green" id="brandBadge" style="font-size:0.65rem;display:none">AI</span></label>
+                  <div class="form-floating mb-2">
+                    <select class="form-select" id="productBrandSelect">
+                      <option value="">-- Select Brand --</option>
+                    </select>
+                    <label for="productBrandSelect">Brand <span class="badge bg-green-light text-green" id="brandBadge" style="font-size:0.65rem;display:none">AI</span></label>
+                  </div>
+                  <div class="form-floating d-none" id="productBrandManualContainer">
+                    <input type="text" class="form-control" id="productBrandManual" placeholder="Enter Brand manually">
+                    <label for="productBrandManual">Enter Brand Name *</label>
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="form-floating">
-                    <input type="text" class="form-control" id="productModel" list="modelList" placeholder="Search or type model" autocomplete="off">
-                    <datalist id="modelList"></datalist>
-                    <label for="productModel">Model <span class="badge bg-green-light text-green" id="modelBadge" style="font-size:0.65rem;display:none">AI</span></label>
+                  <div class="form-floating mb-2">
+                    <select class="form-select" id="productModelSelect">
+                      <option value="">-- Select Model --</option>
+                    </select>
+                    <label for="productModelSelect">Model <span class="badge bg-green-light text-green" id="modelBadge" style="font-size:0.65rem;display:none">AI</span></label>
+                  </div>
+                  <div class="form-floating d-none" id="productModelManualContainer">
+                    <input type="text" class="form-control" id="productModelManual" placeholder="Enter Model manually">
+                    <label for="productModelManual">Enter Model Name *</label>
                   </div>
                 </div>
                 <div class="col-md-4">
@@ -422,12 +432,12 @@
               <div id="perProductAIResults" class="row g-3"></div>
             </div>
 
-            <!-- Step 7: Valuation Engine -->
+            <!-- Step 7: Valuation / Approval -->
             <div class="wizard-step-content d-none" data-step="7">
-              <h5 class="fw-bold mb-3"><i class="bi bi-currency-rupee text-green me-2"></i>Valuation Engine</h5>
-              <p class="text-muted mb-4">Estimated value ranges for all products based on type, condition, and market data.</p>
+              <h5 class="fw-bold mb-3" id="step7Title"><i class="bi bi-currency-rupee text-green me-2"></i>Valuation Summary</h5>
+              <p class="text-muted mb-4" id="step7Desc">Product value summary based on condition, type, and assessment data.</p>
               <div id="allProductsValuation" class="row g-3 mb-4"></div>
-              <div class="alert alert-light border mb-0">
+              <div class="alert alert-light border mb-0" id="step7Info">
                 <i class="bi bi-info-circle me-2 text-green"></i> The valuation is calculated based on product type, condition assessment, questionnaire responses, weight, and current market factors. Share this range with the customer in the next step.
               </div>
             </div>

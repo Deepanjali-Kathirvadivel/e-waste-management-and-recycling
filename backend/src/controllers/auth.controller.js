@@ -14,9 +14,9 @@ exports.login = catchAsync(async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ where: { username } });
   if (!user || !user.is_active) throw new AppError('Invalid credentials', 401);
-  if (['admin', 'root'].includes(user.role)) throw new AppError('Use Admin Login portal', 401);
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) throw new AppError('Invalid credentials', 401);
+  if (['admin', 'root'].includes(user.role)) throw new AppError('Use Admin Login portal', 401);
   await user.update({ last_login: new Date() });
   const token = generateToken(user);
   res.json({

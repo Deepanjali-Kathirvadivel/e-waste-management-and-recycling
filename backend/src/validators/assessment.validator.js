@@ -8,6 +8,7 @@ const createAssessmentSchema = Joi.object({
   customer_state: Joi.string().max(50).allow('', null),
   customer_district: Joi.string().max(50).allow('', null),
   customer_pincode: Joi.string().max(10).allow('', null),
+  customer_city: Joi.string().max(100).allow('', null),
   customer_area_category: Joi.string().max(30).allow('', null),
   customer_ward_number: Joi.string().max(20).allow('', null),
   customer_village: Joi.string().max(100).allow('', null),

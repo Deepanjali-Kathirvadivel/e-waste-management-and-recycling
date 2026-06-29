@@ -53,30 +53,37 @@ router.post('/data/import', auth, rbac('admin', 'root'), importCtrl.importData);
 
 // ───── Employee Management ─────
 const empCtrl = require('./admin.employee.controller');
+const { createEmployeeSchema, updateEmployeeSchema } = require('../../validators/employee.validator');
+const validate = require('../../middleware/validate');
+
 router.get('/employees', auth, rbac('admin', 'root'), empCtrl.list);
-router.post('/employees', auth, rbac('admin', 'root'), empCtrl.create);
+router.post('/employees', auth, rbac('admin', 'root'), validate(createEmployeeSchema), empCtrl.create);
 router.get('/employees/:id', auth, rbac('admin', 'root'), empCtrl.getOne);
-router.put('/employees/:id', auth, rbac('admin', 'root'), empCtrl.update);
+router.put('/employees/:id', auth, rbac('admin', 'root'), validate(updateEmployeeSchema), empCtrl.update);
 router.delete('/employees/:id', auth, rbac('admin', 'root'), empCtrl.remove);
 router.patch('/employees/:id/status', auth, rbac('admin', 'root'), empCtrl.toggleStatus);
 router.post('/employees/:id/reset-password', auth, rbac('admin', 'root'), empCtrl.resetPassword);
 
 // ───── Manager Management ─────
 const mgrCtrl = require('./admin.manager.controller');
+const { createManagerSchema, updateManagerSchema } = require('../../validators/manager.validator');
+
 router.get('/managers', auth, rbac('admin', 'root'), mgrCtrl.list);
-router.post('/managers', auth, rbac('admin', 'root'), mgrCtrl.create);
+router.post('/managers', auth, rbac('admin', 'root'), validate(createManagerSchema), mgrCtrl.create);
 router.get('/managers/:id', auth, rbac('admin', 'root'), mgrCtrl.getOne);
-router.put('/managers/:id', auth, rbac('admin', 'root'), mgrCtrl.update);
+router.put('/managers/:id', auth, rbac('admin', 'root'), validate(updateManagerSchema), mgrCtrl.update);
 router.delete('/managers/:id', auth, rbac('admin', 'root'), mgrCtrl.remove);
 router.patch('/managers/:id/status', auth, rbac('admin', 'root'), mgrCtrl.toggleStatus);
 router.post('/managers/:id/reset-password', auth, rbac('admin', 'root'), mgrCtrl.resetPassword);
 
 // ───── Supply Chain Management ─────
 const scCtrl = require('./admin.supplychain.controller');
+const { createSupplyChainStaffSchema, updateSupplyChainStaffSchema } = require('../../validators/supplychainStaff.validator');
+
 router.get('/supply-chain', auth, rbac('admin', 'root'), scCtrl.list);
-router.post('/supply-chain', auth, rbac('admin', 'root'), scCtrl.create);
+router.post('/supply-chain', auth, rbac('admin', 'root'), validate(createSupplyChainStaffSchema), scCtrl.create);
 router.get('/supply-chain/:id', auth, rbac('admin', 'root'), scCtrl.getOne);
-router.put('/supply-chain/:id', auth, rbac('admin', 'root'), scCtrl.update);
+router.put('/supply-chain/:id', auth, rbac('admin', 'root'), validate(updateSupplyChainStaffSchema), scCtrl.update);
 router.delete('/supply-chain/:id', auth, rbac('admin', 'root'), scCtrl.remove);
 router.patch('/supply-chain/:id/status', auth, rbac('admin', 'root'), scCtrl.toggleStatus);
 router.post('/supply-chain/:id/reset-password', auth, rbac('admin', 'root'), scCtrl.resetPassword);

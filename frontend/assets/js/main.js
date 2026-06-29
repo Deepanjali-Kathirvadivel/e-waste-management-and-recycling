@@ -75,9 +75,16 @@ function setupNotifications() {
 
 function logout() {
   const token = localStorage.getItem('greenera_token');
+  const adminToken = localStorage.getItem('greenera_admin_token');
+  const wasAdmin = !!adminToken;
+
   if (token) {
     fetch(API_BASE + '/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }).catch(() => {});
   }
+  if (adminToken) {
+    fetch(API_BASE + '/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${adminToken}` } }).catch(() => {});
+  }
+
   localStorage.removeItem('greenera_token');
   localStorage.removeItem('greenera_user');
   localStorage.removeItem('greenera_admin_token');
@@ -88,15 +95,19 @@ function logout() {
   sessionStorage.removeItem('greenera_admin');
   
   const path = window.location.pathname.replace(/\\/g, '/');
-  if (path.includes('/admin/')) {
-    const parts = path.split('/admin/');
-    const afterAdmin = parts[1] || '';
-    const slashCount = (afterAdmin.match(/\//g) || []).length;
-    let prefix = '';
-    for (let i = 0; i < slashCount; i++) {
-      prefix += '../';
+  if (path.includes('/admin/') || wasAdmin) {
+    if (path.includes('/admin/')) {
+      const parts = path.split('/admin/');
+      const afterAdmin = parts[1] || '';
+      const slashCount = (afterAdmin.match(/\//g) || []).length;
+      let prefix = '';
+      for (let i = 0; i < slashCount; i++) {
+        prefix += '../';
+      }
+      window.location.href = prefix + 'login.html';
+    } else {
+      window.location.href = 'admin/login.html';
     }
-    window.location.href = prefix + 'login.html';
   } else if (path.includes('/manager/') || path.includes('/hr/') || path.includes('/hub/') || path.includes('/supply-chain/')) {
     window.location.href = '../login.html';
   } else {
@@ -105,7 +116,9 @@ function logout() {
 }
 
 function getAuthHeaders() {
-  const token = localStorage.getItem('greenera_token') || localStorage.getItem('greenera_admin_token');
+  const path = window.location.pathname.replace(/\\/g, '/');
+  const isAdmin = path.includes('/admin/');
+  const token = isAdmin ? localStorage.getItem('greenera_admin_token') : (localStorage.getItem('greenera_token') || localStorage.getItem('greenera_admin_token'));
   return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 }
 
@@ -253,3 +266,126 @@ function startNotificationPolling(intervalMs = 30000) {
 const style = document.createElement('style');
 style.textContent = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
 document.head.appendChild(style);
+
+// ───── Admin Authorization Helpers ─────
+function checkAdminAuth() {
+  const path = window.location.pathname.replace(/\\/g, '/');
+  const token = localStorage.getItem('greenera_admin_token');
+  const admin = JSON.parse(localStorage.getItem('greenera_admin') || 'null');
+  if (!token || !admin || !['admin', 'root'].includes(admin.role)) {
+    if (path.includes('/admin/') && !path.includes('/admin/login.html')) {
+      const parts = path.split('/admin/');
+      const afterAdmin = parts[1] || '';
+      const slashCount = (afterAdmin.match(/\//g) || []).length;
+      let prefix = '';
+      for (let i = 0; i < slashCount; i++) {
+        prefix += '../';
+      }
+      window.location.href = prefix + 'login.html';
+    }
+    return null;
+  }
+  return admin;
+}
+
+// Self-invoking admin page protection
+(function() {
+  const path = window.location.pathname.replace(/\\/g, '/');
+  if (path.includes('/admin/') && !path.includes('/admin/login.html')) {
+    checkAdminAuth();
+  }
+})();
+
+// Dynamic Admin Sidebar links rendering & active link highlighting
+document.addEventListener('DOMContentLoaded', function() {
+  const adminSidebar = document.getElementById('adminSidebar');
+  if (adminSidebar) {
+    const path = window.location.pathname.replace(/\\/g, '/');
+    const isDeeper = path.includes('/forecasting/') || path.includes('/bi/');
+    const prefix = isDeeper ? '../' : '';
+
+    const sidebarHTML = `
+      <div class="admin-sidebar-brand">
+        <h5><i class="bi bi-recycle"></i> Green Era Recyclers</h5>
+      </div>
+      <div class="nav-section">Main</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="${prefix}dashboard.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a class="nav-link" href="${prefix}profile.html"><i class="bi bi-person-circle"></i> My Profile</a>
+        <a class="nav-link" href="${prefix}employees.html"><i class="bi bi-person-workspace"></i> Employees</a>
+        <a class="nav-link" href="${prefix}managers.html"><i class="bi bi-person-badge"></i> Managers</a>
+        <a class="nav-link" href="${prefix}supply-chain.html"><i class="bi bi-truck"></i> Supply Chain</a>
+        <a class="nav-link" href="${prefix}reusability-center.html"><i class="bi bi-arrow-repeat"></i> Reusability Center</a>
+        <a class="nav-link" href="${prefix}analytics.html"><i class="bi bi-graph-up"></i> Reusability Analytics</a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Forecasting</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="${prefix}forecasting/dashboard.html"><i class="bi bi-graph-up-arrow"></i> Forecasting Dashboard</a>
+        <a class="nav-link" href="${prefix}forecasting/upload-data.html"><i class="bi bi-upload"></i> Upload Forecast Data</a>
+        <a class="nav-link" href="${prefix}forecasting/forecast-results.html"><i class="bi bi-bar-chart"></i> Forecast Results</a>
+        <a class="nav-link" href="${prefix}forecasting/regions.html"><i class="bi bi-geo-alt"></i> Region Management</a>
+        <a class="nav-link" href="${prefix}forecasting/facilities.html"><i class="bi bi-building"></i> Facility Management</a>
+        <a class="nav-link" href="${prefix}forecasting/logistics.html"><i class="bi bi-truck"></i> Logistics Management</a>
+        <a class="nav-link" href="${prefix}forecasting/data-upload.html"><i class="bi bi-database"></i> Data Upload Center</a>
+      </nav>
+      <div class="sidebar-divider"></div>
+      <div class="nav-section">Business Intelligence</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="${prefix}bi/sustainability-dashboard.html"><i class="bi bi-leaf"></i> Sustainability Dashboard</a>
+        <a class="nav-link" href="${prefix}bi/profit-optimization.html"><i class="bi bi-cash-stack"></i> Profit Optimization</a>
+        <a class="nav-link" href="${prefix}bi/scenario-simulation.html"><i class="bi bi-diagram-3"></i> Scenario Simulation</a>
+        <a class="nav-link" href="${prefix}bi/recommendation-center.html"><i class="bi bi-lightbulb"></i> Recommendation Center</a>
+        <a class="nav-link" href="${prefix}bi/sustainability-reports.html"><i class="bi bi-file-earmark-text"></i> Sustainability Reports</a>
+        <a class="nav-link" href="${prefix}bi/profitability-reports.html"><i class="bi bi-bar-chart"></i> Profitability Reports</a>
+        <a class="nav-link" href="${prefix}bi/executive-reports.html"><i class="bi bi-clipboard-data"></i> Executive Reports</a>
+      </nav>
+      <div class="nav-section mt-3">Quick Links</div>
+      <nav class="nav flex-column">
+        <a class="nav-link" href="${prefix}../login.html" target="_blank"><i class="bi bi-person-badge"></i> Staff Portal</a>
+        <a class="nav-link" href="${prefix}../index.html" target="_blank"><i class="bi bi-globe"></i> Public Site</a>
+      </nav>
+    `;
+
+    adminSidebar.innerHTML = sidebarHTML;
+
+    // Dynamically patch dropdown profile links to point to the correct admin/profile.html relative path
+    const profileHref = isDeeper ? '../profile.html' : 'profile.html';
+    document.querySelectorAll('.dropdown-menu .dropdown-item').forEach(el => {
+      if (el.textContent.includes('Profile') || el.textContent.includes('My Profile')) {
+        el.setAttribute('href', profileHref);
+      }
+    });
+
+    // Highlighting active classes
+    const navLinks = adminSidebar.querySelectorAll('.nav-link');
+    const currentPage = path.split('/').pop().split('?')[0] || 'dashboard.html';
+
+    navLinks.forEach(link => {
+      const href = link.getAttribute('href') || '';
+      const hrefPage = href.split('/').pop().split('?')[0];
+
+      let isMatch = false;
+      if (currentPage === 'employee-details.html' && hrefPage === 'employees.html') {
+        isMatch = true;
+      } else if (currentPage === 'manager-details.html' && hrefPage === 'managers.html') {
+        isMatch = true;
+      } else if (currentPage === 'supply-chain-details.html' && hrefPage === 'supply-chain.html') {
+        isMatch = true;
+      } else {
+        // Native URL resolution handles matching absolute paths perfectly
+        const resolvedHref = link.href.split('?')[0];
+        const currentHref = window.location.href.split('?')[0];
+        if (resolvedHref === currentHref) {
+          isMatch = true;
+        }
+      }
+
+      if (isMatch) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+  }
+});

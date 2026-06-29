@@ -1,6 +1,7 @@
 (function () {
-  const admin = JSON.parse(localStorage.getItem('greenera_admin') || 'null');
-  if (!admin || !localStorage.getItem('greenera_admin_token')) { window.location.href = 'login.html'; return; }
+  const admin = checkAdminAuth();
+  if (!admin) return;
+
   const initials = (admin.full_name || 'Admin').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   document.getElementById('adminAvatar').textContent = initials || 'A';
 
@@ -31,20 +32,6 @@
   let staffData = [];
   let regionData = [];
   let facilityData = [];
-  const urlRole = new URLSearchParams(window.location.search).get('role');
-  const filterRole = urlRole === 'manager' || urlRole === 'hr' ? urlRole : urlRole || '';
-
-  if (filterRole) {
-    const titles = { employee: 'Employee Management <small>Manage employee accounts</small>', manager: 'Manager Management <small>Manage manager accounts</small>', hr: 'Manager Management <small>Manage manager accounts</small>', supply_chain: 'Supply Chain Management <small>Field staff management</small>' };
-    document.querySelector('.page-title').innerHTML = titles[filterRole] || 'Staff Management <small>All staff</small>';
-    document.getElementById('staffCount') && (document.getElementById('staffCount').textContent = 'Filtered: ' + filterRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
-    document.querySelectorAll('.nav-link').forEach(a => {
-      const href = a.getAttribute('href') || '';
-      if (href.includes('role=' + filterRole)) a.classList.add('active');
-      else if (!href.includes('role=') && !filterRole) a.classList.add('active');
-      else a.classList.remove('active');
-    });
-  }
 
   async function loadRegions() {
     try {
@@ -59,9 +46,6 @@
         opt.textContent = r.name;
         sel.appendChild(opt);
       });
-      const optAll = document.createElement('option');
-      optAll.value = '';
-      optAll.textContent = 'All Regions';
     } catch (e) {
       const sel = document.getElementById('sRegion');
       sel.innerHTML = '<option value="">Region unavailable</option>';
@@ -91,25 +75,14 @@
 
   async function loadStaff() {
     try {
-      let url;
-      if (filterRole === 'manager' || filterRole === 'hr') {
-        url = API_BASE + '/admin/managers';
-      } else if (filterRole === 'supply_chain') {
-        url = API_BASE + '/admin/supply-chain';
-      } else if (filterRole === 'employee') {
-        url = API_BASE + '/admin/employees';
-      } else {
-        url = API_BASE + '/admin/staff';
-      }
-      const res = await fetch(url, { headers });
+      const res = await fetch(API_BASE + '/admin/supply-chain', { headers });
+      if (!res.ok) throw new Error('API failure');
       const data = await res.json();
-      if (data.employees) staffData = data.employees;
-      else if (data.managers) staffData = data.managers;
-      else if (data.supply_chain_staff) staffData = data.supply_chain_staff;
-      else staffData = data.staff || [];
+      staffData = data.supply_chain_staff || [];
       renderStaff();
     } catch (e) {
       document.getElementById('staffCount').textContent = 'Error loading staff';
+      showToast('Failed to load supply chain staff list', 'error');
     }
   }
 
@@ -117,7 +90,7 @@
     const grid = document.getElementById('staffGrid');
     const tbody = document.getElementById('staffTableBody');
     const count = document.getElementById('staffCount');
-    if (count) count.textContent = `${staffData.length} total staff`;
+    if (count) count.textContent = `${staffData.length} total supply chain staff`;
 
     if (grid) {
       grid.innerHTML = staffData.map(s => `
@@ -125,9 +98,9 @@
           <div class="staff-card">
             <div class="staff-avatar">${(s.full_name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)}</div>
             <h6>${s.full_name}</h6>
-            <div class="staff-role">${s.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+            <div class="staff-role">Supply Chain</div>
             <span class="badge ${s.is_active ? 'bg-green' : 'bg-secondary'} mb-2">${s.is_active ? 'active' : 'disabled'}</span>
-            <div class="mt-2"><a href="staff-details.html?id=${s.id}" class="btn btn-sm btn-outline-green w-100">View Details</a></div>
+            <div class="mt-2"><a href="supply-chain-details.html?id=${s.id}" class="btn btn-sm btn-outline-green w-100">View Details</a></div>
           </div>
         </div>
       `).join('');
@@ -136,9 +109,9 @@
     if (tbody) {
       tbody.innerHTML = staffData.map(s => `
         <tr>
-          <td><a href="staff-details.html?id=${s.id}" class="fw-semibold text-dark text-decoration-none">${s.full_name}</a></td>
+          <td><a href="supply-chain-details.html?id=${s.id}" class="fw-semibold text-dark text-decoration-none">${s.full_name}</a></td>
           <td>${s.username}</td>
-          <td><span class="detail-tag blue">${s.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span></td>
+          <td>${s.email || '-'}</td>
           <td>${s.region?.name || '-'}</td>
           <td>${s.facility?.name || '-'}</td>
           <td><span class="status-badge ${s.is_active ? 'completed' : 'cancelled'}">${s.is_active ? 'Active' : 'Disabled'}</span></td>
@@ -160,16 +133,16 @@
     const filtered = staffData.filter(s =>
       s.full_name?.toLowerCase().includes(q) ||
       s.username?.toLowerCase().includes(q) ||
-      s.role?.toLowerCase().includes(q) ||
+      (s.email || '').toLowerCase().includes(q) ||
       (s.region?.name || '').toLowerCase().includes(q)
     );
     const tbody = document.getElementById('staffTableBody');
     if (tbody) {
       tbody.innerHTML = filtered.length ? filtered.map(s => `
         <tr>
-          <td><a href="staff-details.html?id=${s.id}" class="fw-semibold text-dark text-decoration-none">${s.full_name}</a></td>
+          <td><a href="supply-chain-details.html?id=${s.id}" class="fw-semibold text-dark text-decoration-none">${s.full_name}</a></td>
           <td>${s.username}</td>
-          <td><span class="detail-tag blue">${s.role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span></td>
+          <td>${s.email || '-'}</td>
           <td>${s.region?.name || '-'}</td>
           <td>${s.facility?.name || '-'}</td>
           <td><span class="status-badge ${s.is_active ? 'completed' : 'cancelled'}">${s.is_active ? 'Active' : 'Disabled'}</span></td>
@@ -182,20 +155,19 @@
             </div>
           </td>
         </tr>
-      `).join('') : '<tr><td colspan="7" class="text-center text-muted py-3">No staff match your search</td></tr>';
+      `).join('') : '<tr><td colspan="7" class="text-center text-muted py-3">No supply chain staff match your search</td></tr>';
     }
   };
 
   window.editStaff = async function (id) {
     const s = staffData.find(x => x.id === id);
     if (!s) return;
-    document.getElementById('staffModalTitle').textContent = 'Edit Staff — ' + s.full_name;
+    document.getElementById('staffModalTitle').textContent = 'Edit Supply Chain Staff — ' + s.full_name;
     document.getElementById('editStaffId').value = s.id;
     document.getElementById('sName').value = s.full_name;
     document.getElementById('sUsername').value = s.username;
     document.getElementById('sEmail').value = s.email || '';
     document.getElementById('sPhone').value = s.phone || '';
-    document.getElementById('sRole').value = s.role;
     document.getElementById('sRegion').value = s.region_id || '';
     document.getElementById('sFacility').value = s.facility_id || '';
     document.getElementById('passwordField').innerHTML = `<div class="form-floating"><input type="password" class="form-control" id="sPassword" placeholder="Leave blank to keep current"><label>New Password (leave blank to keep)</label></div>`;
@@ -203,23 +175,17 @@
     new bootstrap.Modal(document.getElementById('staffModal')).show();
   };
 
-  function getStaffApiBase() {
-    if (filterRole === 'manager' || filterRole === 'hr') return API_BASE + '/admin/managers';
-    if (filterRole === 'supply_chain') return API_BASE + '/admin/supply-chain';
-    if (filterRole === 'employee') return API_BASE + '/admin/employees';
-    return API_BASE + '/admin/staff';
-  }
-
   window.toggleStaffStatus = async function (id) {
     try {
-      await fetch(getStaffApiBase() + '/' + id + '/status', { method: 'PATCH', headers });
-      showToast('Status toggled');
+      const res = await fetch(API_BASE + '/admin/supply-chain/' + id + '/status', { method: 'PATCH', headers });
+      if (!res.ok) throw new Error((await res.json()).message || 'API failure');
+      showToast('Staff status updated');
       loadStaff();
-    } catch (e) { showToast('Error toggling status', 'error'); }
+    } catch (e) { showToast(e.message || 'Error updating status', 'error'); }
   };
 
   window.openDelete = function (id) {
-    document.getElementById('deleteConfirmText').textContent = `Delete staff #${id}?`;
+    document.getElementById('deleteConfirmText').textContent = `Delete supply chain staff #${id}?`;
     document.getElementById('confirmDeleteBtn').dataset.id = id;
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
   };
@@ -227,27 +193,37 @@
   document.getElementById('confirmDeleteBtn').addEventListener('click', async function () {
     const id = this.dataset.id;
     try {
-      await fetch(getStaffApiBase() + '/' + id, { method: 'DELETE', headers });
-      showToast('Staff deleted');
+      const res = await fetch(API_BASE + '/admin/supply-chain/' + id, { method: 'DELETE', headers });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'API failure');
+      showToast('Supply chain staff deleted successfully');
       bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
       loadStaff();
-    } catch (e) { showToast('Error deleting staff', 'error'); }
+    } catch (e) { showToast(e.message || 'Error deleting staff', 'error'); }
   });
 
   window.openResetPwd = function (id) {
     document.getElementById('resetPwdStaffName').textContent = `Reset password for staff #${id}:`;
     document.getElementById('confirmResetBtn').dataset.id = id;
+    document.getElementById('resetNewPwd').value = '';
     new bootstrap.Modal(document.getElementById('resetPwdModal')).show();
   };
 
   document.getElementById('confirmResetBtn').addEventListener('click', async function () {
     const id = this.dataset.id;
+    const newPassword = document.getElementById('resetNewPwd').value.trim();
+    if (!newPassword || newPassword.length < 4) { showToast('Password must be 4+ chars', 'error'); return; }
     try {
-      const res = await fetch(getStaffApiBase() + '/' + id + '/reset-password', { method: 'POST', headers });
+      const res = await fetch(API_BASE + '/admin/supply-chain/' + id + '/reset-password', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ password: newPassword })
+      });
       const data = await res.json();
-      showToast('Password reset to: ' + data.new_password, 'info');
+      if (!res.ok) throw new Error(data.message || 'API failure');
+      showToast('Password reset successfully', 'info');
       bootstrap.Modal.getInstance(document.getElementById('resetPwdModal')).hide();
-    } catch (e) { showToast('Error resetting password', 'error'); }
+    } catch (e) { showToast(e.message || 'Error resetting password', 'error'); }
   });
 
   document.getElementById('staffForm').addEventListener('submit', async function (e) {
@@ -257,7 +233,6 @@
     const username = document.getElementById('sUsername').value.trim();
     const email = document.getElementById('sEmail').value.trim();
     const phone = document.getElementById('sPhone').value.trim();
-    const role = filterRole === 'hr' ? 'manager' : (filterRole || document.getElementById('sRole').value);
     const region_id = parseInt(document.getElementById('sRegion').value) || null;
     const facility_id = parseInt(document.getElementById('sFacility').value) || null;
     const password = document.getElementById('sPassword')?.value;
@@ -266,22 +241,30 @@
       if (editId) {
         const body = { full_name, email, phone, region_id, facility_id };
         if (password && password.length >= 4) body.password = password;
-        await fetch(getStaffApiBase() + '/' + editId, { method: 'PUT', headers, body: JSON.stringify(body) });
-        showToast('Staff updated');
+        const res = await fetch(API_BASE + '/admin/supply-chain/' + editId, { method: 'PUT', headers, body: JSON.stringify(body) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'API failure');
+        showToast('Supply chain staff updated');
       } else {
         if (!password || password.length < 4) { showToast('Password required (4+ chars)', 'error'); return; }
-        await fetch(getStaffApiBase(), { method: 'POST', headers, body: JSON.stringify({ username, email, password, full_name, phone, region_id, facility_id }) });
-        showToast('Staff created');
+        const res = await fetch(API_BASE + '/admin/supply-chain', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ username, email, password, full_name, phone, region_id, facility_id })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'API failure');
+        showToast('Supply chain staff created successfully');
       }
       bootstrap.Modal.getInstance(document.getElementById('staffModal')).hide();
       document.getElementById('staffForm').reset();
       document.getElementById('editStaffId').value = '';
       loadStaff();
-    } catch (e) { showToast('Error saving staff', 'error'); }
+    } catch (e) { showToast(e.message || 'Error saving staff', 'error'); }
   });
 
   document.querySelector('[data-bs-target="#staffModal"]')?.addEventListener('click', function () {
-    document.getElementById('staffModalTitle').textContent = 'Add New Staff';
+    document.getElementById('staffModalTitle').textContent = 'Add New Supply Chain Staff';
     document.getElementById('editStaffId').value = '';
     document.getElementById('staffForm').reset();
     document.getElementById('passwordField').innerHTML = `<div class="form-floating"><input type="password" class="form-control" id="sPassword" placeholder="Password" required minlength="4"><label>Password</label></div>`;

@@ -87,19 +87,27 @@ exports.staffDailyTrend = catchAsync(async (req, res) => {
 
 exports.staffCategoryDistribution = catchAsync(async (req, res) => {
   const userId = req.user.id;
-  const rows = await Assessment.findAll({
-    attributes: ['product_category', [fn('COUNT', col('assessments.id')), 'count']],
-    where: { user_id: userId, product_category: { [Op.ne]: null } },
-    group: ['product_category'],
-    raw: true,
-  });
+
+  // Use raw SQL with COALESCE so we pick up category from either:
+  //  - product_catalog.category (old assessments that have product_type_id)
+  //  - assessments.product_category (new assessments that set the field directly)
+  const sequelize = Assessment.sequelize;
+  const rows = await sequelize.query(
+    `SELECT COALESCE(pc.category, a.product_category) AS cat, COUNT(a.id) AS cnt
+     FROM assessments a
+     LEFT JOIN product_catalog pc ON a.product_type_id = pc.id
+     WHERE a.user_id = :userId
+     GROUP BY COALESCE(pc.category, a.product_category)`,
+    { replacements: { userId }, type: sequelize.constructor.QueryTypes.SELECT }
+  );
 
   const categoryMap = {};
   Object.keys(CATEGORY_LABELS).forEach((k) => { categoryMap[k] = 0; });
 
   rows.forEach((row) => {
-    if (categoryMap[row.product_category] !== undefined) {
-      categoryMap[row.product_category] = Number(row.count || 0);
+    const catKey = row.cat;
+    if (catKey && categoryMap[catKey] !== undefined) {
+      categoryMap[catKey] = Number(row.cnt || 0);
     }
   });
 

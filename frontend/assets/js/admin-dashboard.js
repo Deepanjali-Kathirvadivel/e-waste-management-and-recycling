@@ -44,29 +44,41 @@
   }
 
   async function loadDashboard() {
+    // Set loading states
+    const kpiIds = ['kpiEmployees', 'kpiManagers', 'kpiSupplyChain', 'kpiAssessments', 'kpiPendingQuotations', 'kpiApprovedQuotations', 'kpiClosedDeals', 'kpiRevenue', 'kpiCollectionStats'];
+    kpiIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<span class="spinner-border spinner-border-sm text-secondary" role="status"></span>';
+    });
+
     try {
-      const kpi = await (await fetch(API_BASE + '/admin/dashboard/kpi', { headers })).json();
+      const res = await fetch(API_BASE + '/admin/dashboard/kpi', { headers });
+      if (!res.ok) throw new Error('API request failed');
+      const kpi = await res.json();
+      
       document.getElementById('kpiEmployees').textContent = (kpi.total_employees || 0).toLocaleString();
       document.getElementById('kpiManagers').textContent = (kpi.total_managers || 0).toLocaleString();
       document.getElementById('kpiSupplyChain').textContent = (kpi.total_supply_chain || 0).toLocaleString();
       document.getElementById('kpiAssessments').textContent = (kpi.total_assessments || 0).toLocaleString();
+      document.getElementById('kpiPendingQuotations').textContent = (kpi.pending_quotations || 0).toLocaleString();
+      document.getElementById('kpiApprovedQuotations').textContent = (kpi.approved_quotations || 0).toLocaleString();
+      document.getElementById('kpiClosedDeals').textContent = (kpi.closed_deals || 0).toLocaleString();
       document.getElementById('kpiRevenue').textContent = '\u20B9' + (kpi.revenue || 0).toLocaleString('en-IN');
-      document.getElementById('kpiProfit').textContent = '\u20B9' + (kpi.profit || 0).toLocaleString('en-IN');
-      document.getElementById('kpiScore').textContent = kpi.sustainability_score || 0;
-      const forecastEl = document.getElementById('kpiForecast');
-      if (forecastEl) forecastEl.textContent = (kpi.forecast_accuracy || 85) + '%';
-      const pendingEl = document.getElementById('kpiPending');
-      if (pendingEl) pendingEl.textContent = (kpi.pending_approvals || 0).toLocaleString();
-      const hubsEl = document.getElementById('kpiHubs');
-      if (hubsEl) hubsEl.textContent = (kpi.hub_count || 0).toLocaleString();
-      const collectedEl = document.getElementById('kpiCollected');
-      if (collectedEl) collectedEl.textContent = (kpi.collected || 0).toLocaleString();
+      document.getElementById('kpiCollectionStats').textContent = kpi.collection_stats || '0';
 
-      const charts = await (await fetch(API_BASE + '/admin/dashboard/charts', { headers })).json();
+      const chartsRes = await fetch(API_BASE + '/admin/dashboard/charts', { headers });
+      if (!chartsRes.ok) throw new Error('Charts API failure');
+      const charts = await chartsRes.json();
       renderCharts(charts);
       loadHeatmap();
     } catch (e) {
       console.error('Dashboard load error:', e);
+      showToast('Error loading dashboard data. Please try again.', 'error');
+      // Set fallback error text
+      kpiIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '--';
+      });
     }
   }
 

@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
-const { User, Region, Facility } = require('../../models');
+const { User, Region, Facility, Assessment, Notification, ActivityLog } = require('../../models');
+const sequelize = require('../../config/database');
 const catchAsync = require('../../utils/catchAsync');
 const AppError = require('../../utils/AppError');
 const pagination = require('../../utils/pagination');
@@ -56,7 +57,23 @@ exports.getOne = catchAsync(async (req, res) => {
 exports.update = catchAsync(async (req, res) => {
   const user = await User.findByPk(req.params.id);
   if (!user || user.role !== 'employee') throw new AppError('Employee not found', 404);
+  
   const updateData = { ...req.body };
+  
+  // Check duplicate username or email if modified
+  const { username, email } = req.body;
+  if (username || email) {
+    const duplicateWhere = {
+      id: { [Op.ne]: user.id },
+      [Op.or]: []
+    };
+    if (username) duplicateWhere[Op.or].push({ username });
+    if (email) duplicateWhere[Op.or].push({ email });
+    
+    const existing = await User.findOne({ where: duplicateWhere });
+    if (existing) throw new AppError('Username or email already exists', 400);
+  }
+
   if (updateData.password) {
     updateData.password_hash = await bcrypt.hash(updateData.password, 10);
     delete updateData.password;
@@ -70,9 +87,22 @@ exports.update = catchAsync(async (req, res) => {
 exports.remove = catchAsync(async (req, res) => {
   const user = await User.findByPk(req.params.id);
   if (!user || user.role !== 'employee') throw new AppError('Employee not found', 404);
-  await user.destroy();
+  
+  // Block deletion if user has associated assessments to preserve referential integrity
+  const assessmentCount = await Assessment.count({ where: { user_id: user.id } });
+  if (assessmentCount > 0) {
+    throw new AppError('Cannot delete employee with associated assessment records. Deactivate instead.', 400);
+  }
+
+  // ACID transaction: delete notifications, nullify activity logs user_id, and delete the user
+  await sequelize.transaction(async (t) => {
+    await Notification.destroy({ where: { user_id: user.id }, transaction: t });
+    await ActivityLog.update({ user_id: null }, { where: { user_id: user.id }, transaction: t });
+    await user.destroy({ transaction: t });
+  });
+
   await log({ userId: req.user.id, action: 'employee_deleted', entityType: 'staff', entityId: user.id });
-  res.json({ message: 'Employee deleted' });
+  res.json({ message: 'Employee deleted successfully' });
 });
 
 exports.toggleStatus = catchAsync(async (req, res) => {

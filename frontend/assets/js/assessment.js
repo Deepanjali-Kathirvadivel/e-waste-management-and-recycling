@@ -4,7 +4,8 @@
   const isStaff = user && user.role === 'employee';
 
   let currentStep = 1;
-  const totalSteps = 8;
+  const totalSteps = 8; // internal step count always 8; staff skip step 6
+  const staffVisibleSteps = 7; // staff see 7 steps (no AI Analysis)
   let categoryCatalog = [];
 
   let data = {
@@ -115,6 +116,7 @@
       { key: 'screen_size', label: 'Screen Size', type: 'select', options: ['11.6"', '12"', '13.3"', '14"', '15.6"', '16"', '17.3"', 'Other'] },
       { key: 'os', label: 'Operating System', type: 'select', options: ['Windows 10', 'Windows 11', 'macOS', 'Linux', 'Chrome OS', 'None / Not Installed', 'Other'] },
       { key: 'gpu', label: 'Graphics', type: 'select', options: ['Integrated', 'NVIDIA GeForce', 'AMD Radeon', 'Intel Arc', 'Apple GPU', 'Other'] },
+      { key: 'battery', label: 'Battery Health / Cycles', type: 'select', options: ['Above 80%', 'Under 80%', 'New Battery Replacement', 'Faulty / Not Charging', 'Other'] },
     ],
     'Desktop': [
       { key: 'processor', label: 'Processor', type: 'select', options: ['Intel Core i3', 'Intel Core i5', 'Intel Core i7', 'Intel Core i9', 'AMD Ryzen 3', 'AMD Ryzen 5', 'AMD Ryzen 7', 'AMD Ryzen 9', 'Other'] },
@@ -131,6 +133,7 @@
       { key: 'screen_size', label: 'Screen Size', type: 'select', options: ['4.7"', '5.5"', '6.1"', '6.3"', '6.5"', '6.7"', '6.9"', 'Other'] },
       { key: 'os', label: 'Operating System', type: 'select', options: ['Android', 'iOS', 'Other'] },
       { key: 'network', label: 'Network', type: 'select', options: ['4G LTE', '5G', 'Wi-Fi Only'] },
+      { key: 'battery', label: 'Battery Capacity / Health', type: 'select', options: ['Above 80%', 'Under 80%', 'New Replacement', 'Faulty / Bulging', 'Other'] },
     ],
     'Tablet': [
       { key: 'storage', label: 'Storage Capacity', type: 'select', options: ['16 GB', '32 GB', '64 GB', '128 GB', '256 GB', '512 GB', '1 TB'] },
@@ -138,6 +141,7 @@
       { key: 'screen_size', label: 'Screen Size', type: 'select', options: ['7"', '8"', '9.7"', '10.1"', '10.5"', '11"', '12.4"', '12.9"', 'Other'] },
       { key: 'os', label: 'Operating System', type: 'select', options: ['iPadOS', 'Android', 'Windows', 'Other'] },
       { key: 'connectivity', label: 'Connectivity', type: 'select', options: ['Wi-Fi Only', 'Wi-Fi + Cellular'] },
+      { key: 'battery', label: 'Battery Health', type: 'select', options: ['Above 80%', 'Under 80%', 'New Replacement', 'Faulty', 'Other'] },
     ],
     'Television': [
       { key: 'screen_size', label: 'Screen Size', type: 'select', options: ['24"', '32"', '40"', '43"', '50"', '55"', '65"', '75"', '85"', 'Other'] },
@@ -308,8 +312,8 @@
     if (!p) return;
     document.getElementById('selectedProductType').value = p.type || '';
     document.getElementById('selectedCategory').value = p.category || '';
-    if (document.getElementById('productBrand')) document.getElementById('productBrand').value = p.brand || '';
-    if (document.getElementById('productModel')) document.getElementById('productModel').value = p.model || '';
+    if (document.getElementById('productBrandManual')) document.getElementById('productBrandManual').value = p.brand || '';
+    if (document.getElementById('productModelManual')) document.getElementById('productModelManual').value = p.model || '';
     if (document.getElementById('productSerial')) document.getElementById('productSerial').value = p.serial || '';
     if (document.getElementById('productYear')) document.getElementById('productYear').value = p.year || '';
     if (document.getElementById('productPurchaseYear')) document.getElementById('productPurchaseYear').value = p.purchaseYear || '';
@@ -389,28 +393,78 @@
 
   function saveDetailsStep() {
     const p = data.products[activeIdx];
-    p.brand = document.getElementById('productBrand').value.trim();
-    p.model = document.getElementById('productModel').value.trim();
+    
+    // Extract Brand
+    const brandSel = document.getElementById('productBrandSelect');
+    if (brandSel && brandSel.value === 'Others') {
+      p.brand = document.getElementById('productBrandManual').value.trim();
+    } else if (brandSel) {
+      p.brand = brandSel.value;
+    } else {
+      p.brand = '';
+    }
+
+    // Extract Model
+    const modelSel = document.getElementById('productModelSelect');
+    if (modelSel && modelSel.value === 'Others') {
+      p.model = document.getElementById('productModelManual').value.trim();
+    } else if (modelSel) {
+      p.model = modelSel.value;
+    } else {
+      p.model = '';
+    }
+
     p.serial = document.getElementById('productSerial').value.trim();
     p.year = document.getElementById('productYear').value;
     p.purchaseYear = document.getElementById('productPurchaseYear').value;
     p.condition = document.getElementById('productCondition').value;
     p.warranty = document.getElementById('productWarranty').value;
     p.ownership = document.getElementById('productOwnership').value;
+    
+    // Extract Accessories with custom input
     const accContainer = document.getElementById('productAccessoriesContainer');
     const selected = [];
-    if (accContainer) accContainer.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => selected.push(cb.value));
+    if (accContainer) {
+      accContainer.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => selected.push(cb.value));
+      const manualAcc = document.getElementById('accOthers')?.value.trim();
+      if (manualAcc) {
+        manualAcc.split(',').map(s => s.trim()).filter(Boolean).forEach(x => {
+          if (!selected.includes(x)) selected.push(x);
+        });
+      }
+    }
     p.accessories = selected;
+
     p.weight = parseFloat(document.getElementById('productWeight').value) || 0;
+    
+    // Extract Specifications with custom input
     const specsContainer = document.getElementById('productSpecsContainer');
     const specsObj = {};
     if (specsContainer) {
-      specsContainer.querySelectorAll('select, input[type="text"]').forEach(el => {
-        const key = el.dataset.specKey || el.id.replace('spec_', '');
-        if (el.value) specsObj[key] = el.value;
+      // For select groups:
+      specsContainer.querySelectorAll('.spec-select-group').forEach(group => {
+        const key = group.dataset.key;
+        const selectEl = group.querySelector('select');
+        const manualEl = group.querySelector('input[type="text"]');
+        if (selectEl) {
+          if (selectEl.value === 'Other' || selectEl.value === 'Others') {
+            specsObj[key] = manualEl ? manualEl.value.trim() : '';
+          } else {
+            specsObj[key] = selectEl.value;
+          }
+        }
+      });
+      // For standard text groups:
+      specsContainer.querySelectorAll('.spec-text-group').forEach(group => {
+        const key = group.dataset.key;
+        const inputEl = group.querySelector('input');
+        if (inputEl) {
+          specsObj[key] = inputEl.value.trim();
+        }
       });
     }
     p.specs = specsObj;
+
     p.notes = document.getElementById('productNotes').value.trim();
   }
 
@@ -530,8 +584,19 @@
   }
 
   function updateUI() {
+    // Map internal step number to visible display number for staff
+    // Staff flow: 1,2,3,4,5,[skip 6],7,8 → displayed as 1,2,3,4,5,6,7
+    function visibleStepNum(internalStep) {
+      if (!isStaff) return internalStep;
+      if (internalStep <= 5) return internalStep;
+      if (internalStep === 7) return 6;
+      if (internalStep === 8) return 7;
+      return internalStep;
+    }
+
     document.querySelectorAll('.wizard-step').forEach(el => {
       const step = parseInt(el.dataset.step);
+      // For staff: hide step 6 (AI Analysis)
       if (isStaff && step === 6) {
         el.classList.add('d-none');
         return;
@@ -541,6 +606,10 @@
       el.classList.remove('active', 'completed');
       if (step === currentStep) el.classList.add('active');
       else if (step < currentStep) el.classList.add('completed');
+
+      // Renumber the circle text for staff (7→6, 8→7)
+      const circle = el.querySelector('.step-circle');
+      if (circle) circle.textContent = visibleStepNum(step);
     });
     document.querySelectorAll('.wizard-step-content').forEach(el => {
       if (isStaff && parseInt(el.dataset.step) === 6) {
@@ -549,7 +618,26 @@
       }
       el.classList.toggle('d-none', parseInt(el.dataset.step) !== currentStep);
     });
-    document.getElementById('stepIndicator').textContent = 'Step ' + currentStep + ' of ' + totalSteps;
+
+    // For staff: hide valuation-specific info in step 7; show only approval message
+    if (isStaff) {
+      const s7Info = document.getElementById('step7Info');
+      const s7Desc = document.getElementById('step7Desc');
+      const s7Title = document.getElementById('step7Title');
+      if (s7Info) s7Info.classList.add('d-none');
+      if (s7Desc) s7Desc.classList.add('d-none');
+      if (s7Title) {
+        s7Title.innerHTML = '<i class="bi bi-check-circle text-green me-2"></i>Assessment Confirmation';
+      }
+      // Rename step 7 and 8 bubble labels for staff
+      const step7Label = document.querySelector('.wizard-step[data-step="7"] .step-label');
+      if (step7Label) step7Label.textContent = 'Confirm';
+    }
+
+    // Show visual step number (staff: 1-7 skipping 6, non-staff: 1-8)
+    const visibleCurrent = visibleStepNum(currentStep);
+    const visibleTotal = isStaff ? staffVisibleSteps : totalSteps;
+    document.getElementById('stepIndicator').textContent = 'Step ' + visibleCurrent + ' of ' + visibleTotal;
     document.getElementById('prevBtn').disabled = currentStep === 1;
     const isLast = currentStep === totalSteps;
     document.getElementById('nextBtn').classList.toggle('d-none', isLast);
@@ -689,10 +777,13 @@
     const p = data.products[activeIdx];
     if (!p) return;
     toggleCustomProductFields();
-    const brandInput = document.getElementById('productBrand');
-    const modelInput = document.getElementById('productModel');
-    const brandList = document.getElementById('brandList');
-    const modelList = document.getElementById('modelList');
+    
+    const brandSel = document.getElementById('productBrandSelect');
+    const modelSel = document.getElementById('productModelSelect');
+    const brandManualContainer = document.getElementById('productBrandManualContainer');
+    const modelManualContainer = document.getElementById('productModelManualContainer');
+    const brandManualInput = document.getElementById('productBrandManual');
+    const modelManualInput = document.getElementById('productModelManual');
 
     try {
       const res = await fetch(API_BASE + '/assessments/catalog/' + encodeURIComponent(p.type), { headers: getAuthHeaders() });
@@ -701,26 +792,63 @@
       categoryCatalog = d.catalog || [];
       const brands = [...new Set(categoryCatalog.map(item => item.company))].sort();
 
-      brandList.innerHTML = brands.map(b => `<option value="${b}">`).join('');
+      // Brand dropdown population
+      brandSel.innerHTML = '<option value="">-- Select Brand --</option>' +
+        brands.map(b => `<option value="${b}">${b}</option>`).join('') +
+        '<option value="Others">Others</option>';
 
-      if (!brandInput.dataset.bound) {
-        brandInput.addEventListener('input', function () {
-          const val = this.value;
-          const models = categoryCatalog.filter(item => item.company === val).map(item => item.model).sort();
-          modelList.innerHTML = models.map(m => `<option value="${m}">`).join('');
-        });
-        brandInput.dataset.bound = 'true';
-      }
+      brandSel.onchange = function () {
+        const val = this.value;
+        if (val === 'Others') {
+          brandManualContainer.classList.remove('d-none');
+          // Reset model options to Others only
+          modelSel.innerHTML = '<option value="">-- Select Model --</option><option value="Others">Others</option>';
+        } else {
+          brandManualContainer.classList.add('d-none');
+          if (val) {
+            const models = categoryCatalog.filter(item => item.company === val).map(item => item.model).sort();
+            modelSel.innerHTML = '<option value="">-- Select Model --</option>' +
+              models.map(m => `<option value="${m}">${m}</option>`).join('') +
+              '<option value="Others">Others</option>';
+          } else {
+            modelSel.innerHTML = '<option value="">-- Select Model --</option>';
+          }
+        }
+      };
+
+      modelSel.onchange = function () {
+        const val = this.value;
+        if (val === 'Others') {
+          modelManualContainer.classList.remove('d-none');
+        } else {
+          modelManualContainer.classList.add('d-none');
+        }
+      };
 
       const restoreBrand = p.brand || p.extractedBrand || '';
       if (restoreBrand && restoreBrand !== 'N/A') {
-        brandInput.value = restoreBrand;
-        const evt = new Event('input', { bubbles: true });
-        brandInput.dispatchEvent(evt);
+        if (brands.includes(restoreBrand)) {
+          brandSel.value = restoreBrand;
+          brandSel.onchange();
+        } else {
+          brandSel.value = 'Others';
+          brandSel.onchange();
+          brandManualInput.value = restoreBrand;
+        }
+
         const restoreModel = p.model || p.extractedModel || '';
         if (restoreModel && restoreModel !== 'N/A') {
-          modelInput.value = restoreModel;
+          const modelOptions = Array.from(modelSel.options).map(o => o.value);
+          if (modelOptions.includes(restoreModel)) {
+            modelSel.value = restoreModel;
+            modelSel.onchange();
+          } else {
+            modelSel.value = 'Others';
+            modelSel.onchange();
+            modelManualInput.value = restoreModel;
+          }
         }
+
         if (restoreBrand === p.extractedBrand || (p.extractedBrand && restoreBrand.includes(p.extractedBrand))) {
           const bb = document.getElementById('brandBadge');
           if (bb) bb.style.display = 'inline-block';
@@ -729,6 +857,11 @@
           const mb = document.getElementById('modelBadge');
           if (mb) mb.style.display = 'inline-block';
         }
+      } else {
+        brandSel.value = '';
+        brandSel.onchange();
+        modelSel.value = '';
+        modelSel.onchange();
       }
     } catch (e) {
       showToast('Error loading catalog', 'error');
@@ -742,7 +875,11 @@
     const type = p ? p.type : '';
     const saved = p && Array.isArray(p.accessories) ? p.accessories : [];
     const items = prodAccessories[type] || prodAccessories['Laptop'] || [];
-    container.innerHTML = items.map(item =>
+    
+    const standardItems = new Set(items);
+    const customItems = saved.filter(x => !standardItems.has(x));
+
+    let html = items.map(item =>
       `<div class="col-md-4 col-6">
         <div class="form-check">
           <input class="form-check-input" type="checkbox" id="acc_${item.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')}" value="${item}" ${saved.includes(item) ? 'checked' : ''}>
@@ -750,6 +887,14 @@
         </div>
       </div>`
     ).join('');
+
+    html += `
+      <div class="col-12 mt-2">
+        <label class="form-label small mb-0 fw-semibold text-muted">Other Accessories (Manual Entry)</label>
+        <input type="text" class="form-control form-control-sm" id="accOthers" placeholder="e.g. Bag, Mouse, Keyboard" value="${customItems.join(', ')}">
+      </div>`;
+
+    container.innerHTML = html;
   }
 
   function renderSpecs() {
@@ -759,24 +904,59 @@
     const type = p ? p.type : '';
     const saved = p && typeof p.specs === 'object' && !Array.isArray(p.specs) ? p.specs : {};
     const fields = prodSpecs[type] || [];
+    
     container.innerHTML = fields.map(f => {
       const id = 'spec_' + f.key;
+      const selectId = id + '_select';
+      const manualId = id + '_manual';
+      const manualContainerId = id + '_manual_container';
+      
       const val = saved[f.key] || '';
+      
       if (f.type === 'select') {
-        return `<div class="col-md-4 col-6">
-          <label class="form-label small mb-0" for="${id}">${f.label}</label>
-          <select class="form-select form-select-sm" id="${id}" data-spec-key="${f.key}">
-            <option value="">-- Select --</option>
-            ${f.options.map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${o}</option>`).join('')}
-          </select>
-        </div>`;
+        const optionsList = [...f.options];
+        if (!optionsList.includes('Other') && !optionsList.includes('Others')) {
+          optionsList.push('Other');
+        }
+        
+        const isStandard = optionsList.includes(val) && val !== 'Other' && val !== 'Others';
+        const selectVal = val ? (isStandard ? val : 'Other') : '';
+        const manualVal = isStandard ? '' : val;
+        
+        return `
+          <div class="col-md-4 col-6 spec-select-group" data-key="${f.key}">
+            <label class="form-label small mb-0" for="${selectId}">${f.label}</label>
+            <select class="form-select form-select-sm" id="${selectId}" onchange="window.toggleSpecManual('${id}')">
+              <option value="">-- Select --</option>
+              ${optionsList.map(o => `<option value="${o}" ${selectVal === o ? 'selected' : ''}>${o}</option>`).join('')}
+            </select>
+            <div class="mt-1 ${selectVal === 'Other' ? '' : 'd-none'}" id="${manualContainerId}">
+              <input type="text" class="form-control form-control-sm" id="${manualId}" placeholder="Enter ${f.label}" value="${manualVal}">
+            </div>
+          </div>
+        `;
       }
-      return `<div class="col-md-4 col-6">
-        <label class="form-label small mb-0" for="${id}">${f.label}</label>
-        <input type="text" class="form-control form-control-sm" id="${id}" data-spec-key="${f.key}" value="${val}">
-      </div>`;
+      
+      return `
+        <div class="col-md-4 col-6 spec-text-group" data-key="${f.key}">
+          <label class="form-label small mb-0" for="${id}">${f.label}</label>
+          <input type="text" class="form-control form-control-sm" id="${id}" value="${val}">
+        </div>
+      `;
     }).join('');
   }
+
+  window.toggleSpecManual = function(id) {
+    const selectEl = document.getElementById(id + '_select');
+    const containerEl = document.getElementById(id + '_manual_container');
+    if (selectEl && containerEl) {
+      if (selectEl.value === 'Other' || selectEl.value === 'Others') {
+        containerEl.classList.remove('d-none');
+      } else {
+        containerEl.classList.add('d-none');
+      }
+    }
+  };
 
   // ───────── Step 4: Per-Product Image Upload (Single Box, Max 10) ─────────
   function refreshImageUpload() {
@@ -1099,6 +1279,17 @@
     data.products.forEach((p, i) => computeProductValue(p, i));
     const container = document.getElementById('allProductsValuation');
     if (!container) return;
+    
+    if (isStaff) {
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-success py-4 text-center mb-0 shadow-sm border-0">
+            <h5 class="fw-bold mb-0 text-success"><i class="bi bi-check-circle me-2"></i>Quotation submitted for Manager approval.</h5>
+          </div>
+        </div>`;
+      return;
+    }
+
     let totalEst = 0;
     let html = '';
     data.products.forEach((p, i) => {
@@ -1177,6 +1368,12 @@
   // ───────── Submit ─────────
   window.submitAssessment = async function () {
     saveActiveProduct();
+    if (!validateStep(1)) {
+      showToast('Please fill all mandatory Customer Details in Step 1.', 'error');
+      currentStep = 1;
+      updateUI();
+      return;
+    }
     const btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Submitting...';

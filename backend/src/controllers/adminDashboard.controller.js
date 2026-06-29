@@ -3,50 +3,60 @@ const { User, Assessment, ProductCatalog, Region, ActivityLog, Facility, Invento
 const catchAsync = require('../utils/catchAsync');
 
 exports.kpi = catchAsync(async (req, res) => {
-  const [employeeCount, managerCount, supplyChainCount, totalAssessments, totalValue, sustainabilityScore, forecastAccuracy, pendingApprovals, completedCount, collectedCount, inTransitCount] = await Promise.all([
-    User.count({ where: { role: 'employee', is_active: true } }),
-    User.count({ where: { role: 'manager', is_active: true } }),
-    User.count({ where: { role: 'supply_chain', is_active: true } }),
+  const [
+    employeeCount,
+    managerCount,
+    supplyChainCount,
+    totalAssessments,
+    pendingQuotations,
+    approvedQuotations,
+    closedDealsCount,
+    pendingApprovals,
+    collectedCount,
+  ] = await Promise.all([
+    User.count({ where: { role: 'employee' } }),
+    User.count({ where: { role: { [Op.in]: ['manager', 'hr', 'center_manager'] } } }),
+    User.count({ where: { role: 'supply_chain' } }),
     Assessment.count(),
-    Assessment.sum('value_estimate', { where: { status: 'completed' } }),
-    Assessment.findOne({
-      attributes: [[fn('AVG', col('ai_score')), 'avg']],
-      where: { ai_score: { [Op.ne]: null } },
-    }),
-    Assessment.findOne({
-      attributes: [[fn('AVG', col('ai_score')), 'avg']],
-      where: { ai_score: { [Op.ne]: null }, status: 'completed' },
-    }),
     Assessment.count({ where: { status: 'pending_manager_review' } }),
+    Assessment.count({ where: { status: 'approved' } }),
     Assessment.count({ where: { status: 'completed' } }),
-    Assessment.count({ where: { status: 'collected' } }),
-    Assessment.count({ where: { status: 'in_transit' } }),
+    Assessment.count({ where: { status: 'pending_manager_review' } }),
+    Assessment.count({ where: { status: { [Op.in]: ['collected', 'in_transit', 'arrived_at_hub', 'received', 'completed'] } } }),
   ]);
 
-  const revenue = totalValue || 0;
-  const profit = Math.round(revenue * 0.3);
-  const avgScore = sustainabilityScore?.dataValues?.avg || 85;
-  const avgForecast = forecastAccuracy?.dataValues?.avg || 0;
-  const hubCount = await Facility.count({ where: { type: 'collection_center', status: 'active' } });
+  const revenueResult = await Assessment.findOne({
+    attributes: [
+      [fn('SUM', fn('COALESCE', col('hr_approved_value'), col('value_estimate'))), 'total']
+    ],
+    where: { status: 'completed' },
+    raw: true
+  });
+  const revenue = Math.round(revenueResult?.total || 0);
+
+  // Collection Stats: e.g. collected count / total assessments
+  const collectionRate = totalAssessments > 0 ? Math.round((collectedCount / totalAssessments) * 100) : 0;
+  const collectionStats = `${collectedCount} / ${totalAssessments} (${collectionRate}%)`;
 
   res.json({
     total_employees: employeeCount,
     total_managers: managerCount,
     total_supply_chain: supplyChainCount,
+    total_assessments: totalAssessments,
+    pending_quotations: pendingQuotations,
+    approved_quotations: approvedQuotations,
+    closed_deals: closedDealsCount,
+    revenue: revenue,
+    collection_stats: collectionStats,
+    // Keep legacy support for fields that might be used elsewhere
     total_staff: employeeCount + managerCount + supplyChainCount,
     total_hr: managerCount,
-    total_assessments: totalAssessments,
     collections: totalAssessments,
     total_products: totalAssessments,
     pending_approvals: pendingApprovals,
-    completed_assessments: completedCount,
+    completed_assessments: closedDealsCount,
     collected: collectedCount,
-    in_transit: inTransitCount,
-    hub_count: hubCount,
-    revenue: Math.round(revenue),
-    profit,
-    sustainability_score: Math.round(avgScore),
-    forecast_accuracy: Math.round(avgForecast),
+    hub_count: await Facility.count({ where: { type: 'collection_center', status: 'active' } }),
   });
 });
 
@@ -83,10 +93,39 @@ exports.charts = catchAsync(async (req, res) => {
     return { label: r.name, value: val || 0 };
   }));
 
-  const catalog = await ProductCatalog.findAll();
-  const productDist = await Promise.all(catalog.map(async (p) => {
-    const count = await Assessment.count({ where: { product_type_id: p.id } });
-    return { label: p.name, value: count };
+  const CATEGORY_LABELS = {
+    IT: 'IT',
+    CE: 'Consumer Electronics',
+    LS: 'Household Appliances',
+    EE: 'Electrical & Electronic Tools',
+    TLS: 'Toys, Leisure & Sports Equipment',
+    LI: 'Lighting Instruments',
+    MD: 'Medical Devices',
+  };
+
+  const rows = await Assessment.findAll({
+    include: [{
+      model: ProductCatalog,
+      attributes: ['category'],
+      required: true
+    }],
+    attributes: [[fn('COUNT', col('assessments.id')), 'count']],
+    group: ['product_catalog.category'],
+    raw: true,
+  });
+
+  const categoryMap = {};
+  Object.keys(CATEGORY_LABELS).forEach((k) => { categoryMap[k] = 0; });
+  rows.forEach((row) => {
+    const catKey = row['product_catalog.category'];
+    if (categoryMap[catKey] !== undefined) {
+      categoryMap[catKey] = Number(row.count || 0);
+    }
+  });
+
+  const productDist = Object.entries(categoryMap).map(([key, value]) => ({
+    label: CATEGORY_LABELS[key] || key,
+    value,
   }));
 
   const classifications = ['reusable', 'repairable', 'recyclable', 'scrap'];

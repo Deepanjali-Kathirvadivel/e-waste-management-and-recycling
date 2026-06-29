@@ -59,6 +59,10 @@
         window.location.href = 'dashboard.html';
       }
     } catch (err) {
+      if (err.message === 'Use Admin Login portal') {
+        window.location.href = 'admin/login.html';
+        return;
+      }
       loginError.textContent = err.message || 'Login failed';
       loginError.classList.remove('d-none');
       btnText.innerHTML = '<i class="bi bi-box-arrow-in-right me-2"></i>Sign In';

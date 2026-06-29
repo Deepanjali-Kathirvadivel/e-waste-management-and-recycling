@@ -70,7 +70,7 @@
           <div class="dropdown">
             <div class="admin-avatar dropdown-toggle" role="button" data-bs-toggle="dropdown" id="adminAvatar">SA</div>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li><a class="dropdown-item" href="../profile.html"><i class="bi bi-person me-2"></i> My Profile</a></li>
+              <li><a class="dropdown-item" href="profile.html"><i class="bi bi-person me-2"></i> My Profile</a></li>
               <li><a class="dropdown-item" href="notifications.html"><i class="bi bi-bell me-2"></i> Notifications</a></li>
               <li><a class="dropdown-item" href="../login.html"><i class="bi bi-arrow-left-right me-2"></i> Staff Portal</a></li>
               <li><hr class="dropdown-divider"></li>
@@ -82,39 +82,33 @@
 
       <!-- Content -->
       <div class="admin-content">
-        <div class="row g-3 mb-4">
-          <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon blue"><i class="bi bi-person"></i></div><p class="kpi-label">Employees</p><h3 class="kpi-value" id="kpiEmployees">0</h3><span class="kpi-sub">Active employees</span></div>
+        <div class="row g-3 mb-4" id="kpiContainer">
+          <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="admin-kpi"><div class="kpi-icon blue"><i class="bi bi-person"></i></div><p class="kpi-label">Total Employees</p><h3 class="kpi-value" id="kpiEmployees">0</h3><span class="kpi-sub">Total staff accounts</span></div>
           </div>
-          <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon purple"><i class="bi bi-person-badge"></i></div><p class="kpi-label">Managers</p><h3 class="kpi-value" id="kpiManagers">0</h3><span class="kpi-sub">Manager officers</span></div>
+          <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="admin-kpi"><div class="kpi-icon purple"><i class="bi bi-person-badge"></i></div><p class="kpi-label">Total Managers</p><h3 class="kpi-value" id="kpiManagers">0</h3><span class="kpi-sub">HR & center managers</span></div>
           </div>
-          <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon orange"><i class="bi bi-truck"></i></div><p class="kpi-label">Supply Chain</p><h3 class="kpi-value" id="kpiSupplyChain">0</h3><span class="kpi-sub">Field staff</span></div>
+          <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="admin-kpi"><div class="kpi-icon orange"><i class="bi bi-truck"></i></div><p class="kpi-label">Total Supply Chain Staff</p><h3 class="kpi-value" id="kpiSupplyChain">0</h3><span class="kpi-sub">Field operations staff</span></div>
           </div>
-          <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon green"><i class="bi bi-box-seam"></i></div><p class="kpi-label">Assessments</p><h3 class="kpi-value" id="kpiAssessments">0</h3><span class="kpi-sub">Total assessments</span></div>
+          <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="admin-kpi"><div class="kpi-icon green"><i class="bi bi-box-seam"></i></div><p class="kpi-label">Total Assessments</p><h3 class="kpi-value" id="kpiAssessments">0</h3><span class="kpi-sub">All registered items</span></div>
           </div>
-          <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon cyan"><i class="bi bi-currency-rupee"></i></div><p class="kpi-label">Revenue</p><h3 class="kpi-value" id="kpiRevenue">₹0</h3><span class="kpi-sub">+8% this quarter</span></div>
+          <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="admin-kpi"><div class="kpi-icon warning"><i class="bi bi-hourglass-split"></i></div><p class="kpi-label">Pending Quotations</p><h3 class="kpi-value" id="kpiPendingQuotations">0</h3><span class="kpi-sub">Awaiting manager review</span></div>
           </div>
-          <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon red"><i class="bi bi-graph-up-arrow"></i></div><p class="kpi-label">Profit</p><h3 class="kpi-value" id="kpiProfit">₹0</h3><span class="kpi-sub">+15% margin</span></div>
+          <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="admin-kpi"><div class="kpi-icon blue"><i class="bi bi-check-circle"></i></div><p class="kpi-label">Approved Quotations</p><h3 class="kpi-value" id="kpiApprovedQuotations">0</h3><span class="kpi-sub">Approved for collection</span></div>
           </div>
-          <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon teal"><i class="bi bi-leaf"></i></div><p class="kpi-label">Sustainability</p><h3 class="kpi-value" id="kpiScore">0</h3><span class="kpi-sub">Score</span></div>
+          <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="admin-kpi"><div class="kpi-icon red"><i class="bi bi-file-earmark-check"></i></div><p class="kpi-label">Closed Deals</p><h3 class="kpi-value" id="kpiClosedDeals">0</h3><span class="kpi-sub">Deals fully completed</span></div>
           </div>
-          <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon cyan"><i class="bi bi-graph-up-arrow"></i></div><p class="kpi-label">Forecast Accuracy</p><h3 class="kpi-value" id="kpiForecast">85%</h3><span class="kpi-sub">Last 12 months</span></div>
+          <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="admin-kpi"><div class="kpi-icon cyan"><i class="bi bi-currency-rupee"></i></div><p class="kpi-label">Revenue</p><h3 class="kpi-value" id="kpiRevenue">₹0</h3><span class="kpi-sub">From completed deals</span></div>
           </div>
-          <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon warning"><i class="bi bi-hourglass-split"></i></div><p class="kpi-label">Pending Approvals</p><h3 class="kpi-value" id="kpiPending">0</h3><span class="kpi-sub">Awaiting review</span></div>
-          </div>
-          <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon blue"><i class="bi bi-building"></i></div><p class="kpi-label">Active Hubs</p><h3 class="kpi-value" id="kpiHubs">0</h3><span class="kpi-sub">Collection centers</span></div>
-          </div>
-          <div class="col-md-4 col-xl-2">
-            <div class="admin-kpi"><div class="kpi-icon purple"><i class="bi bi-check-circle"></i></div><p class="kpi-label">Collected</p><h3 class="kpi-value" id="kpiCollected">0</h3><span class="kpi-sub">Ready for transport</span></div>
+          <div class="col-md-6 col-lg-4 col-xl-3">
+            <div class="admin-kpi"><div class="kpi-icon teal"><i class="bi bi-bar-chart-line"></i></div><p class="kpi-label">Collection Statistics</p><h3 class="kpi-value" id="kpiCollectionStats">0</h3><span class="kpi-sub">Collected / total items</span></div>
           </div>
         </div>
 

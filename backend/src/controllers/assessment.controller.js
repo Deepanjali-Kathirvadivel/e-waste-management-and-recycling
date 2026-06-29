@@ -320,12 +320,20 @@ exports.aiAnalyze = catchAsync(async (req, res) => {
 });
 
 exports.exportData = catchAsync(async (req, res) => {
-  const { format, status, date_from, date_to } = req.query;
+  const { format, search, status, type, date_from, date_to } = req.query;
   const where = {};
   if (req.user.role === 'employee') where.user_id = req.user.id;
   if (status) where.status = status;
+  if (type) where.product_type_id = type;
   if (date_from) where.created_at = { ...where.created_at, [Op.gte]: new Date(date_from) };
   if (date_to) where.created_at = { ...where.created_at, [Op.lte]: new Date(date_to) };
+  if (search) {
+    where[Op.or] = [
+      { customer_name: { [Op.like]: `%${search}%` } },
+      { brand: { [Op.like]: `%${search}%` } },
+      { model: { [Op.like]: `%${search}%` } },
+    ];
+  }
 
   const assessments = await Assessment.findAll({
     where, order: [['created_at', 'DESC']],
@@ -347,6 +355,13 @@ exports.exportData = catchAsync(async (req, res) => {
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=assessments.xlsx');
     return res.send(buf);
+  }
+
+  if (format === 'csv') {
+    const csvContent = [headers.join(','), ...rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=assessments.csv');
+    return res.send(Buffer.from(csvContent));
   }
 
   const buf = reportService.generatePDF('Assessment Report', headers, rows);
