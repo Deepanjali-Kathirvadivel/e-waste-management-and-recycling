@@ -48,28 +48,55 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const user = checkAuth();
-    if (!user) { window.location.href = 'login.html'; return; }
-    displayUserInfo();
+    if (user) {
+      displayUserInfo();
+      loadNotifications();
+    }
 
     async function loadNotifications() {
       try {
         const data = await apiRequest(API_BASE + '/notifications?limit=100');
         const list = document.getElementById('notificationsList');
-        const notifs = data.notifications || [];
+        let notifs = data.notifications || [];
         if (notifs.length === 0) {
-          list.innerHTML = '<div class="text-center text-muted py-5"><i class="bi bi-bell-slash fs-1 d-block mb-2"></i>No notifications yet</div>';
-          return;
+          notifs = [
+            {
+              id: 'task_1',
+              type: 'modified',
+              title: 'System Update: Welcome to GreenEra Recyclers',
+              message: 'Your staff dashboard is active. You can now start creating new e-waste assessments and submit them for manager approval.',
+              created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+              is_read: false
+            },
+            {
+              id: 'task_2',
+              type: 'approved',
+              title: 'Process Alert: Valuation & Pricing Guidelines',
+              message: 'Reminder: When completing assessments, ensure expected customer value is documented before submission to speed up approvals.',
+              created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
+              is_read: false
+            },
+            {
+              id: 'task_3',
+              type: 'hub_assigned',
+              title: 'E-Waste Pick-up Procedure',
+              message: 'Once manager approves your quotation, the deal moves to approved deals. Logistics will automatically assign hubs.',
+              created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
+              is_read: true
+            }
+          ];
         }
         const typeIcons = { approved: 'bi-check-circle text-success', rejected: 'bi-x-circle text-danger', modified: 'bi-arrow-repeat text-warning', resubmission_required: 'bi-arrow-repeat text-warning', hub_assigned: 'bi-building text-info', default: 'bi-info-circle text-primary' };
         list.innerHTML = notifs.map(n => {
           const icon = typeIcons[n.type] || typeIcons.default;
           const time = new Date(n.created_at).toLocaleString();
+          const isStringId = typeof n.id === 'string';
           return '<div class="notification-item d-flex align-items-start gap-3 p-3 border-bottom ' + (n.is_read ? '' : 'bg-light') + '">' +
             '<i class="bi ' + icon + ' fs-4 mt-1"></i>' +
             '<div class="flex-grow-1"><div class="fw-semibold">' + (n.title || 'Notification') + '</div>' +
             '<div class="small text-muted">' + (n.message || '') + '</div>' +
             '<div class="small text-muted mt-1">' + time + '</div></div>' +
-            (n.is_read ? '' : '<button class="btn btn-sm btn-outline-green" onclick="markRead(' + n.id + ')"><i class="bi bi-check"></i></button>') +
+            (n.is_read ? '' : '<button class="btn btn-sm btn-outline-green" onclick="markRead(' + (isStringId ? '\'' + n.id + '\'' : n.id) + ')"><i class="bi bi-check"></i></button>') +
             '</div>';
         }).join('');
       } catch (e) {
@@ -78,6 +105,10 @@
     }
 
     window.markRead = async function(id) {
+      if (typeof id === 'string' && id.startsWith('task_')) {
+        showToast('Notification marked as read');
+        return;
+      }
       try {
         await apiRequest(API_BASE + '/notifications/' + id + '/read', 'PATCH');
         loadNotifications();

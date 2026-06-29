@@ -237,6 +237,7 @@ function showToast(message, type = 'success') {
 }
 
 // ───── Notification polling ─────
+// ───── Notification polling ─────
 function startNotificationPolling(intervalMs = 30000) {
   let badge = document.getElementById('notifBadge');
   let bell = document.getElementById('notifBell');
@@ -249,6 +250,7 @@ function startNotificationPolling(intervalMs = 30000) {
       bell.appendChild(badge);
     }
   }
+
   async function poll() {
     try {
       const res = await fetch(API_BASE + '/notifications/unread-count', { headers: getAuthHeaders() });
@@ -263,9 +265,12 @@ function startNotificationPolling(intervalMs = 30000) {
   setInterval(poll, intervalMs);
 }
 
-const style = document.createElement('style');
-style.textContent = `@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
-document.head.appendChild(style);
+const notifStyles = document.createElement('style');
+notifStyles.textContent = `
+  .btn-outline-green { border-color: #16A34A; color: #16A34A; }
+  .btn-outline-green:hover { background-color: #16A34A; color: #fff; }
+`;
+document.head.appendChild(notifStyles);
 
 // ───── Admin Authorization Helpers ─────
 function checkAdminAuth() {
@@ -298,6 +303,10 @@ function checkAdminAuth() {
 
 // Dynamic Admin Sidebar links rendering & active link highlighting
 document.addEventListener('DOMContentLoaded', function() {
+  setupNotifications();
+  if (document.getElementById('notifBell')) {
+    startNotificationPolling();
+  }
   const adminSidebar = document.getElementById('adminSidebar');
   if (adminSidebar) {
     const path = window.location.pathname.replace(/\\/g, '/');

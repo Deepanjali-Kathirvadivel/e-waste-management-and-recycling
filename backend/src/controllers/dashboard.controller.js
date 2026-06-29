@@ -29,15 +29,15 @@ exports.staffKPI = catchAsync(async (req, res) => {
       },
     }),
     Assessment.count({ where: { user_id: userId, status: 'pending_manager_review' } }),
-    Assessment.count({ where: { user_id: userId, status: 'approved' } }),
+    Assessment.count({ where: { user_id: userId, status: { [Op.in]: ['approved', 'hub_assigned', 'supply_chain_assigned', 'pickup_scheduled', 'out_for_pickup', 'arrived_at_customer', 'customer_verified', 'deal_confirmed', 'collected', 'in_transit', 'delivered_to_hub', 'delivered', 'received', 'completed'] } } }),
     Assessment.count({ where: { user_id: userId, status: 'rejected' } }),
     getRecent(userId, 10),
   ]);
 
   const collectionValue = await Assessment.sum('hr_approved_value', {
-    where: { user_id: userId, status: { [Op.in]: ['approved', 'completed', 'hub_assigned', 'collected'] } },
+    where: { user_id: userId, status: { [Op.in]: ['approved', 'hub_assigned', 'supply_chain_assigned', 'pickup_scheduled', 'out_for_pickup', 'arrived_at_customer', 'customer_verified', 'deal_confirmed', 'collected', 'in_transit', 'delivered_to_hub', 'delivered', 'received', 'completed'] } },
   }) || await Assessment.sum('value_estimate', {
-    where: { user_id: userId, deal_number: { [Op.ne]: null } },
+    where: { user_id: userId, status: { [Op.in]: ['approved', 'hub_assigned', 'supply_chain_assigned', 'pickup_scheduled', 'out_for_pickup', 'arrived_at_customer', 'customer_verified', 'deal_confirmed', 'collected', 'in_transit', 'delivered_to_hub', 'delivered', 'received', 'completed'] } },
   });
 
   res.json({

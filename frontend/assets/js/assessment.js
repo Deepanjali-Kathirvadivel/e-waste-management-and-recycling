@@ -283,10 +283,16 @@
       if (currentStep === 4) refreshImagePreview();
       if (currentStep === 5) refreshQuestions();
       if (currentStep === 6 && !isStaff) runAIAnalysis();
-      if (currentStep === 7) { updateCustomerQuoteStep(); buildSummary(); }
+      if (currentStep === 7) { calculateValue(); updateCustomerQuoteStep(); buildSummary(); }
       if (currentStep === 8) calculateValue();
     }
   };
+
+  function saveActiveProduct() {
+    if (currentStep === 3) saveDetailsStep();
+    if (currentStep === 5) saveQuestionsStep();
+    if (currentStep === 7) saveExpectedValueStep();
+  }
 
   function refreshProductTabDetails() {
     saveActiveProduct();
@@ -505,7 +511,7 @@
       if (dir === -1 && currentStep === 7) newStep = 5;
     }
 
-    saveActiveProduct();
+    saveCurrentStepData();
 
     if (dir === 1 && currentStep === 2 && data.products.length === 0) {
       showToast('Please add at least one product', 'error');
@@ -525,8 +531,8 @@
     if (newStep === 4) refreshImageUpload();
     if (newStep === 5) refreshQuestions();
     if (newStep === 6 && !isStaff) runAIAnalysis();
-    if (newStep === 7) calculateValue();
-    if (newStep === 8) { updateCustomerQuoteStep(); buildSummary(); }
+    if (newStep === 7) { calculateValue(); updateCustomerQuoteStep(); buildSummary(); }
+    if (newStep === 8) calculateValue();
 
     currentStep = newStep;
     updateUI();
@@ -582,7 +588,7 @@
 
   function updateUI() {
     // Map internal step number to visible display number for staff
-    // Staff flow: 1,2,3,4,5,[skip 6],7,8 → displayed as 1,2,3,4,5,6,7
+    // Staff flow: 1,2,3,4,5,[skip 6],7 (Review & Submit),8 (Valuation/Confirmation) → displayed as 1,2,3,4,5,6,7
     function visibleStepNum(internalStep) {
       if (!isStaff) return internalStep;
       if (internalStep <= 5) return internalStep;
@@ -608,37 +614,58 @@
       const circle = el.querySelector('.step-circle');
       if (circle) circle.textContent = visibleStepNum(step);
     });
+
     document.querySelectorAll('.wizard-step-content').forEach(el => {
-      if (isStaff && parseInt(el.dataset.step) === 6) {
+      const step = parseInt(el.dataset.step);
+      if (isStaff && step === 6) {
         el.classList.add('d-none');
         return;
       }
-      el.classList.toggle('d-none', parseInt(el.dataset.step) !== currentStep);
+      el.classList.toggle('d-none', step !== currentStep);
     });
 
-    // For staff: hide valuation-specific info in step 7; show only approval message
+    // Rename step 7 and 8 bubble labels for staff
     if (isStaff) {
-      const s7Info = document.getElementById('step7Info');
-      const s7Desc = document.getElementById('step7Desc');
-      const s7Title = document.getElementById('step7Title');
-      if (s7Info) s7Info.classList.add('d-none');
-      if (s7Desc) s7Desc.classList.add('d-none');
-      if (s7Title) {
-        s7Title.innerHTML = '<i class="bi bi-check-circle text-green me-2"></i>Assessment Confirmation';
-      }
-      // Rename step 7 and 8 bubble labels for staff
       const step7Label = document.querySelector('.wizard-step[data-step="7"] .step-label');
-      if (step7Label) step7Label.textContent = 'Confirm';
+      if (step7Label) step7Label.textContent = 'Review & Submit';
+      const step8Label = document.querySelector('.wizard-step[data-step="8"] .step-label');
+      if (step8Label) step8Label.textContent = 'Confirm';
+
+      const s8Title = document.getElementById('step8Title');
+      const s8Desc = document.getElementById('step8Desc');
+      const s8Info = document.getElementById('step8Info');
+      if (s8Title) s8Title.innerHTML = '<i class="bi bi-check-circle text-green me-2"></i>Assessment Confirmation';
+      if (s8Desc) s8Desc.classList.add('d-none');
+      if (s8Info) s8Info.classList.add('d-none');
     }
 
-    // Show visual step number (staff: 1-7 skipping 6, non-staff: 1-8)
+    // Show visual step number (staff: 1-7, non-staff: 1-8)
     const visibleCurrent = visibleStepNum(currentStep);
     const visibleTotal = isStaff ? staffVisibleSteps : totalSteps;
     document.getElementById('stepIndicator').textContent = 'Step ' + visibleCurrent + ' of ' + visibleTotal;
-    document.getElementById('prevBtn').disabled = currentStep === 1;
-    const isLast = currentStep === totalSteps;
-    document.getElementById('nextBtn').classList.toggle('d-none', isLast);
-    document.getElementById('submitBtn').classList.toggle('d-none', !isLast);
+
+    // Disallow going back from step 8 (Confirmation) since the assessment is already submitted
+    document.getElementById('prevBtn').disabled = currentStep === 1 || (isStaff && currentStep === 8);
+
+    const showSubmit = isStaff ? (currentStep === 7) : (currentStep === 8);
+    const showNext = isStaff ? (currentStep < 7) : (currentStep < 8);
+
+    document.getElementById('nextBtn').classList.toggle('d-none', !showNext);
+    document.getElementById('submitBtn').classList.toggle('d-none', !showSubmit);
+
+    // Cancel Button transforms to Finish when submitted (Step 8 for staff)
+    const cancelBtn = document.getElementById('cancelBtn');
+    if (cancelBtn) {
+      if (isStaff && currentStep === 8) {
+        cancelBtn.innerHTML = '<i class="bi bi-check-lg me-1"></i> Finish';
+        cancelBtn.className = 'btn btn-primary-green';
+        cancelBtn.setAttribute('onclick', "window.location.href='assessment-history.html'");
+      } else {
+        cancelBtn.innerHTML = '<i class="bi bi-x-circle me-1"></i> Cancel';
+        cancelBtn.className = 'btn btn-outline-danger me-2';
+        cancelBtn.setAttribute('onclick', 'resetWizard()');
+      }
+    }
   }
 
   // ───────── Step 1: Customer Info ─────────
@@ -1412,7 +1439,7 @@
           product_category: p.category,
           product_type: p.type,
           value_estimate: p.estimatedValue || 0, customer_expected_value: p.customerExpectedValue || 0,
-          ...(!isStaff ? { value_min: p.valueMin || 0, value_max: p.valueMax || 0 } : {}),
+          value_min: p.valueMin || 0, value_max: p.valueMax || 0,
           deal_group_id: dealGroupId + '-' + String.fromCharCode(65 + i),
           status: 'draft',
         };
@@ -1464,7 +1491,13 @@
         ? 'Assessment submitted successfully!'
         : successCount + ' of ' + products.length + ' assessments submitted successfully!';
       showToast(msg, 'success');
-      setTimeout(() => window.location.href = 'assessment-history.html', 1500);
+      if (isStaff) {
+        currentStep = 8;
+        calculateValue();
+        updateUI();
+      } else {
+        setTimeout(() => window.location.href = 'assessment-history.html', 1500);
+      }
     } else {
       showToast('Submission failed for all products', 'error');
       btn.disabled = false;

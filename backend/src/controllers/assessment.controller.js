@@ -121,7 +121,7 @@ exports.submit = catchAsync(async (req, res) => {
   if (req.user.role === 'employee' && assessment.user_id !== req.user.id) throw new AppError('Unauthorized', 403);
 
   let valuation;
-  if (assessment.value_estimate !== null && assessment.value_estimate !== undefined) {
+  if (assessment.value_estimate !== null && assessment.value_estimate !== undefined && parseFloat(assessment.value_estimate) > 0) {
     valuation = {
       base_price: parseFloat(assessment.value_estimate),
       condition_multiplier: 1.0,

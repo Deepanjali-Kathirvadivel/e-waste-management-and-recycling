@@ -119,7 +119,7 @@ exports.approvedQuotations = catchAsync(async (req, res) => {
   const { page, limit, offset } = pagination(req.query);
   // For employee role, include both old HR-approved and new manager-approved statuses
   const statusFilter = req.user.role === 'employee'
-    ? { [Op.in]: ['approved'] }
+    ? { [Op.in]: ['approved', 'hub_assigned', 'supply_chain_assigned', 'pickup_scheduled', 'out_for_pickup', 'arrived_at_customer', 'customer_verified', 'deal_confirmed', 'collected', 'in_transit', 'delivered_to_hub', 'delivered', 'received', 'completed'] }
     : 'approved';
   const where = { status: statusFilter };
   if (req.user.role === 'employee') where.user_id = req.user.id;

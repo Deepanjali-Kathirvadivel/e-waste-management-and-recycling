@@ -38,6 +38,7 @@
         <a href="assessment-new.html" class="list-group-item list-group-item-action d-flex align-items-center gap-3"><i class="bi bi-plus-circle text-green"></i> New Assessment</a>
         <a href="assessment-history.html" class="list-group-item list-group-item-action d-flex align-items-center gap-3"><i class="bi bi-clock-history text-green"></i> Assessment History</a>
         <a href="profile.html" class="list-group-item list-group-item-action active bg-green border-green d-flex align-items-center gap-3"><i class="bi bi-person"></i> My Profile</a>
+        <a href="approved-deals.html" class="list-group-item list-group-item-action d-flex align-items-center gap-3"><i class="bi bi-check2-all text-green"></i> Approved Deals</a>
       `;
     }
     sidebar.innerHTML = sidebarHtml;
