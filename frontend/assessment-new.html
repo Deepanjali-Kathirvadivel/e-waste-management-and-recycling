@@ -95,11 +95,11 @@
               </div>
               <div class="wizard-step" data-step="7">
                 <div class="step-circle">7</div>
-                <div class="step-label">Valuation</div>
+                <div class="step-label">Review &amp; Submit</div>
               </div>
               <div class="wizard-step" data-step="8">
                 <div class="step-circle">8</div>
-                <div class="step-label">Submit</div>
+                <div class="step-label">Valuation</div>
               </div>
             </div>
           </div>
@@ -432,24 +432,24 @@
               <div id="perProductAIResults" class="row g-3"></div>
             </div>
 
-            <!-- Step 7: Valuation / Approval -->
+            <!-- Step 7: Review & Submit -->
             <div class="wizard-step-content d-none" data-step="7">
-              <h5 class="fw-bold mb-3" id="step7Title"><i class="bi bi-currency-rupee text-green me-2"></i>Valuation Summary</h5>
-              <p class="text-muted mb-4" id="step7Desc">Product value summary based on condition, type, and assessment data.</p>
-              <div id="allProductsValuation" class="row g-3 mb-4"></div>
-              <div class="alert alert-light border mb-0" id="step7Info">
-                <i class="bi bi-info-circle me-2 text-green"></i> The valuation is calculated based on product type, condition assessment, questionnaire responses, weight, and current market factors. Share this range with the customer in the next step.
-              </div>
-            </div>
-
-            <!-- Step 8: Review & Submit -->
-            <div class="wizard-step-content" data-step="8">
               <h5 class="fw-bold mb-3"><i class="bi bi-check-circle text-green me-2"></i>Review &amp; Submit</h5>
               <p class="text-muted mb-4">Review all assessment details before final submission to the Manager.</p>
               <div id="allProductsQuotation" class="row g-3 mb-4"></div>
               <div class="bg-light rounded-3 p-4 mb-4" id="summaryContent"></div>
               <div class="alert alert-warning mb-0" id="submitLockAlert">
                 <i class="bi bi-info-circle me-2"></i>After submission, assessments will be locked and sent for Manager review. You cannot edit them afterwards.
+              </div>
+            </div>
+
+            <!-- Step 8: Valuation / Approval -->
+            <div class="wizard-step-content d-none" data-step="8">
+              <h5 class="fw-bold mb-3" id="step8Title"><i class="bi bi-currency-rupee text-green me-2"></i>Valuation Summary</h5>
+              <p class="text-muted mb-4" id="step8Desc">Product value summary based on condition, type, and assessment data.</p>
+              <div id="allProductsValuation" class="row g-3 mb-4"></div>
+              <div class="alert alert-light border mb-0" id="step8Info">
+                <i class="bi bi-info-circle me-2 text-green"></i> The valuation is calculated based on product type, condition assessment, questionnaire responses, weight, and current market factors.
               </div>
             </div>
           </div>
@@ -460,7 +460,7 @@
               <i class="bi bi-chevron-left me-1"></i> Previous
             </button>
             <div>
-              <button class="btn btn-outline-danger me-2" onclick="resetWizard()">
+              <button class="btn btn-outline-danger me-2" id="cancelBtn" onclick="resetWizard()">
                 <i class="bi bi-x-circle me-1"></i> Cancel
               </button>
               <button class="btn btn-primary-green" id="nextBtn" onclick="navigateStep(1)">

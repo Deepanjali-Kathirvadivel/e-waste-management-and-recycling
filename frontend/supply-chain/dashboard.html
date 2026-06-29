@@ -48,12 +48,11 @@
 
         <!-- KPI Cards -->
         <div class="row g-2 mb-4">
-          <div class="col-md-2 col-6"><div class="card border-0 shadow-sm bg-info bg-opacity-10"><div class="card-body text-center py-3"><div class="fs-3 text-info fw-bold" id="kpiTodayAssigned">0</div><small class="text-muted">Today Assigned</small></div></div></div>
-          <div class="col-md-2 col-6"><div class="card border-0 shadow-sm bg-warning bg-opacity-10"><div class="card-body text-center py-3"><div class="fs-3 text-warning fw-bold" id="kpiPending">0</div><small class="text-muted">Pending Pickups</small></div></div></div>
-          <div class="col-md-2 col-6"><div class="card border-0 shadow-sm bg-success bg-opacity-10"><div class="card-body text-center py-3"><div class="fs-3 text-success fw-bold" id="kpiCompleted">0</div><small class="text-muted">Completed Today</small></div></div></div>
-          <div class="col-md-2 col-6"><div class="card border-0 shadow-sm bg-dark bg-opacity-10"><div class="card-body text-center py-3"><div class="fs-3 text-dark fw-bold" id="kpiInTransit">0</div><small class="text-muted">In Transit</small></div></div></div>
-          <div class="col-md-2 col-6"><div class="card border-0 shadow-sm bg-primary bg-opacity-10"><div class="card-body text-center py-3"><div class="fs-3 text-primary fw-bold" id="kpiDelivered">0</div><small class="text-muted">Delivered</small></div></div></div>
-          <div class="col-md-2 col-6"><div class="card border-0 shadow-sm" style="background:rgba(25,135,84,0.08)"><div class="card-body text-center py-3"><div class="fs-3 text-success fw-bold" id="kpiSuccessRate">0%</div><small class="text-muted">Success Rate</small></div></div></div>
+          <div class="col-md-2 col-6"><div class="card border-0 shadow-sm bg-info bg-opacity-10"><div class="card-body text-center py-3"><div class="fs-3 text-info fw-bold" id="kpiApprovedDeals">0</div><small class="text-muted">Approved Deals</small></div></div></div>
+          <div class="col-md-2 col-6"><div class="card border-0 shadow-sm bg-warning bg-opacity-10"><div class="card-body text-center py-3"><div class="fs-3 text-warning fw-bold" id="kpiClosedDeals">0</div><small class="text-muted">Closed Deals</small></div></div></div>
+          <div class="col-md-2 col-6"><div class="card border-0 shadow-sm bg-success bg-opacity-10"><div class="card-body text-center py-3"><div class="fs-3 text-success fw-bold" id="kpiHistoryDeals">0</div><small class="text-muted">History</small></div></div></div>
+          <div class="col-md-3 col-6"><div class="card border-0 shadow-sm bg-dark bg-opacity-10"><div class="card-body text-center py-3"><div class="fs-3 text-dark fw-bold" id="kpiTodayPickups">0</div><small class="text-muted">Today's Pickups</small></div></div></div>
+          <div class="col-md-3 col-6"><div class="card border-0 shadow-sm bg-primary bg-opacity-10"><div class="card-body text-center py-3"><div class="fs-3 text-primary fw-bold" id="kpiPendingPickups">0</div><small class="text-muted">Pending Pickups</small></div></div></div>
         </div>
 
         <!-- Charts Row -->
@@ -61,12 +60,6 @@
           <div class="col-md-6"><div class="card shadow-sm"><div class="card-header bg-white fw-bold small">Daily Pickup Trend <span class="text-muted fw-normal">(30 days)</span></div><div class="card-body"><canvas id="trendChart" height="180"></canvas></div></div></div>
           <div class="col-md-3"><div class="card shadow-sm"><div class="card-header bg-white fw-bold small">Category Distribution</div><div class="card-body"><canvas id="categoryChart" height="180"></canvas></div></div></div>
           <div class="col-md-3"><div class="card shadow-sm"><div class="card-header bg-white fw-bold small">Branch Pickups</div><div class="card-body"><canvas id="branchChart" height="180"></canvas></div></div></div>
-        </div>
-
-        <!-- Status Breakdown -->
-        <div class="row g-2 mb-4">
-          <div class="col-md-6"><div class="card shadow-sm"><div class="card-header bg-white fw-bold small">Pickup Completion Rate</div><div class="card-body"><canvas id="completionChart" height="200"></canvas></div></div></div>
-          <div class="col-md-6"><div class="card shadow-sm"><div class="card-header bg-white fw-bold small">Status Breakdown</div><div class="card-body"><div id="statusBreakdown"><p class="text-muted small">Loading...</p></div></div></div></div>
         </div>
       </main>
     </div>
@@ -85,12 +78,12 @@
     try {
       const res = await fetch(API_BASE + '/supply-chain/dashboard', { headers: h });
       const dash = await res.json();
-      document.getElementById('kpiTodayAssigned').textContent = dash.today_assigned || 0;
-      document.getElementById('kpiPending').textContent = dash.pending_pickups || 0;
-      document.getElementById('kpiCompleted').textContent = dash.completed_today || 0;
-      document.getElementById('kpiInTransit').textContent = dash.in_transit || 0;
-      document.getElementById('kpiDelivered').textContent = dash.total_delivered || 0;
-      document.getElementById('kpiSuccessRate').textContent = (dash.success_rate || 0) + '%';
+      document.getElementById('kpiApprovedDeals').textContent = dash.approved_deals || 0;
+      document.getElementById('kpiClosedDeals').textContent = dash.closed_deals || 0;
+      document.getElementById('kpiHistoryDeals').textContent = dash.history_deals || 0;
+      document.getElementById('kpiTodayPickups').textContent = dash.today_pickups || 0;
+      document.getElementById('kpiPendingPickups').textContent = dash.pending_pickups || 0;
+
       const trendLabels = dash.daily_trend?.map(t => t.date) || [];
       const trendData = dash.daily_trend?.map(t => t.count) || [];
       new Chart(document.getElementById('trendChart'), {
@@ -98,6 +91,7 @@
         data: { labels: trendLabels.length ? trendLabels : ['No Data'], datasets: [{ label: 'Pickups', data: trendData.length ? trendData : [0], borderColor: '#0D6EFD', backgroundColor: 'rgba(13,110,253,0.08)', fill: true, tension: 0.3 }] },
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
       });
+
       const catLabels = dash.category_distribution?.map(c => c.category) || [];
       const catData = dash.category_distribution?.map(c => c.count) || [];
       const catColors = ['#0D6EFD','#198754','#FFC107','#DC3545','#6F42C1','#20C997','#FD7E14'];
@@ -106,6 +100,7 @@
         data: { labels: catLabels.length ? catLabels : ['No Data'], datasets: [{ data: catData.length ? catData : [1], backgroundColor: catColors.slice(0, catLabels.length || 1) }] },
         options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 8, font: { size: 10 } } } } }
       });
+
       const branchLabels = dash.branch_pickups?.map(b => b.branch) || [];
       const branchData = dash.branch_pickups?.map(b => b.count) || [];
       new Chart(document.getElementById('branchChart'), {
@@ -113,27 +108,10 @@
         data: { labels: branchLabels.length ? branchLabels : ['No Data'], datasets: [{ label: 'Pickups', data: branchData.length ? branchData : [0], backgroundColor: '#198754' }] },
         options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
       });
-      const sb = dash.status_breakdown || [];
-      const statusLabels = sb.map(s => s.status.replace(/_/g, ' '));
-      const statusData = sb.map(s => parseInt(s.count));
-      const statusColors = { ready_for_pickup:'#FFC107', supply_chain_assigned:'#0DCAF0', pickup_scheduled:'#0D6EFD', out_for_pickup:'#212529', arrived_at_customer:'#6C757D', customer_verified:'#198754', deal_confirmed:'#198754', collected:'#6C757D', in_transit:'#212529', arrived_at_hub:'#0D6EFD', delivered:'#198754', received:'#198754', completed:'#198754', cancelled:'#DC3545' };
-      const bgColors = statusData.map((_, i) => statusColors[sb[i]?.status] || '#6C757D');
-      new Chart(document.getElementById('completionChart'), {
-        type: 'pie',
-        data: { labels: statusLabels.length ? statusLabels : ['No Data'], datasets: [{ data: statusData.length ? statusData : [1], backgroundColor: bgColors.length ? bgColors : ['#6C757D'] }] },
-        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 6, font: { size: 9 } } } } }
-      });
-      let sbHtml = '';
-      sb.forEach(s => {
-        const total = sb.reduce((a, b) => a + parseInt(b.count || 0), 0);
-        const pct = total ? Math.round(parseInt(s.count) / total * 100) : 0;
-        const color = statusColors[s.status] || '#6C757D';
-        sbHtml += `<div class="d-flex justify-content-between align-items-center mb-1"><span class="small">${s.status.replace(/_/g, ' ')}</span><span class="fw-bold">${s.count}</span></div><div class="progress mb-2" style="height:4px"><div class="progress-bar" style="width:${pct}%;background:${color}"></div></div>`;
-      });
-      document.getElementById('statusBreakdown').innerHTML = sbHtml || '<p class="text-muted small">No data</p>';
+
       // Notifications
       try { const nr = await fetch(API_BASE + '/notifications/unread-count', { headers: h }); const nd = await nr.json(); const b = document.getElementById('scNotifCount'); if (nd.count > 0) { b.textContent = nd.count; b.style.display = ''; } } catch(e) {}
-    } catch(e) { document.getElementById('statusBreakdown').innerHTML = '<p class="text-danger small">Failed to load dashboard</p>'; }
+    } catch(e) {}
   })();
   </script>
 </body>

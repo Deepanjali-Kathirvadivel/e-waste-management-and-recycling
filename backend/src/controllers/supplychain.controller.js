@@ -111,47 +111,67 @@ exports.dashboard = catchAsync(async (req, res) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const userId = req.user.id;
+  const todayStr = today.toISOString().split('T')[0];
 
-  const activeStatuses = PICKUP_WORKFLOW.filter(s => !['received', 'ready_for_processing', 'delivered', 'completed'].includes(s));
+  const CATEGORY_MAP = {
+    IT: 'IT – Information Technology',
+    CE: 'CE – Consumer Electronics',
+    LS: 'LS – Large/Small Household Appliances',
+    EE: 'EE – Electrical & Electronic Tools',
+    TLS: 'TLS – Toys, Leisure & Sports Equipment',
+    LI: 'LI – Lighting Instruments',
+    MD: 'MD – Medical Devices',
+  };
 
-  const raw = await Promise.all([
-    // today_assigned - assigned today
-    Assessment.count({ where: { supply_chain_user_id: userId, updatedAt: { [Op.gte]: today }, status: { [Op.in]: ['supply_chain_assigned', 'pickup_scheduled'] } } }),
-    // pending_pickups - not yet collected
-    Assessment.count({ where: { supply_chain_user_id: userId, status: { [Op.in]: ['supply_chain_assigned', 'pickup_scheduled', 'out_for_pickup', 'arrived_at_customer', 'customer_verified', 'deal_confirmed'] } } }),
-    // completed_today - collected/delivered today
-    Assessment.count({ where: { supply_chain_user_id: userId, status: { [Op.in]: ['collected', 'delivered'] }, updatedAt: { [Op.gte]: today } } }),
-    // in_transit
-    Assessment.count({ where: { supply_chain_user_id: userId, status: 'in_transit' } }),
-    // delivered total
-    Assessment.count({ where: { supply_chain_user_id: userId, status: { [Op.in]: ['delivered', 'received', 'ready_for_processing', 'completed'] } } }),
-    // total attempted pickups for success rate
-    Assessment.count({ where: { supply_chain_user_id: userId, status: { [Op.notIn]: ['hub_assigned', 'ready_for_pickup'] } } }),
+  const [approvedDeals, closedDeals, historyDeals, todayPickups, pendingPickups, rawTrend, rawCat, rawBranch] = await Promise.all([
+    // Approved Deals: Count of assessments in status 'approved'/'hub_assigned'/'ready_for_pickup'/'supply_chain_assigned'
+    Assessment.count({ where: { status: { [Op.in]: ['approved', 'hub_assigned', 'ready_for_pickup', 'supply_chain_assigned'] } } }),
+    // Closed Deals: Count of assessments in closed flow
+    Assessment.count({ where: { supply_chain_user_id: userId, status: { [Op.in]: ['customer_verified', 'deal_confirmed', 'collected', 'in_transit'] } } }),
+    // History: Count of history assessments
+    Assessment.count({ where: { supply_chain_user_id: userId, status: { [Op.in]: ['delivered', 'delivered_to_hub', 'received', 'completed', 'cancelled', ...EXCEPTION_STATUSES] } } }),
+    // Today's Pickups: Count of today's pickups
+    Assessment.count({
+      where: {
+        supply_chain_user_id: userId,
+        [Op.or]: [
+          { scheduled_pickup_date: todayStr },
+          { collection_time: { [Op.gte]: today } },
+          { updatedAt: { [Op.gte]: today }, status: { [Op.in]: ['collected', 'delivered_to_hub', 'delivered', 'received'] } }
+        ]
+      }
+    }),
+    // Pending Pickups: Count of pending pickups assigned to the user
+    Assessment.count({ where: { supply_chain_user_id: userId, status: { [Op.in]: ['supply_chain_assigned', 'pickup_scheduled', 'out_for_pickup', 'arrived_at_customer'] } } }),
     // daily pickup trend
     sequelize.query(`SELECT strftime('%Y-%m-%d', created_at) as date, COUNT(*) as count FROM assessments WHERE supply_chain_user_id = ? AND created_at >= date('now', '-30 days') GROUP BY date ORDER BY date ASC`, { replacements: [userId], type: sequelize.QueryTypes.SELECT }),
-    // category distribution
-    sequelize.query(`SELECT COALESCE(pc.name,'Unknown') as category, COUNT(*) as count FROM assessments a LEFT JOIN product_catalog pc ON pc.id = a.product_type_id WHERE a.supply_chain_user_id = ? GROUP BY pc.name ORDER BY count DESC`, { replacements: [userId], type: sequelize.QueryTypes.SELECT }),
+    // category distribution grouped by 7 e-waste categories
+    sequelize.query(`
+      SELECT COALESCE(pc.category, a.product_category) AS category, COUNT(*) AS count
+      FROM assessments a
+      LEFT JOIN product_catalog pc ON pc.id = a.product_type_id
+      WHERE a.supply_chain_user_id = ?
+      GROUP BY COALESCE(pc.category, a.product_category)
+      ORDER BY count DESC
+    `, { replacements: [userId], type: sequelize.QueryTypes.SELECT }),
     // branch-wise pickup count
     sequelize.query(`SELECT COALESCE(f.name,'Unassigned') as branch, COUNT(*) as count FROM assessments a LEFT JOIN facilities f ON f.id = a.assigned_hub_id WHERE a.supply_chain_user_id = ? GROUP BY a.assigned_hub_id`, { replacements: [userId], type: sequelize.QueryTypes.SELECT }),
-    // completion rate (status breakdown)
-    sequelize.query(`SELECT status, COUNT(*) as count FROM assessments WHERE supply_chain_user_id = ? GROUP BY status`, { replacements: [userId], type: sequelize.QueryTypes.SELECT }),
   ]);
 
-  const totalAttempted = raw[5] || 1;
-  const totalDelivered = raw[4] || 0;
-  const successRate = Math.round((totalDelivered / totalAttempted) * 100);
+  const mappedCat = rawCat.map(c => ({
+    category: CATEGORY_MAP[c.category] || c.category || 'Other',
+    count: Number(c.count || 0)
+  }));
 
   res.json({
-    today_assigned: raw[0],
-    pending_pickups: raw[1],
-    completed_today: raw[2],
-    in_transit: raw[3],
-    total_delivered: raw[4],
-    success_rate: successRate,
-    daily_trend: raw[6],
-    category_distribution: raw[7],
-    branch_pickups: raw[8],
-    status_breakdown: raw[9],
+    approved_deals: approvedDeals,
+    closed_deals: closedDeals,
+    history_deals: historyDeals,
+    today_pickups: todayPickups,
+    pending_pickups: pendingPickups,
+    daily_trend: rawTrend,
+    category_distribution: mappedCat,
+    branch_pickups: rawBranch,
   });
 });
 
@@ -521,7 +541,9 @@ exports.deliverToHub = catchAsync(async (req, res) => {
     include: [{ model: ProductCatalog, attributes: ['name'] }, { model: Facility, as: 'assigned_hub', attributes: ['name'] }],
   });
   if (!assessment) throw new AppError('Pickup not found', 404);
-  if (assessment.status !== 'arrived_at_hub') throw new AppError('Product must arrive at hub first', 400);
+  if (!['collected', 'in_transit', 'arrived_at_hub', 'delivered'].includes(assessment.status)) {
+    throw new AppError('Product must be collected or in transit first', 400);
+  }
   const { product_ok, quantity_ok, serial_ok, condition_ok, notes } = req.body;
   if (product_ok === false || quantity_ok === false || serial_ok === false || condition_ok === false) {
     await assessment.update({
@@ -533,7 +555,7 @@ exports.deliverToHub = catchAsync(async (req, res) => {
     return res.json({ message: 'Delivery rejected by hub', pickup: assessment, rejected: true });
   }
   await assessment.update({
-    status: 'delivered',
+    status: 'delivered_to_hub',
     movement_history: pushMovement(assessment, MOVEMENT_ACTION.DELIVERED, req.user.id, { verified_by: req.user.id }),
   });
   const inv = await createInventoryItem(assessment, req.user.id);
@@ -633,7 +655,7 @@ exports.pickupHistory = catchAsync(async (req, res) => {
   if (req.user.role === 'supply_chain') {
     where.supply_chain_user_id = req.user.id;
   }
-  where.status = { [Op.in]: ['delivered', 'received', 'ready_for_processing', 'completed', 'cancelled', ...EXCEPTION_STATUSES] };
+  where.status = { [Op.in]: ['delivered', 'delivered_to_hub', 'received', 'ready_for_processing', 'completed', 'cancelled', ...EXCEPTION_STATUSES] };
   if (status) where.status = status;
   if (hub_id) where.assigned_hub_id = hub_id;
   if (date_from) where.createdAt = { ...where.createdAt, [Op.gte]: new Date(date_from) };

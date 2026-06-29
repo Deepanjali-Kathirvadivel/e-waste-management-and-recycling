@@ -31,18 +31,33 @@ exports.dashboard = catchAsync(async (req, res) => {
   ]);
 
   const revenueSum = await Assessment.sum('hr_approved_value', {
-    where: { status: { [Op.in]: ['approved', 'hub_assigned', 'completed'] } },
+    where: { status: { [Op.in]: ['approved', 'hub_assigned', 'supply_chain_assigned', 'completed', 'delivered', 'delivered_to_hub', 'received'] } },
   });
 
   const monthRevenue = await Assessment.sum('hr_approved_value', {
-    where: { hr_acted_at: { [Op.gte]: monthStart }, status: { [Op.in]: ['approved', 'hub_assigned', 'completed'] } },
+    where: { hr_acted_at: { [Op.gte]: monthStart }, status: { [Op.in]: ['approved', 'hub_assigned', 'supply_chain_assigned', 'completed', 'delivered', 'delivered_to_hub', 'received'] } },
+  });
+
+  const todayCollections = await Assessment.sum('hr_approved_value', {
+    where: {
+      status: { [Op.in]: ['collected', 'delivered', 'delivered_to_hub', 'received', 'completed'] },
+      deal_closed_at: { [Op.gte]: today }
+    }
+  }) || 0;
+
+  const receiptCount = await Assessment.count({
+    where: { receipt_number: { [Op.ne]: null } }
+  });
+
+  const activeEmployees = await User.count({
+    where: { role: 'employee', is_active: true }
   });
 
   const totalValueSum = await Assessment.sum('hr_approved_value', {
     where: { hr_approved_value: { [Op.ne]: null } },
   });
   const totalWithValue = await Assessment.count({
-    where: { hr_approved_value: { [Op.ne]: null }, status: { [Op.in]: ['approved', 'hub_assigned', 'completed'] } },
+    where: { hr_approved_value: { [Op.ne]: null }, status: { [Op.in]: ['approved', 'hub_assigned', 'supply_chain_assigned', 'completed', 'delivered', 'delivered_to_hub', 'received'] } },
   });
 
   const branchRows = await Assessment.findAll({
@@ -113,6 +128,9 @@ exports.dashboard = catchAsync(async (req, res) => {
     branch_revenue: revenueSum || 0,
     monthly_revenue: monthRevenue || 0,
     average_deal_value: avgDealValue,
+    today_collections: todayCollections,
+    receipt_count: receiptCount,
+    active_employees: activeEmployees,
     branch_performance: branchRows.map((row) => ({
       branch: facilityMap[row.destination_id]?.name || 'Unassigned',
       type: facilityMap[row.destination_id]?.type || null,
@@ -144,7 +162,7 @@ exports.pendingReviews = catchAsync(async (req, res) => {
 exports.approvedQuotations = catchAsync(async (req, res) => {
   const { page, limit, offset } = pagination(req.query);
   const { rows, count } = await Assessment.findAndCountAll({
-    where: { status: 'approved' },
+    where: { status: { [Op.in]: ['approved', 'hub_assigned', 'supply_chain_assigned'] } },
     limit, offset, order: [['hr_acted_at', 'DESC']],
     include: [
       { model: ProductCatalog, attributes: ['name', 'icon'] },
@@ -180,7 +198,7 @@ exports.getQuotation = catchAsync(async (req, res) => {
       { model: User, attributes: ['full_name', 'username', 'phone'] },
       { model: User, as: 'approver', attributes: ['full_name'] },
       { model: Facility, as: 'assigned_hub', attributes: ['id', 'name', 'type'] },
-      { model: User, as: 'supply_chain_user', attributes: ['full_name', 'username'] },
+      { model: User, as: 'supply_chain_user', attributes: ['id', 'full_name', 'username'] },
     ],
   });
   if (!assessment) throw new AppError('Quotation not found', 404);
@@ -398,4 +416,51 @@ exports.getReceipt = catchAsync(async (req, res) => {
 
   res.setHeader('Content-Type', 'text/html');
   res.send(receiptHtml);
+});
+
+exports.getSupplyChainUsers = catchAsync(async (req, res) => {
+  const users = await User.findAll({
+    where: { role: 'supply_chain', is_active: true },
+    attributes: ['id', 'full_name', 'username'],
+    order: [['full_name', 'ASC']],
+  });
+  res.json({ users });
+});
+
+exports.assignSupplyChain = catchAsync(async (req, res) => {
+  const assessment = await Assessment.findByPk(req.params.id);
+  if (!assessment) throw new AppError('Assessment not found', 404);
+  if (assessment.status !== 'approved' && assessment.status !== 'hub_assigned' && assessment.status !== 'supply_chain_assigned') {
+    throw new AppError('Assessment must be approved first', 400);
+  }
+
+  const { supply_chain_user_id } = req.body;
+  if (!supply_chain_user_id) throw new AppError('supply_chain_user_id is required', 400);
+
+  const scUser = await User.findOne({ where: { id: supply_chain_user_id, role: 'supply_chain' } });
+  if (!scUser) throw new AppError('Supply chain staff not found', 404);
+
+  const history = assessment.movement_history || [];
+  history.push({
+    action: 'supply_chain_assigned',
+    assigned_by: req.user.id,
+    assigned_to: supply_chain_user_id,
+    assigned_at: new Date().toISOString(),
+  });
+
+  await assessment.update({
+    supply_chain_user_id,
+    status: 'supply_chain_assigned',
+    movement_history: history,
+  });
+
+  await log({ userId: req.user.id, action: 'supply_chain_assigned', entityType: 'assessment', entityId: assessment.id,
+    metadata: { customer: assessment.customer_name, supply_chain_user: scUser.full_name } });
+
+  try {
+    await notificationService.notifyEmployee(assessment, 'supply_chain_assigned', req.user.full_name);
+    await notificationService.notifySupplyChain(assessment, scUser.full_name);
+  } catch (e) { console.error('Notify error:', e.message); }
+
+  res.json({ message: 'Supply chain staff assigned successfully', quotation: assessment });
 });

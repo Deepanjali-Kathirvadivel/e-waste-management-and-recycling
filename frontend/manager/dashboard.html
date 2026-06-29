@@ -43,11 +43,8 @@
           <a href="pending.html" class="nav-link"><i class="bi bi-clock me-2"></i>Pending Reviews</a>
           <a href="approved.html" class="nav-link"><i class="bi bi-check-circle me-2"></i>Approved</a>
           <a href="rejected.html" class="nav-link"><i class="bi bi-x-circle me-2"></i>Rejected</a>
-          <a href="review.html" class="nav-link"><i class="bi bi-eye me-2"></i>Review</a>
           <a href="receipt-history.html" class="nav-link"><i class="bi bi-receipt me-2"></i>Receipts</a>
           <a href="../profile.html" class="nav-link"><i class="bi bi-person me-2"></i>My Profile</a>
-          <hr>
-          <a href="../dashboard.html" class="nav-link"><i class="bi bi-arrow-left me-2"></i>Back to Staff</a>
         </div>
       </nav>
 
@@ -58,15 +55,12 @@
 
         <div class="row g-3 mb-4" id="kpiCards">
           <div class="col-md-3"><div class="card bg-warning bg-opacity-10 border-warning"><div class="card-body text-center"><h3 class="fw-bold text-warning" id="kpiPending">0</h3><small class="text-muted">Pending Reviews</small></div></div></div>
-          <div class="col-md-3"><div class="card bg-success bg-opacity-10 border-success"><div class="card-body text-center"><h3 class="fw-bold text-success" id="kpiApproved">0</h3><small class="text-muted">Approved Today</small></div></div></div>
-          <div class="col-md-3"><div class="card bg-danger bg-opacity-10 border-danger"><div class="card-body text-center"><h3 class="fw-bold text-danger" id="kpiRejected">0</h3><small class="text-muted">Rejected Today</small></div></div></div>
+          <div class="col-md-3"><div class="card bg-success bg-opacity-10 border-success"><div class="card-body text-center"><h3 class="fw-bold text-success" id="kpiApprovedTotal">0</h3><small class="text-muted">Approved Quotations</small></div></div></div>
+          <div class="col-md-3"><div class="card bg-danger bg-opacity-10 border-danger"><div class="card-body text-center"><h3 class="fw-bold text-danger" id="kpiRejectedTotal">0</h3><small class="text-muted">Rejected Quotations</small></div></div></div>
           <div class="col-md-3"><div class="card bg-primary bg-opacity-10 border-primary"><div class="card-body text-center"><h3 class="fw-bold text-primary" id="kpiRevenue">₹0</h3><small class="text-muted">Branch Revenue</small></div></div></div>
-          <div class="col-md-2"><div class="card bg-info bg-opacity-10 border-info"><div class="card-body text-center"><h3 class="fw-bold text-info" id="kpiRate">0%</h3><small class="text-muted">Approval Rate</small></div></div></div>
-          <div class="col-md-2"><div class="card bg-danger bg-opacity-10 border-danger-subtle"><div class="card-body text-center"><h3 class="fw-bold text-danger-emphasis" id="kpiRejectRate">0%</h3><small class="text-muted">Rejection Rate</small></div></div></div>
-          <div class="col-md-2"><div class="card bg-secondary bg-opacity-10 border-secondary"><div class="card-body text-center"><h3 class="fw-bold text-secondary" id="kpiAvgDeal">₹0</h3><small class="text-muted">Avg Deal Value</small></div></div></div>
-          <div class="col-md-2"><div class="card bg-success bg-opacity-10 border-success"><div class="card-body text-center"><h3 class="fw-bold text-success" id="kpiMonthRev">₹0</h3><small class="text-muted">This Month</small></div></div></div>
-          <div class="col-md-2"><div class="card bg-dark bg-opacity-10 border-dark"><div class="card-body text-center"><h3 class="fw-bold text-dark" id="kpiTotal">0</h3><small class="text-muted">Total Quotations</small></div></div></div>
-          <div class="col-md-2"><div class="card bg-primary bg-opacity-10 border-primary-subtle"><div class="card-body text-center"><h3 class="fw-bold text-primary-emphasis" id="kpiApprovedTotal">0</h3><small class="text-muted">Approved Total</small></div></div></div>
+          <div class="col-md-4"><div class="card bg-success bg-opacity-10 border-success"><div class="card-body text-center"><h3 class="fw-bold text-success" id="kpiTodayCollections">₹0</h3><small class="text-muted">Today's Collections</small></div></div></div>
+          <div class="col-md-4"><div class="card bg-info bg-opacity-10 border-info"><div class="card-body text-center"><h3 class="fw-bold text-info" id="kpiReceiptCount">0</h3><small class="text-muted">Receipt Count</small></div></div></div>
+          <div class="col-md-4"><div class="card bg-secondary bg-opacity-10 border-secondary"><div class="card-body text-center"><h3 class="fw-bold text-secondary" id="kpiActiveEmployees">0</h3><small class="text-muted">Active Employees</small></div></div></div>
         </div>
 
         <div class="row g-3 mb-4">
@@ -118,22 +112,6 @@
     } catch(e) {}
   }
 
-  async function toggleNotifications() {
-    try {
-      const res = await fetch('/api/notifications', { headers: notifHeaders });
-      const data = await res.json();
-      const notifs = data.notifications || [];
-      if (!notifs.length) { alert('No notifications'); return; }
-      let msg = notifs.slice(0, 10).map((n, i) =>
-        `${i+1}. [${n.type.toUpperCase()}] ${n.title}\n  ${n.message || ''}${n.is_read ? '' : ' (NEW)'}`
-      ).join('\n\n');
-      if (confirm(msg + '\n\nMark all as read?')) {
-        await fetch('/api/notifications/read-all', { method: 'POST', headers: notifHeaders });
-        fetchNotifCount();
-      }
-    } catch(e) { alert('Failed to load notifications'); }
-  }
-
   (async function() {
     const token = localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token');
     if (!token) { window.location.href = '../login.html'; return; }
@@ -150,15 +128,12 @@
       const empData = await empRes.json();
 
       document.getElementById('kpiPending').textContent = kpi.pending_reviews || 0;
-      document.getElementById('kpiApproved').textContent = kpi.approved_today || 0;
-      document.getElementById('kpiRejected').textContent = kpi.rejected_today || 0;
-      document.getElementById('kpiTotal').textContent = kpi.total_quotations || 0;
       document.getElementById('kpiApprovedTotal').textContent = kpi.approved_total || 0;
-      document.getElementById('kpiRate').textContent = (kpi.approval_rate || 0) + '%';
-      document.getElementById('kpiRejectRate').textContent = (kpi.rejection_rate || 0) + '%';
-      document.getElementById('kpiRevenue').textContent = '\u20B9' + (kpi.branch_revenue || 0).toLocaleString('en-IN');
-      document.getElementById('kpiMonthRev').textContent = '\u20B9' + (kpi.monthly_revenue || 0).toLocaleString('en-IN');
-      document.getElementById('kpiAvgDeal').textContent = '\u20B9' + (kpi.average_deal_value || 0).toLocaleString('en-IN');
+      document.getElementById('kpiRejectedTotal').textContent = kpi.rejected_total || 0;
+      document.getElementById('kpiRevenue').textContent = '₹' + (kpi.branch_revenue || 0).toLocaleString('en-IN');
+      document.getElementById('kpiTodayCollections').textContent = '₹' + (kpi.today_collections || 0).toLocaleString('en-IN');
+      document.getElementById('kpiReceiptCount').textContent = kpi.receipt_count || 0;
+      document.getElementById('kpiActiveEmployees').textContent = kpi.active_employees || 0;
 
       if (kpi.quotation_trends) {
         const trendCtx = document.getElementById('trendChart');
@@ -198,7 +173,7 @@
               </div>
               <div class="text-end">
                 <div class="fw-bold">${b.count}</div>
-                <small class="text-success">\u20B9${(b.revenue||0).toLocaleString('en-IN')}</small>
+                <small class="text-success">₹${(b.revenue||0).toLocaleString('en-IN')}</small>
               </div>
             </div>`).join('');
         }
@@ -207,7 +182,7 @@
       if (empData.employees) {
         let html = `<table class="table table-sm table-hover"><thead><tr><th>Employee</th><th>Total</th><th>Approved</th><th>Rejected</th><th>Approval Rate</th><th>Rejection Rate</th><th>Avg Deal</th></tr></thead><tbody>`;
         empData.employees.forEach(e => {
-          html += `<tr><td>${e.name}</td><td>${e.total_assessments}</td><td class="text-success">${e.approved}</td><td class="text-danger">${e.rejected}</td><td>${e.approval_rate}%</td><td>${e.rejection_rate}%</td><td>\u20B9${(e.average_deal_value||0).toLocaleString('en-IN')}</td></tr>`;
+          html += `<tr><td>${e.name}</td><td>${e.total_assessments}</td><td class="text-success">${e.approved}</td><td class="text-danger">${e.rejected}</td><td>${e.approval_rate}%</td><td>${e.rejection_rate}%</td><td>₹${(e.average_deal_value||0).toLocaleString('en-IN')}</td></tr>`;
         });
         html += '</tbody></table>';
         document.getElementById('employeeKpiTable').innerHTML = html;

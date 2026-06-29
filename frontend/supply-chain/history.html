@@ -108,19 +108,20 @@
         <div class="col-md-3 col-6"><div class="card border-0 bg-info bg-opacity-10"><div class="card-body text-center py-2"><div class="fw-bold text-info">${data.total ? Math.round(totalCompleted/data.total*100) : 0}%</div><small class="text-muted">Success Rate</small></div></div></div>
       `;
 
-      let html = '<div class="table-responsive"><table class="table table-hover align-middle small"><thead class="table-light"><tr><th>Deal #</th><th>Customer</th><th>Product</th><th>Value</th><th>Status</th><th>Hub</th><th>Executive</th><th>Completed</th><th>Action</th></tr></thead><tbody>';
+      let html = '<div class="table-responsive"><table class="table table-hover align-middle small"><thead class="table-light"><tr><th>Pickup Date</th><th>Delivery Date</th><th>Customer</th><th>Product</th><th>Amount</th><th>Hub</th><th>Executive</th><th>Status</th><th>Action</th></tr></thead><tbody>';
       (data.history || data.deliveries || []).forEach(h => {
         const color = STATUS_COLORS[h.status] || 'secondary';
-        const transitTime = h.deal_closed_at && h.created_at ? Math.round((new Date(h.deal_closed_at) - new Date(h.created_at)) / 3600000) + 'h' : '-';
+        const pickupDate = h.scheduled_pickup_date ? new Date(h.scheduled_pickup_date).toLocaleDateString('en-IN') : (h.collection_time ? new Date(h.collection_time).toLocaleDateString('en-IN') : '-');
+        const deliveryDate = h.deal_closed_at ? new Date(h.deal_closed_at).toLocaleDateString('en-IN') : (['delivered_to_hub', 'delivered', 'received', 'completed'].includes(h.status) && h.updatedAt ? new Date(h.updatedAt).toLocaleDateString('en-IN') : '-');
         html += `<tr>
-          <td><strong>${h.deal_number || '#'+h.id}</strong></td>
+          <td><small>${pickupDate}</small></td>
+          <td><small>${deliveryDate}</small></td>
           <td>${h.customer_name||'-'}<br><small class="text-muted">${h.customer_phone||''}</small></td>
           <td>${h.product_catalog?.name||h.brand||'-'}</td>
-          <td>\u20B9${(h.hr_approved_value||h.value_estimate||0).toLocaleString('en-IN')}</td>
-          <td><span class="badge bg-${color}">${h.status.replace(/_/g,' ')}</span></td>
+          <td>₹${(h.hr_approved_value||h.value_estimate||0).toLocaleString('en-IN')}</td>
           <td>${h.assigned_hub?.name||'-'}</td>
           <td>${h.supply_chain_user?.full_name||h.supply_chain_user?.username||'-'}</td>
-          <td><small>${h.deal_closed_at ? new Date(h.deal_closed_at).toLocaleDateString('en-IN') : '-'}<br>${transitTime}</small></td>
+          <td><span class="badge bg-${color}">${h.status.replace(/_/g,' ')}</span></td>
           <td><button class="btn btn-sm btn-outline-secondary" onclick="viewDetail(${h.id})"><i class="bi bi-eye"></i></button></td>
         </tr>`;
       });

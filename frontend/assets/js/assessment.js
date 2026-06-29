@@ -278,33 +278,30 @@
     renderProductList();
     updateProductTabs();
     updateUI();
-    if (currentStep >= 3 && currentStep <= 7) {
+    if (currentStep >= 3 && currentStep <= 8) {
       if (currentStep === 3) refreshProductDetails();
       if (currentStep === 4) refreshImagePreview();
       if (currentStep === 5) refreshQuestions();
       if (currentStep === 6 && !isStaff) runAIAnalysis();
-      if (currentStep === 7) calculateValue();
+      if (currentStep === 7) { updateCustomerQuoteStep(); buildSummary(); }
+      if (currentStep === 8) calculateValue();
     }
-    if (currentStep === 8) { updateCustomerQuoteStep(); buildSummary(); }
   };
 
-  window.removeProduct = function (idx) {
-    if (data.products.length <= 1) { showToast('At least one product is required', 'warning'); return; }
-    data.products.splice(idx, 1);
-    if (activeIdx >= data.products.length) activeIdx = data.products.length - 1;
-    loadActiveProduct();
-    renderProductList();
-    updateProductTabs();
+  function refreshProductTabDetails() {
+    saveActiveProduct();
     if (currentStep === 3) refreshProductDetails();
     if (currentStep === 4) refreshImageUpload();
     if (currentStep === 5) refreshQuestions();
-  };
+    if (currentStep === 7) { updateCustomerQuoteStep(); buildSummary(); }
+  }
 
-  function saveActiveProduct() {
+  function saveCurrentStepData() {
+    saveActiveProduct();
     if (currentStep === 1) saveCustomerStep();
     if (currentStep === 3) saveDetailsStep();
     if (currentStep === 5) saveQuestionsStep();
-    if (currentStep === 8) saveExpectedValueStep();
+    if (currentStep === 7) saveExpectedValueStep();
   }
 
   function loadActiveProduct() {

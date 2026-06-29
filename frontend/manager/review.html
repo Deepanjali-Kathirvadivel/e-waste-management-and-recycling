@@ -34,8 +34,8 @@
         <a href="pending.html" class="nav-link"><i class="bi bi-clock me-2"></i>Pending Reviews</a>
         <a href="approved.html" class="nav-link"><i class="bi bi-check-circle me-2"></i>Approved</a>
         <a href="rejected.html" class="nav-link"><i class="bi bi-x-circle me-2"></i>Rejected</a>
-        <a href="review.html" class="nav-link active"><i class="bi bi-eye me-2"></i>Review</a>
         <a href="receipt-history.html" class="nav-link"><i class="bi bi-receipt me-2"></i>Receipts</a>
+        <a href="../profile.html" class="nav-link"><i class="bi bi-person me-2"></i>My Profile</a>
       </div></nav>
       <main class="col-md-10 ms-sm-auto px-4">
         <div class="pt-4 pb-2 mb-3 border-bottom"><h1 class="h4">Review Quotation</h1></div>
@@ -48,7 +48,7 @@
   <div class="modal fade" id="approveModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title"><i class="bi bi-check-circle text-success me-2"></i>Approve Quotation</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-header"><h5 class="modal-title"><i class="bi bi-check-circle text-success me-2"></i>Approve & Assign Deal</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <div class="modal-body">
           <div class="mb-3">
             <label class="form-label">Approved Value (₹)</label>
@@ -58,6 +58,10 @@
           <div class="mb-3">
             <label class="form-label">Assign Collection Center / Processing Hub</label>
             <select class="form-select" id="approveHub"></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Assign Supply Chain Executive</label>
+            <select class="form-select" id="approveSupplyChain"></select>
           </div>
         </div>
         <div class="modal-footer">
@@ -137,19 +141,26 @@
     const id = params.get('id');
     if (!id) { document.getElementById('reviewContent').innerHTML = '<div class="alert alert-warning">No quotation ID provided</div>'; return; }
     try {
-      const [qRes, facRes, histRes] = await Promise.all([
+      const [qRes, facRes, histRes, scRes] = await Promise.all([
         fetch('/api/manager/quotations/' + id, { headers }),
         fetch('/api/manager/facilities', { headers }),
         fetch('/api/manager/history/' + id, { headers }),
+        fetch('/api/manager/supply-chain-users', { headers }),
       ]);
       const qData = await qRes.json();
       const facData = await facRes.json();
       const histData = await histRes.json();
+      const scData = await scRes.json();
       currentQuotation = qData.quotation;
 
       const hubSelect = document.getElementById('approveHub');
       hubSelect.innerHTML = '<option value="">Select Hub</option>' + (facData.facilities || []).map(f =>
         `<option value="${f.id}">${f.name} (${f.type})</option>`
+      ).join('');
+
+      const scSelect = document.getElementById('approveSupplyChain');
+      scSelect.innerHTML = '<option value="">Select Supply Chain Executive</option>' + (scData.users || []).map(u =>
+        `<option value="${u.id}">${u.full_name} (@${u.username})</option>`
       ).join('');
 
       const q = qData.quotation;
@@ -159,7 +170,7 @@
       // Customer & Product Info
       html += `<div class="card mb-4"><div class="card-header d-flex justify-content-between align-items-center">
         <strong><i class="bi bi-file-text me-2"></i>#${q.id} - ${q.customer_name || 'Unknown'}</strong>
-        <span class="badge bg-${q.status === 'pending_manager_review' ? 'warning' : q.status === 'approved' ? 'success' : 'danger'} fs-6">${q.status}</span>
+        <span class="badge bg-${q.status === 'pending_manager_review' ? 'warning' : q.status === 'approved' || q.status === 'hub_assigned' || q.status === 'supply_chain_assigned' ? 'success' : 'danger'} fs-6">${q.status}</span>
       </div><div class="card-body">
         <div class="row">
           <div class="col-md-6">
@@ -186,30 +197,62 @@
         </div>
         <div class="row mt-2">
           <div class="col-md-6">
-            <h6 class="fw-bold text-green"><i class="bi bi-person-badge me-2"></i>Employee</h6>
+            <h6 class="fw-bold text-green"><i class="bi bi-person-badge me-2"></i>Employee & Notes</h6>
             <p class="mb-1">${q.user?.full_name || '-'} <span class="text-muted">(@${q.user?.username || '-'})</span></p>
-            ${q.notes ? `<div class="mt-2"><strong class="small text-muted">Employee Notes:</strong><p class="mb-0 small">${q.notes}</p></div>` : ''}
+            ${q.notes ? `<div class="mt-2 p-2 bg-light rounded"><strong class="small text-muted">Employee Notes:</strong><p class="mb-0 small">${q.notes}</p></div>` : '<p class="text-muted small">No notes provided</p>'}
           </div>
           <div class="col-md-6">
             <h6 class="fw-bold text-green"><i class="bi bi-currency-rupee me-2"></i>Valuation</h6>
             <div class="row g-2">
               <div class="col-4 text-center p-2 bg-light rounded">
                 <div class="small text-muted">Min</div>
-                <div class="fw-bold text-danger">\u20B9${(q.value_min || 0).toLocaleString('en-IN')}</div>
+                <div class="fw-bold text-danger">₹${(q.value_min || 0).toLocaleString('en-IN')}</div>
               </div>
               <div class="col-4 text-center p-2 bg-success bg-opacity-10 rounded">
                 <div class="small text-muted">Recommended</div>
-                <div class="fw-bold text-success">\u20B9${(q.recommended_value || q.value_estimate || 0).toLocaleString('en-IN')}</div>
+                <div class="fw-bold text-success">₹${(q.recommended_value || q.value_estimate || 0).toLocaleString('en-IN')}</div>
               </div>
               <div class="col-4 text-center p-2 bg-light rounded">
                 <div class="small text-muted">Max</div>
-                <div class="fw-bold text-primary">\u20B9${(q.value_max || 0).toLocaleString('en-IN')}</div>
+                <div class="fw-bold text-primary">₹${(q.value_max || 0).toLocaleString('en-IN')}</div>
               </div>
             </div>
-            ${q.customer_expected_value ? `<div class="mt-2 p-2 bg-info bg-opacity-10 rounded"><strong class="small">Customer Expected:</strong> \u20B9${(q.customer_expected_value).toLocaleString('en-IN')}</div>` : ''}
+            ${q.customer_expected_value ? `<div class="mt-2 p-2 bg-info bg-opacity-10 rounded"><strong class="small">Customer Expected Value:</strong> ₹${(q.customer_expected_value).toLocaleString('en-IN')}</div>` : ''}
           </div>
         </div>
       </div></div>`;
+
+      // Condition Report Card
+      const detail = q.assessment_detail;
+      if (detail) {
+        html += `<div class="card mb-4"><div class="card-header"><strong><i class="bi bi-shield-check me-2"></i>Condition Report</strong></div><div class="card-body">
+          <div class="row g-3 small">
+            <div class="col-md-2 col-6"><strong>Casing Intact:</strong> <span class="badge bg-${detail.casing_intact ? 'success' : 'danger'}">${detail.casing_intact ? 'Yes' : 'No'}</span></div>
+            <div class="col-md-2 col-6"><strong>Screen Intact:</strong> <span class="badge bg-${detail.screen_intact ? 'success' : 'danger'}">${detail.screen_intact ? 'Yes' : 'No'}</span></div>
+            <div class="col-md-2 col-6"><strong>Has Scratches:</strong> <span class="badge bg-${detail.has_scratches ? 'warning' : 'success'}">${detail.has_scratches ? 'Yes' : 'No'}</span></div>
+            <div class="col-md-2 col-6"><strong>Ports Functional:</strong> <span class="badge bg-${detail.ports_functional ? 'success' : 'danger'}">${detail.ports_functional ? 'Yes' : 'No'}</span></div>
+            <div class="col-md-2 col-6"><strong>Remote Present:</strong> <span class="badge bg-${detail.remote_present ? 'success' : 'secondary'}">${detail.remote_present ? 'Yes' : 'No/N/A'}</span></div>
+            <div class="col-md-2 col-6"><strong>Working Condition:</strong> <span class="badge bg-info">${q.working_condition || 'N/A'}</span></div>
+          </div>
+        </div></div>`;
+      }
+
+      // Dynamic Questionnaire
+      if (detail && detail.verification_answers) {
+        const va = detail.verification_answers;
+        html += `<div class="card mb-4"><div class="card-header"><strong><i class="bi bi-question-circle me-2"></i>Dynamic Questionnaire</strong></div><div class="card-body">
+          <div class="row g-2 small">
+            <div class="col-3"><strong>Power On:</strong> ${va.power_on || '-'}</div>
+            <div class="col-3"><strong>Damage:</strong> ${va.damage || '-'}</div>
+            <div class="col-3"><strong>Age:</strong> ${va.age || '-'}</div>
+            <div class="col-3"><strong>Accessories:</strong> ${va.accessories || '-'}</div>
+          </div>`;
+        if (detail.functional_status) {
+          const fs = typeof detail.functional_status === 'object' ? detail.functional_status : {};
+          html += `<hr><div class="row g-2 small">${Object.entries(fs).map(([k,v]) => `<div class="col-4"><strong>${k}:</strong> ${String(v)}</div>`).join('')}</div>`;
+        }
+        html += `</div></div>`;
+      }
 
       // Images with AI Analysis
       if (q.assessment_images && q.assessment_images.length) {
@@ -269,24 +312,6 @@
         html += '</div></div>';
       }
 
-      // Dynamic Questionnaire
-      const detail = q.assessment_detail;
-      if (detail && detail.verification_answers) {
-        const va = detail.verification_answers;
-        html += `<div class="card mb-4"><div class="card-header"><strong><i class="bi bi-question-circle me-2"></i>Dynamic Questionnaire</strong></div><div class="card-body">
-          <div class="row g-2 small">
-            <div class="col-3"><strong>Power On:</strong> ${va.power_on || '-'}</div>
-            <div class="col-3"><strong>Damage:</strong> ${va.damage || '-'}</div>
-            <div class="col-3"><strong>Age:</strong> ${va.age || '-'}</div>
-            <div class="col-3"><strong>Accessories:</strong> ${va.accessories || '-'}</div>
-          </div>`;
-        if (detail.functional_status) {
-          const fs = typeof detail.functional_status === 'object' ? detail.functional_status : {};
-          html += `<hr><div class="row g-2 small">${Object.entries(fs).map(([k,v]) => `<div class="col-4"><strong>${k}:</strong> ${String(v)}</div>`).join('')}</div>`;
-        }
-        html += `</div></div>`;
-      }
-
       // AI Analysis Summary
       if (q.ai_score) {
         html += `<div class="card mb-4"><div class="card-header"><strong><i class="bi bi-robot me-2"></i>AI Analysis Summary</strong></div>
@@ -322,11 +347,12 @@
             quotation_rejected: 'bi-x-circle text-danger',
             quotation_modified: 'bi-pencil text-warning',
             hub_assigned: 'bi-building text-info',
+            supply_chain_assigned: 'bi-truck text-primary',
             assessment_resubmitted: 'bi-arrow-repeat text-primary',
           };
           const icon = actionIcons[log.action] || 'bi-info-circle text-secondary';
           const meta = log.metadata || {};
-          const metaStr = meta.value ? ` - Value: \u20B9${Number(meta.value).toLocaleString('en-IN')}` : (meta.reason ? ` - Reason: ${meta.reason}` : (meta.changes ? ' - Values modified' : ''));
+          const metaStr = meta.value ? ` - Value: ₹${Number(meta.value).toLocaleString('en-IN')}` : (meta.reason ? ` - Reason: ${meta.reason}` : (meta.changes ? ' - Values modified' : ''));
           const actionLabel = log.action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
           html += `<div class="list-group-item py-2 px-3 d-flex align-items-start gap-3">
             <i class="${icon} fs-5 mt-1"></i>
@@ -346,37 +372,50 @@
       // Actions for pending quotations
       if (q.status === 'pending_manager_review') {
         html += `<div class="d-flex gap-2 flex-wrap mb-4">
-          <button class="btn btn-success btn-lg flex-fill" data-bs-toggle="modal" data-bs-target="#approveModal"><i class="bi bi-check-circle me-2"></i>Approve</button>
+          <button class="btn btn-success btn-lg flex-fill" data-bs-toggle="modal" data-bs-target="#approveModal"><i class="bi bi-check-circle me-2"></i>Approve & Assign</button>
           <button class="btn btn-warning btn-lg text-white flex-fill" data-bs-toggle="modal" data-bs-target="#modifyModal"><i class="bi bi-pencil me-2"></i>Modify</button>
           <button class="btn btn-danger btn-lg flex-fill" data-bs-toggle="modal" data-bs-target="#rejectModal"><i class="bi bi-x-circle me-2"></i>Reject</button>
         </div>`;
       }
 
-      // Show assigned hub info if already approved
-      if (q.assigned_hub) {
-        html += `<div class="alert alert-info"><i class="bi bi-building me-2"></i><strong>Assigned Hub:</strong> ${q.assigned_hub.name} (${q.assigned_hub.type || 'N/A'})</div>`;
+      // Show assignment info
+      if (q.assigned_hub || q.supply_chain_user) {
+        html += '<div class="alert alert-info mb-4">';
+        if (q.assigned_hub) html += `<div><i class="bi bi-building me-2"></i><strong>Assigned Hub:</strong> ${q.assigned_hub.name} (${q.assigned_hub.type || 'N/A'})</div>`;
+        if (q.supply_chain_user) html += `<div class="mt-1"><i class="bi bi-truck me-2"></i><strong>Assigned Supply Chain Executive:</strong> ${q.supply_chain_user.full_name} (@${q.supply_chain_user.username})</div>`;
+        html += '</div>';
       }
 
       document.getElementById('reviewContent').innerHTML = html;
     } catch(e) {
-      document.getElementById('reviewContent').innerHTML = '<p class="text-danger">Failed to load: ' + e.message + '</p>';
+      document.getElementById('reviewContent').innerHTML = '<div class="alert alert-danger">Failed to load: ' + e.message + '</div>';
     }
   }
 
   window.approveQuotation = async function() {
     const value = document.getElementById('approveValue').value || currentQuotation.customer_expected_value || currentQuotation.value_estimate;
     const hubId = document.getElementById('approveHub').value;
+    const scUserId = document.getElementById('approveSupplyChain').value;
     try {
       const res = await fetch('/api/manager/quotations/' + currentQuotation.id + '/approve', {
         method: 'POST', headers, body: JSON.stringify({ approved_value: value })
       });
       if (!res.ok) throw new Error((await res.json()).error);
+      
       if (hubId) {
         const hubRes = await fetch('/api/manager/quotations/' + currentQuotation.id + '/assign-hub', {
           method: 'POST', headers, body: JSON.stringify({ hub_id: hubId })
         });
         if (!hubRes.ok) throw new Error('Hub assignment failed');
       }
+
+      if (scUserId) {
+        const scRes = await fetch('/api/manager/quotations/' + currentQuotation.id + '/assign-supply-chain', {
+          method: 'POST', headers, body: JSON.stringify({ supply_chain_user_id: scUserId })
+        });
+        if (!scRes.ok) throw new Error('Supply chain assignment failed');
+      }
+
       alert('Quotation approved successfully!');
       window.location.href = 'approved.html';
     } catch(e) { alert('Error: ' + e.message); }

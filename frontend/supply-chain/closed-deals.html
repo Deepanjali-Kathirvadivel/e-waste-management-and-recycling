@@ -54,7 +54,6 @@
               <option value="collected">Collected</option>
               <option value="delivered">Delivered</option>
             </select>
-            <button class="btn btn-sm btn-outline-secondary" onclick="showQRScanner()"><i class="bi bi-qr-code-scan me-1"></i>Scan QR</button>
             <button class="btn btn-sm btn-outline-primary-green" onclick="loadPickups(currentPage)"><i class="bi bi-arrow-clockwise"></i></button>
           </div>
         </div>
@@ -62,7 +61,7 @@
       </main>
     </div>
   </div>
-
+ 
   <!-- Confirm Deal Modal -->
   <div class="modal fade" id="confirmDealModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-hand-thumbs-up me-2"></i>Confirm Deal</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -72,7 +71,7 @@
     </div>
     <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success btn-sm" onclick="confirmDeal()"><i class="bi bi-check-lg me-1"></i>Confirm Deal</button></div>
   </div></div></div>
-
+ 
   <!-- Collect Product Modal -->
   <div class="modal fade" id="collectModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-box-seam me-2"></i>Collect Product</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -84,10 +83,10 @@
     </div>
     <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success btn-sm" onclick="confirmCollect()"><i class="bi bi-check-lg me-1"></i>Collect & Generate Receipt</button></div>
   </div></div></div>
-
-  <!-- Deliver to Hub Modal -->
+ 
+  <!-- Deliver to Hub Modal (Product Delivered) -->
   <div class="modal fade" id="deliverModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
-    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-building me-2"></i>Deliver to Hub</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-building me-2"></i>Product Delivered</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
       <p class="small text-muted">Hub operator verifies the delivery</p>
       <div class="mb-2 form-check"><input type="checkbox" class="form-check-input" id="deliverProductOk" checked><label class="form-check-label small">Product OK</label></div>
@@ -217,7 +216,7 @@
 
     if (isAssignedToMe && s === 'deal_confirmed') push('Collect', 'btn-outline-success', 'openCollect('+d.id+')');
 
-    if (isAssignedToMe && s === 'collected') push('Deliver to Hub', 'btn-outline-dark', 'openDeliver('+d.id+')');
+    if (isAssignedToMe && (s === 'collected' || s === 'in_transit')) push('Product Delivered', 'btn-outline-dark', 'openDeliver('+d.id+')');
 
     if (isAssignedToMe && s === 'delivered') push('Receive', 'btn-success', 'openReceive('+d.id+')');
 

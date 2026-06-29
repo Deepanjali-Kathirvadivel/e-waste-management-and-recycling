@@ -25,3 +25,9 @@ exports.changePassword = catchAsync(async (req, res) => {
   await user.update({ password_hash: await bcrypt.hash(newPassword, 10) });
   res.json({ message: 'Password changed successfully' });
 });
+
+exports.getActivity = catchAsync(async (req, res) => {
+  const { getRecent } = require('../services/activity.service');
+  const logs = await getRecent(req.user.id, 50);
+  res.json({ activity: logs });
+});
