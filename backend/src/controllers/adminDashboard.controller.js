@@ -26,7 +26,7 @@ exports.kpi = catchAsync(async (req, res) => {
   const revenue = totalValue || 0;
   const profit = Math.round(revenue * 0.3);
   const avgScore = sustainabilityScore?.dataValues?.avg || 85;
-  const avgForecast = forecastAccuracy?.dataValues?.avg || 78;
+  const avgForecast = forecastAccuracy?.dataValues?.avg || 0;
   const hubCount = await Facility.count({ where: { type: 'collection_center', status: 'active' } });
 
   res.json({

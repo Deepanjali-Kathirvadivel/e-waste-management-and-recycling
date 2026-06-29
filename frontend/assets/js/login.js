@@ -23,11 +23,6 @@
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
 
-    if (username === 'admin' || username === 'root') {
-      window.location.href = 'admin/login.html';
-      return;
-    }
-
     try {
       const res = await fetch(API_BASE + '/auth/login', {
         method: 'POST',

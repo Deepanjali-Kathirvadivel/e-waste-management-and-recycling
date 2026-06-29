@@ -8,7 +8,7 @@
   let categoryCatalog = [];
 
   let data = {
-    customer: { name: '', phone: '', email: '', address: '', state: '', district: '', pincode: '', areaCategory: '', localBodyName: '', village: '', ward: '', gpsLat: '', gpsLng: '' },
+    customer: { name: '', phone: '', email: '', address: '', state: '', district: '', pincode: '', city: '', gpsLat: '', gpsLng: '' },
     products: [],
   };
   let activeIdx = 0;
@@ -28,7 +28,7 @@
   }
 
   function resetData() {
-    data = { customer: { name: '', phone: '', email: '', address: '', state: '', district: '', pincode: '', areaCategory: '', localBodyName: '', village: '', ward: '', gpsLat: '', gpsLng: '' }, products: [] };
+    data = { customer: { name: '', phone: '', email: '', address: '', state: '', district: '', pincode: '', city: '', gpsLat: '', gpsLng: '' }, products: [] };
     activeIdx = 0;
     currentStep = 1;
     categoryCatalog = [];
@@ -371,30 +371,17 @@
     data.customer.phone = document.getElementById('custPhone').value.trim();
     data.customer.email = document.getElementById('custEmail').value.trim();
     data.customer.address = document.getElementById('custAddress').value.trim();
-    data.customer.ward = document.getElementById('custWard').value.trim();
-    data.customer.areaCategory = document.getElementById('custAreaCategory').value;
-    data.customer.localBodyName = document.getElementById('custLocalBody')?.value.trim() || '';
-    data.customer.village = document.getElementById('custVillage')?.value.trim() || '';
+    data.customer.city = document.getElementById('custCity').value.trim();
     data.customer.district = document.getElementById('custDistrict').value.trim();
-    const streetVal = document.getElementById('custStreet')?.value.trim();
     data.customer.state = document.getElementById('custState').value.trim();
     data.customer.pincode = document.getElementById('custPincode').value.trim();
     data.customer.gpsLat = document.getElementById('custGpsLat')?.value || data.customer.gpsLat || '';
     data.customer.gpsLng = document.getElementById('custGpsLng')?.value || data.customer.gpsLng || '';
-    if (streetVal && !data.customer.address.includes(streetVal)) {
-      data.customer.address = streetVal + ', ' + data.customer.address;
-    }
   }
 
   function customerLocationPayload(c) {
     const payload = {};
-    if (c.village) payload.customer_village = c.village;
-    if (c.localBodyName) {
-      if (c.areaCategory === 'Corporation') payload.customer_corporation = c.localBodyName;
-      else if (c.areaCategory === 'Municipality') payload.customer_municipality = c.localBodyName;
-      else if (c.areaCategory === 'Panchayat') payload.customer_panchayat = c.localBodyName;
-      else payload.customer_panchayat = c.localBodyName;
-    }
+    if (c.city) payload.customer_city = c.city;
     if (c.gpsLat) payload.customer_gps_lat = parseFloat(c.gpsLat);
     if (c.gpsLng) payload.customer_gps_lng = parseFloat(c.gpsLng);
     return payload;
@@ -475,7 +462,7 @@
     }
 
     if (newStep === 1) {
-      ['custName','custPhone','custAddress','custEmail','custWard','custAreaCategory','custLocalBody','custVillage','custDistrict','custStreet','custState','custPincode'].forEach(clearFieldError);
+      ['custName','custPhone','custAddress','custEmail','custCity','custDistrict','custState','custPincode'].forEach(clearFieldError);
     }
     if (newStep === 3) {
       const p = data.products[activeIdx];
@@ -511,10 +498,11 @@
         { id: 'custName', label: 'Full Name' },
         { id: 'custPhone', label: 'Phone Number' },
         { id: 'custAddress', label: 'Street / Address' },
+        { id: 'custCity', label: 'City' },
         { id: 'custDistrict', label: 'District' },
         { id: 'custState', label: 'State' },
       ];
-      ['custName','custPhone','custAddress','custEmail','custWard','custAreaCategory','custLocalBody','custVillage','custDistrict','custStreet','custState','custPincode'].forEach(clearFieldError);
+      ['custName','custPhone','custAddress','custEmail','custCity','custDistrict','custState','custPincode'].forEach(clearFieldError);
       for (const f of fields) {
         const el = document.getElementById(f.id);
         if (!el || !el.value.trim()) {
@@ -701,12 +689,10 @@
     const p = data.products[activeIdx];
     if (!p) return;
     toggleCustomProductFields();
-    const brandSel = document.getElementById('productBrand');
-    const modelSel = document.getElementById('productModel');
-    const savedBrand = brandSel.value;
-    const savedModel = modelSel.value;
-    brandSel.innerHTML = '<option value="">Select Brand</option>';
-    modelSel.innerHTML = '<option value="">Select Model</option>';
+    const brandInput = document.getElementById('productBrand');
+    const modelInput = document.getElementById('productModel');
+    const brandList = document.getElementById('brandList');
+    const modelList = document.getElementById('modelList');
 
     try {
       const res = await fetch(API_BASE + '/assessments/catalog/' + encodeURIComponent(p.type), { headers: getAuthHeaders() });
@@ -714,30 +700,32 @@
       const d = await res.json();
       categoryCatalog = d.catalog || [];
       const brands = [...new Set(categoryCatalog.map(item => item.company))].sort();
-      brands.forEach(b => { const o = document.createElement('option'); o.value = b; o.textContent = b; brandSel.appendChild(o); });
 
-      if (!brandSel.dataset.bound) {
-        brandSel.addEventListener('change', function () {
-          modelSel.innerHTML = '<option value="">Select Model</option>';
-          const models = categoryCatalog.filter(item => item.company === this.value).map(item => item.model).sort();
-          models.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; modelSel.appendChild(o); });
+      brandList.innerHTML = brands.map(b => `<option value="${b}">`).join('');
+
+      if (!brandInput.dataset.bound) {
+        brandInput.addEventListener('input', function () {
+          const val = this.value;
+          const models = categoryCatalog.filter(item => item.company === val).map(item => item.model).sort();
+          modelList.innerHTML = models.map(m => `<option value="${m}">`).join('');
         });
-        brandSel.dataset.bound = 'true';
+        brandInput.dataset.bound = 'true';
       }
 
-      const restoreBrand = p.brand || savedBrand || p.extractedBrand || '';
+      const restoreBrand = p.brand || p.extractedBrand || '';
       if (restoreBrand && restoreBrand !== 'N/A') {
-        brandSel.value = restoreBrand;
-        brandSel.dispatchEvent(new Event('change'));
-        const restoreModel = p.model || savedModel || p.extractedModel || '';
+        brandInput.value = restoreBrand;
+        const evt = new Event('input', { bubbles: true });
+        brandInput.dispatchEvent(evt);
+        const restoreModel = p.model || p.extractedModel || '';
         if (restoreModel && restoreModel !== 'N/A') {
-          modelSel.value = restoreModel;
+          modelInput.value = restoreModel;
         }
-        if (restoreBrand === p.extractedBrand || p.extractedBrand && restoreBrand.includes(p.extractedBrand)) {
+        if (restoreBrand === p.extractedBrand || (p.extractedBrand && restoreBrand.includes(p.extractedBrand))) {
           const bb = document.getElementById('brandBadge');
           if (bb) bb.style.display = 'inline-block';
         }
-        if (restoreModel === p.extractedModel || p.extractedModel && restoreModel.includes(p.extractedModel)) {
+        if (restoreModel === p.extractedModel || (p.extractedModel && restoreModel.includes(p.extractedModel))) {
           const mb = document.getElementById('modelBadge');
           if (mb) mb.style.display = 'inline-block';
         }
@@ -1111,27 +1099,28 @@
     data.products.forEach((p, i) => computeProductValue(p, i));
     const container = document.getElementById('allProductsValuation');
     if (!container) return;
-    let totalMin = 0, totalMax = 0;
+    let totalEst = 0;
     let html = '';
     data.products.forEach((p, i) => {
-      totalMin += p.valueMin || 0;
-      totalMax += p.valueMax || 0;
+      totalEst += p.estimatedValue || 0;
       html += `<div class="col-md-6">
         <div class="card border-light h-100">
           <div class="card-body py-3">
             <h6 class="fw-bold mb-1">${i + 1}. ${p.type || '-'}</h6>
             <small class="text-muted">${p.brand || ''}${p.model ? ' / ' + p.model : ''}</small>
-            <div class="d-flex justify-content-between mt-2">
+            ${!isStaff ? `<div class="d-flex justify-content-between mt-2">
               <span class="text-danger small"><i class="bi bi-arrow-down-circle"></i> Min: <strong>\u20B9${(p.valueMin || 0).toLocaleString('en-IN')}</strong></span>
               <span class="text-success small"><i class="bi bi-arrow-up-circle"></i> Max: <strong>\u20B9${(p.valueMax || 0).toLocaleString('en-IN')}</strong></span>
-            </div>
+            </div>` : `<div class="mt-2 text-center">
+              <span class="text-green small"><strong>Estimated Value: \u20B9${(p.estimatedValue || 0).toLocaleString('en-IN')}</strong></span>
+            </div>`}
           </div>
         </div>
       </div>`;
     });
     html += `<div class="col-12">
       <div class="alert alert-success py-2 mb-0 text-center">
-        <strong>Total Deal Value: </strong>\u20B9${totalMin.toLocaleString('en-IN')} - \u20B9${totalMax.toLocaleString('en-IN')}
+        <strong>Total Estimated Value: </strong>\u20B9${totalEst.toLocaleString('en-IN')}
       </div>
     </div>`;
     container.innerHTML = html;
@@ -1167,7 +1156,7 @@
     let html = `
       <div class="mb-3"><h6 class="fw-bold text-green"><i class="bi bi-person me-2"></i>Customer</h6>
       <p class="mb-1">${c.name || '-'} | ${c.phone || '-'}${c.email ? ' | ' + c.email : ''}</p>
-      <p class="text-muted small mb-0">${c.address || ''}${c.village ? ', ' + c.village : ''}${c.localBodyName ? ', ' + c.localBodyName : ''}${c.areaCategory ? ' (' + c.areaCategory + ')' : ''}${c.district ? ', ' + c.district : ''}${c.state ? ', ' + c.state : ''}${c.pincode ? ' - ' + c.pincode : ''}</p></div>
+      <p class="text-muted small mb-0">${c.address || ''}${c.city ? ', ' + c.city : ''}${c.district ? ', ' + c.district : ''}${c.state ? ', ' + c.state : ''}${c.pincode ? ' - ' + c.pincode : ''}</p></div>
       <hr>
       <h6 class="fw-bold text-green mb-3"><i class="bi bi-box me-2"></i>Products (${data.products.length})</h6>`;
     data.products.forEach((p, i) => {
@@ -1215,8 +1204,7 @@
         const body = {
           customer_name: c.name, customer_email: c.email, customer_phone: c.phone,
           customer_address: c.address, customer_state: c.state, customer_district: c.district,
-          customer_pincode: c.pincode, customer_area_category: c.areaCategory,
-          customer_ward_number: c.ward,
+          customer_pincode: c.pincode,
           ...customerLocationPayload(c),
           brand: p.brand, model: p.model, serial_number: p.serial,
           year_of_manufacture: p.year ? parseInt(p.year, 10) : null,
@@ -1229,8 +1217,8 @@
           notes: p.notes,
           product_category: p.category,
           product_type: p.type,
-          value_estimate: p.estimatedValue || 0, value_min: p.valueMin || 0,
-          value_max: p.valueMax || 0, customer_expected_value: p.customerExpectedValue || 0,
+          value_estimate: p.estimatedValue || 0, customer_expected_value: p.customerExpectedValue || 0,
+          ...(!isStaff ? { value_min: p.valueMin || 0, value_max: p.valueMax || 0 } : {}),
           deal_group_id: dealGroupId + '-' + String.fromCharCode(65 + i),
           status: 'draft',
         };

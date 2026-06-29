@@ -31,18 +31,18 @@ exports.notifyEmployee = async (assessment, type, managerName) => {
       user_id: assessment.user_id,
       assessment_id: assessment.id,
       type: type,
-      title: type === 'approved' ? 'Quotation Approved' :
-             type === 'rejected' ? 'Quotation Rejected' :
-             type === 'modified' ? 'Quotation Modified' :
+      title: type === 'approved' ? 'Assessment Approved' :
+             type === 'rejected' ? 'Assessment Rejected' :
+             type === 'modified' ? 'Assessment Resubmission Required' :
              type === 'hub_assigned' ? 'Hub Assigned' : 'Notification',
       message: type === 'approved'
-        ? `Your quotation #${assessment.id} for ${assessment.customer_name} has been approved by ${managerName} with value \u20B9${(assessment.hr_approved_value || 0).toLocaleString('en-IN')}.`
+        ? `Assessment #${assessment.id} for ${assessment.customer_name} has been approved by ${managerName} with value \u20B9${(assessment.hr_approved_value || 0).toLocaleString('en-IN')}.`
         : type === 'rejected'
-        ? `Your quotation #${assessment.id} for ${assessment.customer_name} has been rejected by ${managerName}. Reason: ${assessment.rejection_reason || ''}`
+        ? `Assessment #${assessment.id} for ${assessment.customer_name} has been rejected by ${managerName}. Reason: ${assessment.rejection_reason || ''}`
         : type === 'modified'
-        ? `Your quotation #${assessment.id} for ${assessment.customer_name} has been modified by ${managerName}.`
+        ? `Assessment #${assessment.id} for ${assessment.customer_name} requires resubmission. Modification requested by ${managerName}.`
         : type === 'hub_assigned'
-        ? `Hub assigned for quotation #${assessment.id}.`
+        ? `Hub assigned for assessment #${assessment.id}.`
         : '',
       metadata: { assessment_id: assessment.id, customer: assessment.customer_name },
     });

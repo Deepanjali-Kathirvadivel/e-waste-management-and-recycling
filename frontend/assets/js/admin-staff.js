@@ -6,8 +6,27 @@
 
   const token = localStorage.getItem('greenera_admin_token');
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
-  window.adminLogout = function () { localStorage.removeItem('greenera_admin_token'); localStorage.removeItem('greenera_admin'); window.location.href = 'login.html'; };
+  window.adminLogout = function () {
+    fetch(API_BASE + '/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + token } }).catch(() => {});
+    localStorage.removeItem('greenera_admin_token');
+    localStorage.removeItem('greenera_admin');
+    window.location.href = 'login.html';
+  };
   window.toggleSidebar = function () { document.getElementById('adminSidebar').classList.toggle('show'); };
+
+  function startNotifPoll() {
+    let badge = document.getElementById('adminNotifBadge');
+    async function poll() {
+      try {
+        const res = await fetch(API_BASE + '/notifications/unread-count', { headers });
+        const data = await res.json();
+        if (badge) { badge.textContent = data.count || ''; badge.style.display = data.count > 0 ? 'flex' : 'none'; }
+      } catch (e) {}
+    }
+    poll();
+    setInterval(poll, 30000);
+  }
+  startNotifPoll();
 
   let staffData = [];
   let regionData = [];
@@ -16,7 +35,7 @@
   const filterRole = urlRole === 'manager' || urlRole === 'hr' ? urlRole : urlRole || '';
 
   if (filterRole) {
-    const titles = { manager: 'HR Management <small>Manage HR accounts</small>', hr: 'HR Management <small>Manage HR accounts</small>', supply_chain: 'Supply Chain Staff <small>Field staff management</small>' };
+    const titles = { employee: 'Employee Management <small>Manage employee accounts</small>', manager: 'Manager Management <small>Manage manager accounts</small>', hr: 'Manager Management <small>Manage manager accounts</small>', supply_chain: 'Supply Chain Management <small>Field staff management</small>' };
     document.querySelector('.page-title').innerHTML = titles[filterRole] || 'Staff Management <small>All staff</small>';
     document.getElementById('staffCount') && (document.getElementById('staffCount').textContent = 'Filtered: ' + filterRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()));
     document.querySelectorAll('.nav-link').forEach(a => {
@@ -72,11 +91,22 @@
 
   async function loadStaff() {
     try {
-      const filter = filterRole === 'hr' ? 'manager' : filterRole;
-      const url = API_BASE + '/admin/staff' + (filter ? '?role=' + filter : '');
+      let url;
+      if (filterRole === 'manager' || filterRole === 'hr') {
+        url = API_BASE + '/admin/managers';
+      } else if (filterRole === 'supply_chain') {
+        url = API_BASE + '/admin/supply-chain';
+      } else if (filterRole === 'employee') {
+        url = API_BASE + '/admin/employees';
+      } else {
+        url = API_BASE + '/admin/staff';
+      }
       const res = await fetch(url, { headers });
       const data = await res.json();
-      staffData = data.staff || [];
+      if (data.employees) staffData = data.employees;
+      else if (data.managers) staffData = data.managers;
+      else if (data.supply_chain_staff) staffData = data.supply_chain_staff;
+      else staffData = data.staff || [];
       renderStaff();
     } catch (e) {
       document.getElementById('staffCount').textContent = 'Error loading staff';
@@ -173,9 +203,16 @@
     new bootstrap.Modal(document.getElementById('staffModal')).show();
   };
 
+  function getStaffApiBase() {
+    if (filterRole === 'manager' || filterRole === 'hr') return API_BASE + '/admin/managers';
+    if (filterRole === 'supply_chain') return API_BASE + '/admin/supply-chain';
+    if (filterRole === 'employee') return API_BASE + '/admin/employees';
+    return API_BASE + '/admin/staff';
+  }
+
   window.toggleStaffStatus = async function (id) {
     try {
-      await fetch(API_BASE + '/admin/staff/' + id + '/status', { method: 'PATCH', headers });
+      await fetch(getStaffApiBase() + '/' + id + '/status', { method: 'PATCH', headers });
       showToast('Status toggled');
       loadStaff();
     } catch (e) { showToast('Error toggling status', 'error'); }
@@ -190,7 +227,7 @@
   document.getElementById('confirmDeleteBtn').addEventListener('click', async function () {
     const id = this.dataset.id;
     try {
-      await fetch(API_BASE + '/admin/staff/' + id, { method: 'DELETE', headers });
+      await fetch(getStaffApiBase() + '/' + id, { method: 'DELETE', headers });
       showToast('Staff deleted');
       bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
       loadStaff();
@@ -206,7 +243,7 @@
   document.getElementById('confirmResetBtn').addEventListener('click', async function () {
     const id = this.dataset.id;
     try {
-      const res = await fetch(API_BASE + '/admin/staff/' + id + '/reset-password', { method: 'POST', headers });
+      const res = await fetch(getStaffApiBase() + '/' + id + '/reset-password', { method: 'POST', headers });
       const data = await res.json();
       showToast('Password reset to: ' + data.new_password, 'info');
       bootstrap.Modal.getInstance(document.getElementById('resetPwdModal')).hide();
@@ -220,20 +257,20 @@
     const username = document.getElementById('sUsername').value.trim();
     const email = document.getElementById('sEmail').value.trim();
     const phone = document.getElementById('sPhone').value.trim();
-    const role = document.getElementById('sRole').value;
+    const role = filterRole === 'hr' ? 'manager' : (filterRole || document.getElementById('sRole').value);
     const region_id = parseInt(document.getElementById('sRegion').value) || null;
     const facility_id = parseInt(document.getElementById('sFacility').value) || null;
     const password = document.getElementById('sPassword')?.value;
 
     try {
       if (editId) {
-        const body = { full_name, email, phone, role, region_id, facility_id };
+        const body = { full_name, email, phone, region_id, facility_id };
         if (password && password.length >= 4) body.password = password;
-        await fetch(API_BASE + '/admin/staff/' + editId, { method: 'PUT', headers, body: JSON.stringify(body) });
+        await fetch(getStaffApiBase() + '/' + editId, { method: 'PUT', headers, body: JSON.stringify(body) });
         showToast('Staff updated');
       } else {
         if (!password || password.length < 4) { showToast('Password required (4+ chars)', 'error'); return; }
-        await fetch(API_BASE + '/admin/staff', { method: 'POST', headers, body: JSON.stringify({ username, email, password, full_name, phone, role, region_id, facility_id }) });
+        await fetch(getStaffApiBase(), { method: 'POST', headers, body: JSON.stringify({ username, email, password, full_name, phone, region_id, facility_id }) });
         showToast('Staff created');
       }
       bootstrap.Modal.getInstance(document.getElementById('staffModal')).hide();

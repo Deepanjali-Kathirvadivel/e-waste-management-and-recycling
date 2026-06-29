@@ -15,7 +15,7 @@
       <a class="navbar-brand" href="#"><i class="bi bi-truck"></i> Green Era <span class="badge bg-warning ms-2">Supply Chain</span></a>
       <div class="d-flex align-items-center gap-3">
         <span class="text-muted d-none d-md-inline" id="dashboardDate"></span>
-        <a class="text-dark text-decoration-none position-relative" href="#" id="notifBellSC" title="Notifications">
+        <a class="text-dark text-decoration-none position-relative" href="notifications.html" id="notifBellSC" title="Notifications">
           <i class="bi bi-bell fs-5 text-green"></i>
           <span id="scNotifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;font-size:9px">0</span>
         </a>
@@ -25,6 +25,9 @@
             <span id="userName">Staff</span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="../profile.html"><i class="bi bi-person me-2"></i>My Profile</a></li>
+            <li><a class="dropdown-item" href="notifications.html"><i class="bi bi-bell me-2"></i>Notifications</a></li>
+            <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
           </ul>
         </div>

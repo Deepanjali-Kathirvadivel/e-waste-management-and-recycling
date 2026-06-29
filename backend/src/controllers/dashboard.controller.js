@@ -7,9 +7,9 @@ const CATEGORY_LABELS = {
   IT: 'IT',
   CE: 'Consumer Electronics',
   LS: 'Household Appliances',
-  EE: 'Electrical Tools',
-  TLS: 'Toys & Sports',
-  LI: 'Lighting',
+  EE: 'Electrical & Electronic Tools',
+  TLS: 'Toys, Leisure & Sports Equipment',
+  LI: 'Lighting Instruments',
   MD: 'Medical Devices',
 };
 
@@ -94,24 +94,19 @@ exports.staffCategoryDistribution = catchAsync(async (req, res) => {
     raw: true,
   });
 
-  const distribution = rows.map((row) => ({
-    label: CATEGORY_LABELS[row.product_category] || row.product_category || 'Other',
-    value: Number(row.count || 0),
-  }));
+  const categoryMap = {};
+  Object.keys(CATEGORY_LABELS).forEach((k) => { categoryMap[k] = 0; });
 
-  if (!distribution.length) {
-    const catalogRows = await Assessment.findAll({
-      attributes: ['product_type_id', [fn('COUNT', col('assessments.id')), 'count']],
-      where: { user_id: userId, product_type_id: { [Op.ne]: null } },
-      group: ['product_type_id'],
-      raw: true,
-    });
-    const catalog = await ProductCatalog.findAll();
-    const catalogMap = Object.fromEntries(catalog.map((c) => [c.id, c.name]));
-    catalogRows.forEach((row) => {
-      distribution.push({ label: catalogMap[row.product_type_id] || 'Other', value: Number(row.count || 0) });
-    });
-  }
+  rows.forEach((row) => {
+    if (categoryMap[row.product_category] !== undefined) {
+      categoryMap[row.product_category] = Number(row.count || 0);
+    }
+  });
+
+  const distribution = Object.entries(categoryMap).map(([key, value]) => ({
+    label: CATEGORY_LABELS[key] || key,
+    value,
+  }));
 
   res.json({ distribution });
 });

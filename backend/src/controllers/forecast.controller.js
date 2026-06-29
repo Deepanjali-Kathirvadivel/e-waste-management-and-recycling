@@ -75,20 +75,14 @@ exports.dashboard = catchAsync(async (req, res) => {
 
   res.json({
     forecasted_waste: totalWaste,
-    growth_rate: parseFloat(avgGrowth?.dataValues?.avg || 12.4).toFixed(1),
-    opportunity_score: parseFloat(avgOpp?.dataValues?.avg || 72).toFixed(1),
+    growth_rate: avgGrowth?.dataValues?.avg ? parseFloat(avgGrowth.dataValues.avg).toFixed(1) : '0.0',
+    opportunity_score: avgOpp?.dataValues?.avg ? parseFloat(avgOpp.dataValues.avg).toFixed(1) : '0.0',
     predicted_revenue: predictedRevenue,
-    product_demand: productDemand.length > 0 ? productDemand : [
-      { product: 'Mobile', demand: 'high', share: 35 },
-      { product: 'Laptop', demand: 'high', share: 25 },
-      { product: 'Television', demand: 'medium', share: 20 },
-      { product: 'Refrigerator', demand: 'medium', share: 12 },
-      { product: 'Washing Machine', demand: 'low', share: 8 },
-    ],
+    product_demand: productDemand,
     region_forecast: regionForecast,
     trend: {
-      labels: trendLabels.length > 0 ? trendLabels : ['2025', '2026', '2027', '2028', '2029'],
-      data: trendData.length > 0 ? trendData : [12000, 18500, 25000, 32000, 40000],
+      labels: trendLabels,
+      data: trendData,
     },
     region_data: Object.values(results.reduce((acc, r) => {
       const name = r.region?.name || 'Unknown';

@@ -7,22 +7,6 @@
   let approvedDeals = [];
   let currentPage = 1;
   const rowsPerPage = 10;
-  let currentGroupKey = null;
-  let currentGroupItems = [];
-  let facilities = [];
-
-  async function loadFacilities() {
-    try {
-      const res = await fetch(API_BASE + '/employee/facilities', { headers: getAuthHeaders() });
-      const data = await res.json();
-      facilities = data.facilities || [];
-      const sel = document.getElementById('facilitySelect');
-      sel.innerHTML = '<option value="" selected disabled>Select branch / facility</option>';
-      facilities.forEach(f => {
-        sel.innerHTML += `<option value="${f.id}">${f.name}${f.location ? ' - ' + f.location : ''}</option>`;
-      });
-    } catch (e) { console.warn('Failed to load facilities'); }
-  }
 
   function buildGroupKey(a) {
     return a.deal_group_id || a.customer_phone || a.customer_name || 'unknown_' + a.id;
@@ -45,9 +29,22 @@
       approvedDeals = data.quotations || [];
       currentPage = 1;
       renderTable();
+      renderSummary();
     } catch (e) {
       document.getElementById('approvedDealsBody').innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Error loading approved deals</td></tr>';
     }
+  }
+
+  function renderSummary() {
+    const groups = groupByDeal(approvedDeals);
+    const totalDeals = groups.length;
+    const totalProducts = approvedDeals.length;
+    const totalValue = approvedDeals.reduce((sum, a) => sum + (Number(a.hr_approved_value || a.value_estimate || 0)), 0);
+    const uniqueCustomers = new Set(approvedDeals.map(a => a.customer_name)).size;
+    document.getElementById('sumTotalDeals').textContent = totalDeals;
+    document.getElementById('sumTotalProducts').textContent = totalProducts;
+    document.getElementById('sumTotalValue').textContent = '\u20B9' + totalValue.toLocaleString('en-IN');
+    document.getElementById('sumTotalCustomers').textContent = uniqueCustomers;
   }
 
   function renderTable() {
@@ -87,12 +84,14 @@
           <td><span class="badge bg-secondary">${g.items.length} product(s)</span></td>
           <td class="fw-bold text-success">\u20B9${totalVal.toLocaleString('en-IN')}</td>
           <td><span class="status-badge ${allClosed ? 'completed' : 'approved'}">${allClosed ? 'Closed' : hasClosed ? 'Partial' : 'Approved'}</span></td>
-          <td>${allClosed ? '<span class="text-muted small">Closed</span>' : `<button class="btn btn-sm btn-outline-green" onclick="event.stopPropagation(); openProcessModal('${g.dealGroupId || ''}',${g.items[0].id})"><i class="bi bi-gear"></i> Process</button>`}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-green" onclick="event.stopPropagation(); viewDetail(${g.items[0].id})"><i class="bi bi-eye me-1"></i>View</button>
+          </td>
         </tr>
         <tr class="group-detail d-none" id="${gid}">
           <td colspan="8" class="p-0">
             <table class="table table-sm mb-0 bg-light">
-              <thead><tr><th>#ID</th><th>Product</th><th>Brand</th><th>Value</th><th>Status</th><th>Action</th></tr></thead>
+              <thead><tr><th>#ID</th><th>Product</th><th>Brand</th><th>Value</th><th>Status</th></tr></thead>
               <tbody>${g.items.map(a => `
                 <tr>
                   <td>${a.id}</td>
@@ -100,10 +99,6 @@
                   <td>${a.brand || '-'} ${a.model || ''}</td>
                   <td>\u20B9${(Number(a.hr_approved_value || a.value_estimate || 0)).toLocaleString('en-IN')}</td>
                   <td><span class="status-badge ${a.deal_number ? 'completed' : 'approved'}">${a.deal_number ? 'Closed' : 'Approved'}</span></td>
-                  <td>${a.deal_number
-                    ? `<button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); viewReceipt(${a.id})" title="View Receipt"><i class="bi bi-receipt"></i></button>`
-                    : `<button class="btn btn-sm btn-outline-green" onclick="event.stopPropagation(); openProcessModal('${g.dealGroupId || ''}',${a.id})"><i class="bi bi-gear"></i></button>`
-                  }</td>
                 </tr>
               `).join('')}</tbody>
             </table>
@@ -126,201 +121,67 @@
 
   window.changePage = function(p) { currentPage = p; renderTable(); };
 
-  function renderGroupProducts() {
-    const tbody = document.getElementById('groupProductsBody');
-    if (!currentGroupItems.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-muted text-center py-2">No products</td></tr>';
-      return;
-    }
-    tbody.innerHTML = currentGroupItems.map((a, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${a.product_catalog?.name || a.brand || '-'}</td>
-        <td>${a.brand || '-'} ${a.model || ''}</td>
-        <td>\u20B9${(Number(a.hr_approved_value || a.value_estimate || 0)).toLocaleString('en-IN')}</td>
-        <td><span class="badge ${a.otp_verified ? 'bg-success' : a.otp_code ? 'bg-warning text-dark' : 'bg-secondary'}">${a.otp_verified ? 'Verified' : a.otp_code ? 'OTP Sent' : 'Pending'}</span></td>
-        <td><span class="status-badge ${a.deal_number ? 'completed' : 'approved'}">${a.deal_number ? 'Closed' : 'Open'}</span></td>
-      </tr>
-    `).join('');
-  }
-
-  async function loadGroupProducts() {
-    if (!currentGroupKey) return;
-    try {
-      const res = await fetch(API_BASE + '/employee/deal-group/' + encodeURIComponent(currentGroupKey), { headers: getAuthHeaders() });
-      const data = await res.json();
-      currentGroupItems = data.assessments || [];
-    } catch (e) {
-      currentGroupItems = [];
-    }
-    if (!currentGroupItems.length) {
-      currentGroupItems = approvedDeals.filter(a => buildGroupKey(a) === currentGroupKey);
-    }
-    renderGroupProducts();
-    updateModalButtons();
-  }
-
-  function updateModalButtons() {
-    const hasUnclosed = currentGroupItems.some(a => !a.deal_number);
-    const allVerified = currentGroupItems.filter(a => !a.deal_number).every(a => a.otp_verified);
-    const hasOtpSent = currentGroupItems.filter(a => !a.deal_number).some(a => a.otp_code && !a.otp_verified);
-    const facility = document.getElementById('facilitySelect').value;
-
-    document.getElementById('generateOtpBtn').disabled = !hasUnclosed || (currentGroupItems.filter(a => !a.deal_number).every(a => a.otp_verified));
-    document.getElementById('verifyOtpBtn').disabled = !hasUnclosed || !hasOtpSent;
-    document.getElementById('facilitySelect').disabled = !hasUnclosed || !allVerified;
-    document.getElementById('closeDealBtn').disabled = !hasUnclosed || !allVerified || !facility;
-
-    if (allVerified && hasUnclosed) {
-      document.getElementById('otpVerified').classList.remove('d-none');
-    } else {
-      document.getElementById('otpVerified').classList.add('d-none');
-    }
-  }
-
-  window.openProcessModal = async function(dealGroupId, firstId) {
-    const deal = approvedDeals.find(a => a.id === firstId);
-    if (!deal) return;
-    currentGroupKey = dealGroupId || buildGroupKey(deal);
-
-    document.getElementById('dealInfo').innerHTML = `
-      <strong>${deal.customer_name || '-'}</strong><br>
-      <span class="text-muted">${deal.customer_phone || ''}${deal.customer_email ? ' | ' + deal.customer_email : ''}</span>
-      ${deal.deal_group_id ? `<br><span class="text-muted small">Group: ${deal.deal_group_id}</span>` : ''}`;
-
-    document.getElementById('otpDisplay').classList.add('d-none');
-    document.getElementById('otpVerified').classList.add('d-none');
-    document.getElementById('otpCode').textContent = '';
-    document.getElementById('otpInput').value = '';
-    document.getElementById('facilitySelect').value = '';
-
-    document.getElementById('generateOtpBtn').disabled = true;
-    document.getElementById('verifyOtpBtn').disabled = true;
-    document.getElementById('facilitySelect').disabled = true;
-    document.getElementById('closeDealBtn').disabled = true;
-
-    await loadGroupProducts();
-    await loadFacilities();
-
-    const modal = new bootstrap.Modal(document.getElementById('processModal'));
+  window.viewDetail = async function(id) {
+    const body = document.getElementById('detailModalBody');
+    body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-green"></div><p class="mt-2 text-muted">Loading...</p></div>';
+    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
     modal.show();
-  };
-
-  window.generateGroupOTP = async function() {
-    const unverified = currentGroupItems.filter(a => !a.deal_number && !a.otp_verified);
-    if (!unverified.length) { showToast('All products already verified', 'info'); return; }
 
     try {
-      const ids = unverified.map(a => a.id);
-      const res = await fetch(API_BASE + '/employee/batch-generate-otp', {
-        method: 'POST', headers: getAuthHeaders(),
-        body: JSON.stringify({ ids })
-      });
+      const res = await fetch(API_BASE + '/assessments/' + id, { headers: getAuthHeaders() });
+      if (!res.ok) throw new Error('Failed');
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed');
+      const a = data.assessment;
+      const d = a.assessment_detail;
+      const statusClass = a.status === 'approved' ? 'success' : a.status === 'completed' ? 'primary' : 'secondary';
 
-      unverified.forEach(a => { a.otp_code = data.otp; });
-
-      document.getElementById('otpCode').textContent = data.otp;
-      document.getElementById('otpDisplay').classList.remove('d-none');
-      renderGroupProducts();
-      updateModalButtons();
-      showToast('OTP generated for ' + unverified.length + ' product(s)', 'success');
+      body.innerHTML = `
+        <div class="row g-3">
+          <div class="col-md-6">
+            <h6 class="fw-bold text-green border-bottom pb-2"><i class="bi bi-person me-2"></i>Customer</h6>
+            <p class="mb-1"><strong>${a.customer_name || '-'}</strong></p>
+            <p class="mb-1 text-muted small">${a.customer_phone || ''}${a.customer_email ? ' | ' + a.customer_email : ''}</p>
+            <p class="mb-0 text-muted small">${[a.customer_address, a.customer_city || a.customer_village, a.customer_district, a.customer_state].filter(Boolean).join(', ')}${a.customer_pincode ? ' - ' + a.customer_pincode : ''}</p>
+          </div>
+          <div class="col-md-6">
+            <h6 class="fw-bold text-green border-bottom pb-2"><i class="bi bi-box me-2"></i>Product</h6>
+            <p class="mb-1"><strong>${a.brand || '-'} ${a.model || ''}</strong> <span class="badge bg-secondary">${a.product_category || ''}</span></p>
+            <p class="mb-0 text-muted small">${a.product_catalog?.name || a.brand || '-'} | Serial: ${a.serial_number || '-'} | Condition: <span class="badge bg-secondary">${a.condition || '-'}</span></p>
+          </div>
+          <div class="col-12"><hr class="my-1"></div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded text-center">
+              <small class="text-muted">Approved Value</small>
+              <h5 class="mb-0 fw-bold text-success">\u20B9${(a.hr_approved_value || a.value_estimate || 0).toLocaleString('en-IN')}</h5>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded text-center">
+              <small class="text-muted">Status</small>
+              <h5 class="mb-0"><span class="badge bg-${statusClass} fs-6">${(a.status || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span></h5>
+            </div>
+          </div>
+          ${a.customer_expected_value ? `<div class="col-12"><hr class="my-1"><p class="mb-0"><strong>Customer Expected Value:</strong> <span class="fw-bold text-info">\u20B9${a.customer_expected_value.toLocaleString('en-IN')}</span></p></div>` : ''}
+          ${a.weight_kg ? `<div class="col-6"><hr class="my-1"><p class="mb-0 small"><strong>Weight:</strong> ${a.weight_kg} kg</p></div>` : ''}
+          ${a.notes ? `<div class="col-6"><hr class="my-1"><p class="mb-0 small"><strong>Notes:</strong> ${a.notes}</p></div>` : ''}
+          ${a.deal_number ? `<div class="col-12"><hr class="my-1"><p class="mb-0 small text-muted">Deal: ${a.deal_number || '-'} | Receipt: ${a.receipt_number || '-'} | Collection: ${a.collection_number || '-'}</p></div>` : ''}
+          ${d ? `<div class="col-12"><hr class="my-1">
+            <h6 class="fw-bold text-green"><i class="bi bi-question-circle me-2"></i>Verification Answers</h6>
+            <div class="row g-2 small">
+              <div class="col-3">Power: <span class="fw-bold">${d.verification_answers?.power_on || '-'}</span></div>
+              <div class="col-3">Damage: <span class="fw-bold">${d.verification_answers?.damage || '-'}</span></div>
+              <div class="col-3">Age: <span class="fw-bold">${d.verification_answers?.age || '-'}</span></div>
+              <div class="col-3">Accessories: <span class="fw-bold">${d.verification_answers?.accessories || '-'}</span></div>
+            </div>
+          </div>` : ''}
+          <div class="col-12"><hr class="my-1">
+            <small class="text-muted">Created: ${new Date(a.created_at || a.createdAt).toLocaleString()}${a.submitted_at ? ' | Submitted: ' + new Date(a.submitted_at).toLocaleString() : ''}</small>
+          </div>
+        </div>`;
     } catch (e) {
-      showToast('Failed to generate OTP: ' + e.message, 'error');
+      body.innerHTML = '<div class="text-center py-4 text-danger"><i class="bi bi-exclamation-triangle fs-1"></i><p class="mt-2">Failed to load details</p></div>';
     }
   };
 
-  window.verifyGroupOTP = async function() {
-    const otp = document.getElementById('otpInput').value.trim();
-    if (!otp || otp.length !== 6) { showToast('Enter 6-digit OTP', 'error'); return; }
-
-    const pending = currentGroupItems.filter(a => !a.deal_number && a.otp_code && !a.otp_verified);
-    if (!pending.length) { showToast('No pending OTP verifications', 'info'); return; }
-
-    let verified = 0;
-    for (const item of pending) {
-      try {
-        const res = await fetch(API_BASE + '/employee/quotations/' + item.id + '/verify-otp', {
-          method: 'POST', headers: getAuthHeaders(),
-          body: JSON.stringify({ otp })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Invalid');
-        item.otp_verified = true;
-        verified++;
-      } catch (e) {
-        // try next
-      }
-    }
-
-    if (verified > 0) {
-      document.getElementById('otpVerified').classList.remove('d-none');
-      renderGroupProducts();
-      updateModalButtons();
-      showToast(verified + ' product(s) verified', 'success');
-    } else {
-      showToast('OTP verification failed for all products', 'error');
-    }
-  };
-
-  window.closeGroupDeal = async function() {
-    const facilityId = document.getElementById('facilitySelect').value;
-    if (!facilityId) { showToast('Please select a branch', 'error'); return; }
-
-    const pending = currentGroupItems.filter(a => !a.deal_number);
-    if (!pending.length) { showToast('All products already closed', 'info'); return; }
-
-    const notVerified = pending.filter(a => !a.otp_verified);
-    if (notVerified.length) { showToast(notVerified.length + ' product(s) not verified', 'error'); return; }
-
-    try {
-      let result;
-      const hasRealGroupId = currentGroupItems.some(a => a.deal_group_id === currentGroupKey);
-      if (hasRealGroupId) {
-        const res = await fetch(API_BASE + '/employee/batch-close-deal', {
-          method: 'POST', headers: getAuthHeaders(),
-          body: JSON.stringify({ deal_group_id: currentGroupKey })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed');
-        result = data;
-      } else {
-        let closed = [];
-        for (const item of pending) {
-          const res = await fetch(API_BASE + '/employee/quotations/' + item.id + '/close-deal', {
-            method: 'POST', headers: getAuthHeaders()
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Failed');
-          closed.push(data);
-        }
-        result = { message: closed.length + ' product(s) closed', deals: closed };
-      }
-
-      if (facilityId) {
-        for (const item of pending) {
-          try {
-            await fetch(API_BASE + '/employee/quotations/' + item.id + '/destination', {
-              method: 'POST', headers: getAuthHeaders(),
-              body: JSON.stringify({ facility_id: parseInt(facilityId) })
-            });
-          } catch (e) { /* non-critical */ }
-        }
-      }
-
-      showToast(result.message, 'success');
-      bootstrap.Modal.getInstance(document.getElementById('processModal')).hide();
-      loadApprovedDeals();
-    } catch (e) {
-      showToast(e.message, 'error');
-    }
-  };
-
-  window.viewReceipt = function(id) {
-    window.open(API_BASE + '/employee/quotations/' + id + '/receipt?token=' + (localStorage.getItem('greenera_token') || ''), '_blank');
-  };
-
-  loadFacilities();
   loadApprovedDeals();
 })();

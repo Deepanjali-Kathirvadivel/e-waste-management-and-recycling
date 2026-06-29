@@ -13,18 +13,16 @@
     const password = document.getElementById('adminPass').value;
 
     try {
-      const res = await fetch(API_BASE + '/auth/login', {
+      const res = await fetch(API_BASE + '/auth/admin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
       if (!res.ok) throw new Error((await res.json()).error || 'Invalid credentials');
       const data = await res.json();
-      if (data.user.role === 'employee') throw new Error('Admin access required');
       const remember = document.getElementById('adminRemember')?.checked;
       const storage = remember ? localStorage : sessionStorage;
 
-      // Clear both storages first to ensure no stale data remains
       localStorage.removeItem('greenera_admin_token');
       localStorage.removeItem('greenera_admin');
       sessionStorage.removeItem('greenera_admin_token');

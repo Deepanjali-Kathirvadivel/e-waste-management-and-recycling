@@ -12,14 +12,36 @@
   const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   window.adminLogout = function () {
+    const token = localStorage.getItem('greenera_admin_token');
+    if (token) {
+      fetch(API_BASE + '/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }).catch(() => {});
+    }
     localStorage.removeItem('greenera_admin_token');
     localStorage.removeItem('greenera_admin');
+    sessionStorage.removeItem('greenera_admin_token');
+    sessionStorage.removeItem('greenera_admin');
     window.location.href = 'login.html';
   };
 
   window.toggleSidebar = function () {
     document.getElementById('adminSidebar').classList.toggle('show');
   };
+
+  function startAdminNotificationPolling() {
+    let badge = document.getElementById('adminNotifBadge');
+    async function poll() {
+      try {
+        const res = await fetch(API_BASE + '/notifications/unread-count', { headers });
+        const data = await res.json();
+        if (badge) {
+          badge.textContent = data.count || '';
+          badge.style.display = data.count > 0 ? 'flex' : 'none';
+        }
+      } catch (e) {}
+    }
+    poll();
+    setInterval(poll, 30000);
+  }
 
   async function loadDashboard() {
     try {
@@ -223,4 +245,5 @@
   }
 
   loadDashboard();
+  startAdminNotificationPolling();
 })();

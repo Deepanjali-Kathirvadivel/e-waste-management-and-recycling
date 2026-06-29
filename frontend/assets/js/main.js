@@ -24,29 +24,66 @@ function checkAuth() {
     return null;
   }
   const path = window.location.pathname.replace(/\\/g, '/');
-  if (user.role === 'manager' && !path.includes('/manager/') && !path.includes('login.html') && !path.includes('admin/')) {
+  const role = user.role;
+  const rolePaths = {
+    manager: '/manager/',
+    supply_chain: '/supply-chain/',
+    center_manager: '/hub/',
+    employee: '',
+  };
+  const expectedPath = rolePaths[role];
+  if (expectedPath !== undefined && !path.includes(expectedPath) && !path.includes('login.html') && !path.includes('admin/')) {
     const base = path.substring(0, path.lastIndexOf('/') + 1);
-    window.location.href = base + 'manager/dashboard.html';
-    return null;
-  }
-  if (user.role === 'supply_chain' && !path.includes('/supply-chain/') && !path.includes('login.html') && !path.includes('admin/')) {
-    const base = path.substring(0, path.lastIndexOf('/') + 1);
-    window.location.href = base + 'supply-chain/dashboard.html';
-    return null;
-  }
-  if (user.role === 'center_manager' && !path.includes('/hub/') && !path.includes('login.html') && !path.includes('admin/')) {
-    const base = path.substring(0, path.lastIndexOf('/') + 1);
-    window.location.href = base + 'hub/dashboard.html';
-    return null;
+    const redirectMap = {
+      manager: base + 'manager/dashboard.html',
+      supply_chain: base + 'supply-chain/dashboard.html',
+      center_manager: base + 'hub/dashboard.html',
+    };
+    if (redirectMap[role]) {
+      window.location.href = redirectMap[role];
+      return null;
+    }
   }
   return user;
 }
 
+function displayUserInfo() {
+  const user = JSON.parse(localStorage.getItem('greenera_user') || sessionStorage.getItem('greenera_user') || 'null');
+  if (!user) return;
+  const nameEl = document.getElementById('userName');
+  if (nameEl) nameEl.textContent = user.full_name || user.username || 'User';
+  const avatarEl = document.getElementById('userAvatar');
+  if (avatarEl) {
+    const initials = (user.full_name || 'U').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    avatarEl.textContent = initials || 'U';
+  }
+  const dateEl = document.getElementById('dashboardDate');
+  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const dateTextEl = document.getElementById('dashboardDateText');
+  if (dateTextEl) dateTextEl.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function setupNotifications() {
+  const notifBell = document.getElementById('notifBell');
+  if (notifBell) {
+    notifBell.addEventListener('click', function(e) {
+      e.preventDefault();
+      window.location.href = 'notifications.html';
+    });
+  }
+}
+
 function logout() {
+  const token = localStorage.getItem('greenera_token');
+  if (token) {
+    fetch(API_BASE + '/auth/logout', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } }).catch(() => {});
+  }
   localStorage.removeItem('greenera_token');
   localStorage.removeItem('greenera_user');
   localStorage.removeItem('greenera_admin_token');
   localStorage.removeItem('greenera_admin');
+  sessionStorage.removeItem('greenera_token');
+  sessionStorage.removeItem('greenera_user');
   sessionStorage.removeItem('greenera_admin_token');
   sessionStorage.removeItem('greenera_admin');
   
@@ -68,7 +105,7 @@ function logout() {
 }
 
 function getAuthHeaders() {
-  const token = localStorage.getItem('greenera_token');
+  const token = localStorage.getItem('greenera_token') || localStorage.getItem('greenera_admin_token');
   return token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 }
 
@@ -145,7 +182,14 @@ async function apiRequest(url, method = 'GET', body = null) {
   try {
     const res = await fetch(url, options);
     if (res.status === 401) {
-      logout();
+      const path = window.location.pathname.replace(/\\/g, '/');
+      if (path.includes('/admin/')) {
+        localStorage.removeItem('greenera_admin_token');
+        localStorage.removeItem('greenera_admin');
+        window.location.href = (path.includes('/admin/') ? '' : '../admin/') + 'login.html';
+      } else {
+        logout();
+      }
       throw new Error('Session expired');
     }
     const data = await res.json();

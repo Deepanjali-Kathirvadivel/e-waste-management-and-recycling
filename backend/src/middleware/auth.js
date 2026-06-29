@@ -11,13 +11,22 @@ const auth = async (req, res, next) => {
     }
     const token = header.split(' ')[1];
     const decoded = jwt.verify(token, jwtSecret);
-    const user = await User.findByPk(decoded.id, { attributes: { exclude: ['password_hash'] } });
+    const user = await User.findByPk(decoded.id, {
+      attributes: { exclude: ['password_hash'] },
+      include: [
+        { association: 'region', attributes: ['id', 'name'] },
+        { association: 'facility', attributes: ['id', 'name'] },
+      ],
+    });
     if (!user || !user.is_active) {
       return next(new AppError('User not found or inactive', 401));
     }
     req.user = user;
     next();
   } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return next(new AppError('Token expired, please login again', 401));
+    }
     return next(new AppError('Invalid or expired token', 401));
   }
 };

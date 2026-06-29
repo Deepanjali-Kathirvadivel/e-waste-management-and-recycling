@@ -362,7 +362,7 @@
                 <h6 class="fw-bold text-green border-bottom pb-2"><i class="bi bi-person me-2"></i>Customer</h6>
                 <p class="mb-1"><strong>${a.customer_name || '-'}</strong></p>
                 <p class="mb-1 text-muted small">${a.customer_phone || ''}${a.customer_email ? ' | ' + a.customer_email : ''}</p>
-                <p class="mb-0 text-muted small">${[a.customer_address, a.customer_village, a.customer_district, a.customer_state].filter(Boolean).join(', ')}${a.customer_pincode ? ' - ' + a.customer_pincode : ''}</p>
+                <p class="mb-0 text-muted small">${[a.customer_address, a.customer_city || a.customer_village, a.customer_district, a.customer_state].filter(Boolean).join(', ')}${a.customer_pincode ? ' - ' + a.customer_pincode : ''}</p>
               </div>
               <div class="col-md-6">
                 <h6 class="fw-bold text-green border-bottom pb-2"><i class="bi bi-box me-2"></i>Product</h6>

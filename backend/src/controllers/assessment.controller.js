@@ -101,6 +101,7 @@ exports.update = catchAsync(async (req, res) => {
   const assessment = await Assessment.findByPk(req.params.id);
   if (!assessment) throw new AppError('Assessment not found', 404);
   if (req.user.role === 'employee' && assessment.user_id !== req.user.id) throw new AppError('Unauthorized', 403);
+  if (assessment.status !== 'draft') throw new AppError('Cannot edit a submitted assessment. Only draft assessments can be modified.', 400);
   await assessment.update(req.body);
   res.json({ assessment });
 });
@@ -109,6 +110,7 @@ exports.remove = catchAsync(async (req, res) => {
   const assessment = await Assessment.findByPk(req.params.id);
   if (!assessment) throw new AppError('Assessment not found', 404);
   if (req.user.role === 'employee' && assessment.user_id !== req.user.id) throw new AppError('Unauthorized', 403);
+  if (assessment.status !== 'draft') throw new AppError('Cannot delete a submitted assessment.', 400);
   await assessment.destroy();
   res.json({ message: 'Assessment deleted' });
 });
@@ -331,11 +333,13 @@ exports.exportData = catchAsync(async (req, res) => {
   });
 
   const headers = ['ID', 'Date', 'Customer', 'Product', 'Brand', 'Condition', 'Value', 'Status'];
+  const isEmployee = req.user.role === 'employee';
   const rows = assessments.map((a) => [
     a.id, new Date(a.created_at).toLocaleDateString(),
     a.customer_name || '-', a.product_catalog?.name || '-',
     a.brand || '-', a.condition || '-',
-    a.value_estimate ? `₹${a.value_estimate.toLocaleString()}` : '-', a.status,
+    isEmployee ? '-' : (a.value_estimate ? `₹${a.value_estimate.toLocaleString()}` : '-'),
+    a.status,
   ]);
 
   if (format === 'xlsx') {

@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { Assessment, AssessmentImage, AssessmentDetail, ProductCatalog, User, Region } = require('../models');
+const { Assessment, AssessmentImage, AssessmentDetail, ProductCatalog, User, Region, ActivityLog } = require('../models');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const pagination = require('../utils/pagination');
@@ -55,4 +55,30 @@ exports.getOne = catchAsync(async (req, res) => {
   });
   if (!assessment) throw new AppError('Product not found', 404);
   res.json({ product: assessment });
+});
+
+exports.create = catchAsync(async (req, res) => {
+  const { name, category, icon, base_price } = req.body;
+  if (!name) throw new AppError('Product name is required', 400);
+  const existing = await ProductCatalog.findOne({ where: { name } });
+  if (existing) throw new AppError('Product already exists', 400);
+  const product = await ProductCatalog.create({ name, category, icon, base_price });
+  await ActivityLog.create({ user_id: req.user.id, action: 'product_created', entity_type: 'product_catalog', entity_id: product.id, metadata: { name } });
+  res.status(201).json({ product });
+});
+
+exports.update = catchAsync(async (req, res) => {
+  const product = await ProductCatalog.findByPk(req.params.id);
+  if (!product) throw new AppError('Product not found', 404);
+  await product.update(req.body);
+  await ActivityLog.create({ user_id: req.user.id, action: 'product_updated', entity_type: 'product_catalog', entity_id: product.id });
+  res.json({ product });
+});
+
+exports.remove = catchAsync(async (req, res) => {
+  const product = await ProductCatalog.findByPk(req.params.id);
+  if (!product) throw new AppError('Product not found', 404);
+  await product.destroy();
+  await ActivityLog.create({ user_id: req.user.id, action: 'product_deleted', entity_type: 'product_catalog', entity_id: parseInt(req.params.id) });
+  res.json({ message: 'Product deleted' });
 });

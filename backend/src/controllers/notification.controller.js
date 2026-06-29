@@ -45,6 +45,7 @@ exports.types = catchAsync(async (req, res) => {
       'approved',
       'rejected',
       'modified',
+      'resubmission_required',
       'hub_assigned',
       'forecast_ready',
       'simulation_complete',

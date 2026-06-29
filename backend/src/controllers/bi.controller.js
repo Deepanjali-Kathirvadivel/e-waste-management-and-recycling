@@ -140,7 +140,7 @@ exports.environmental = catchAsync(async (req, res) => {
 });
 
 exports.profitability = catchAsync(async (req, res) => {
-  const totalRevenue = await Assessment.sum('value_estimate', { where: { status: 'completed' } }) || 1500000;
+  const totalRevenue = await Assessment.sum('value_estimate', { where: { status: 'completed' } }) || 0;
 
   const facilityRent = await Facility.sum('rent') || 0;
   const facilityElectricity = await Facility.sum('electricity_cost') || 0;
@@ -155,14 +155,12 @@ exports.profitability = catchAsync(async (req, res) => {
   const staffCount = await User.count({ where: { role: 'employee', is_active: true } });
   const laborCost = staffCount * 15000;
 
-  const totalCosts = totalFacilityCost + totalTransportCost + laborCost > 0
-    ? (totalFacilityCost + totalTransportCost + laborCost) * 3
-    : Math.round(totalRevenue * 0.6);
+  const totalCosts = (totalFacilityCost + totalTransportCost + laborCost) * 3;
 
   const profit = totalRevenue - totalCosts;
   const savings = Math.round(profit * 0.15);
-  const roi = totalCosts > 0 ? parseFloat(((profit / totalCosts) * 100).toFixed(1)) : 15.0;
-  const paybackPeriod = profit > 0 ? parseFloat((totalCosts / (profit / 12)).toFixed(1)) : 12.0;
+  const roi = totalCosts > 0 ? parseFloat(((profit / totalCosts) * 100).toFixed(1)) : 0;
+  const paybackPeriod = profit > 0 ? parseFloat((totalCosts / (profit / 12)).toFixed(1)) : 0;
 
   const months = [];
   const now = new Date();
@@ -207,7 +205,7 @@ exports.profitability = catchAsync(async (req, res) => {
 });
 
 exports.scenarios = catchAsync(async (req, res) => {
-  const currentRevenue = await Assessment.sum('value_estimate', { where: { status: 'completed' } }) || 1500000;
+  const currentRevenue = await Assessment.sum('value_estimate', { where: { status: 'completed' } }) || 0;
 
   const facilityRent = await Facility.sum('rent') || 0;
   const facilityElectricity = await Facility.sum('electricity_cost') || 0;
@@ -222,9 +220,7 @@ exports.scenarios = catchAsync(async (req, res) => {
   const staffCount = await User.count({ where: { role: 'employee', is_active: true } });
   const laborCost = staffCount * 15000 * 3;
 
-  const baseCost = totalFacilityCost + totalLogisticsCost + laborCost > 0
-    ? (totalFacilityCost + totalLogisticsCost + laborCost)
-    : Math.round(currentRevenue * 0.6);
+  const baseCost = totalFacilityCost + totalLogisticsCost + laborCost;
   const baseProfit = currentRevenue - baseCost;
 
   const scenarios = [
@@ -240,7 +236,7 @@ exports.scenarios = catchAsync(async (req, res) => {
 exports.simulate = catchAsync(async (req, res) => {
   const { type, region_id, cost, revenue_increase_pct, cost_increase_pct } = req.body;
 
-  const currentRevenue = await Assessment.sum('value_estimate', { where: { status: 'completed' } }) || 1500000;
+  const currentRevenue = await Assessment.sum('value_estimate', { where: { status: 'completed' } }) || 0;
 
   const facilityRent = await Facility.sum('rent') || 0;
   const facilityElectricity = await Facility.sum('electricity_cost') || 0;
@@ -255,9 +251,7 @@ exports.simulate = catchAsync(async (req, res) => {
   const staffCount = await User.count({ where: { role: 'employee', is_active: true } });
   const laborCost = staffCount * 15000 * 3;
 
-  const baseCost = totalFacilityCost + totalLogisticsCost + laborCost > 0
-    ? (totalFacilityCost + totalLogisticsCost + laborCost)
-    : Math.round(currentRevenue * 0.6);
+  const baseCost = totalFacilityCost + totalLogisticsCost + laborCost;
   const baseProfit = currentRevenue - baseCost;
 
   const newCost = baseCost + (cost || 0) + (baseCost * ((cost_increase_pct || 0) / 100));
@@ -295,15 +289,15 @@ exports.simulate = catchAsync(async (req, res) => {
 exports.recommendations = catchAsync(async (req, res) => {
   const { transportation, facility: facilityCost, labor, operational } = req.body;
   const totalCost = (parseFloat(transportation) || 0) + (parseFloat(facilityCost) || 0) + (parseFloat(labor) || 0) + (parseFloat(operational) || 0);
-  const revenue = await Assessment.sum('value_estimate', { where: { status: 'completed' } }) || 1500000;
+  const revenue = await Assessment.sum('value_estimate', { where: { status: 'completed' } }) || 0;
 
   const profit = revenue - totalCost;
   const feasibility = profit > 0 ? 'high' : 'low';
 
   const recommendations = [
     { type: 'logistics_optimization', title: 'Optimize Logistics Routes', description: 'Consolidate shipments to reduce transportation costs by up to 15%. Recommend dynamic route scheduling.', feasibility: 'high', estimated_cost: Math.round(totalCost * 0.05), estimated_benefit: Math.round(revenue * 0.1) },
-    { type: 'new_center', title: 'Open New Collection Center', description: 'Expand collection coverage to high-density zones in Pollachi or Sulur.', feasibility: profit > 300000 ? 'high' : 'medium', estimated_cost: 200000, estimated_benefit: 600000 },
-    { type: 'expansion', title: 'Expand Processing Facility', description: 'Upgrade sorting machinery at Coimbatore Processing Hub to increase throughput by 30%.', feasibility: profit > 600000 ? 'high' : 'medium', estimated_cost: 400000, estimated_benefit: 1200000 },
+    { type: 'new_center', title: 'Open New Collection Center', description: 'Expand collection coverage to high-density zones.', feasibility: profit > 300000 ? 'high' : 'medium', estimated_cost: 200000, estimated_benefit: 600000 },
+    { type: 'expansion', title: 'Expand Processing Facility', description: 'Upgrade sorting machinery to increase throughput by 30%.', feasibility: profit > 600000 ? 'high' : 'medium', estimated_cost: 400000, estimated_benefit: 1200000 },
   ].filter(r => r.estimated_benefit > r.estimated_cost);
   res.json({ current_profit: profit, predicted_profit: Math.round(profit * 1.25), feasibility, recommendations });
 });
@@ -367,10 +361,10 @@ exports.executiveDashboard = catchAsync(async (req, res) => {
     },
     sustainability_summary: {
       score: scoreData?.score || 75,
-      collection_efficiency: scoreData?.collection_efficiency || 70,
-      recovery_rate: scoreData?.recovery_rate || 75,
-      transportation_efficiency: scoreData?.transportation_efficiency || 80,
-      facility_utilization: scoreData?.facility_utilization || 65,
+      collection_efficiency: scoreData?.collection_efficiency || 0,
+      recovery_rate: scoreData?.recovery_rate || 0,
+      transportation_efficiency: scoreData?.transportation_efficiency || 0,
+      facility_utilization: scoreData?.facility_utilization || 0,
       environmental_impact: scoreData?.environmental_impact || { co2_saved_kg: 0, energy_saved_kwh: 0, landfill_diverted_kg: 0, water_saved_l: 0 },
     },
     profitability_summary: {
@@ -585,12 +579,6 @@ exports.reports = catchAsync(async (req, res) => {
       const value = await Assessment.sum('value_estimate', { where: { user_id: u.id } }) || 0;
       rows.push([u.full_name || 'N/A', u.username, `${count}`, `Rs. ${value.toLocaleString('en-IN')}`]);
     }));
-  }
-
-  if (rows.length === 0) {
-    for (let i = 0; i < 8; i++) {
-      rows.push(cfg.headers.map(() => Math.floor(Math.random() * 100) + 1));
-    }
   }
 
   if (format === 'json') {
