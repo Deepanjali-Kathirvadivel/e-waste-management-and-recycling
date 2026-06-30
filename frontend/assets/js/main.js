@@ -32,7 +32,7 @@ function checkAuth() {
     employee: '',
   };
   const expectedPath = rolePaths[role];
-  if (expectedPath !== undefined && !path.includes(expectedPath) && !path.includes('login.html') && !path.includes('admin/')) {
+  if (expectedPath !== undefined && !path.includes(expectedPath) && !path.includes('login.html') && !path.includes('admin/') && !path.includes('profile.html') && !path.includes('notifications.html')) {
     const base = path.substring(0, path.lastIndexOf('/') + 1);
     const redirectMap = {
       manager: base + 'manager/dashboard.html',

@@ -15,7 +15,7 @@
       <a class="navbar-brand" href="dashboard.html"><i class="bi bi-truck"></i> Green Era <span class="badge bg-warning ms-2">Supply Chain</span></a>
       <div class="d-flex align-items-center gap-3">
         <span class="text-muted d-none d-md-inline" id="dashboardDate"></span>
-        <a class="text-dark text-decoration-none position-relative" href="#" id="notifBellSC" title="Notifications">
+        <a class="text-dark text-decoration-none position-relative" href="../notifications.html" id="notifBellSC" title="Notifications">
           <i class="bi bi-bell fs-5 text-green"></i>
           <span id="scNotifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;font-size:9px">0</span>
         </a>
@@ -25,6 +25,9 @@
             <span id="userName">Staff</span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="../profile.html"><i class="bi bi-person me-2"></i>My Profile</a></li>
+            <li><a class="dropdown-item" href="../notifications.html"><i class="bi bi-bell me-2"></i>Notifications</a></li>
+            <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
           </ul>
         </div>
@@ -153,6 +156,8 @@
         ${p.supply_chain_user ? `<div class="col-md-4"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Executive</small><h5 class="fw-bold mb-0 small">${p.supply_chain_user.full_name||p.supply_chain_user.username||'-'}</h5></div></div>` : ''}
         ${p.deal_closed_at ? `<div class="col-md-4"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Completed</small><h5 class="fw-bold mb-0 small">${new Date(p.deal_closed_at).toLocaleDateString('en-IN')}</h5></div></div>` : ''}
         ${p.vehicle_number ? `<div class="col-md-4"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Vehicle</small><h5 class="fw-bold mb-0 small">${p.vehicle_number||'-'}</h5></div></div>` : ''}
+        <div class="col-md-6"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Assigned Manager</small><h6 class="fw-bold mb-0">${p.approver?.full_name || '-'}</h6></div></div>
+        <div class="col-md-6"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Approved Date</small><h6 class="fw-bold mb-0">${p.hr_acted_at ? new Date(p.hr_acted_at).toLocaleDateString('en-IN') : '-'}</h6></div></div>
         ${p.driver_name ? `<div class="col-md-4"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Driver</small><h5 class="fw-bold mb-0 small">${p.driver_name||'-'}</h5></div></div>` : ''}
         ${p.exception_reason ? `<div class="col-12"><div class="alert alert-danger py-2 mb-0 small"><strong>Exception:</strong> ${p.exception_reason}</div></div>` : ''}
         ${p.analysis_result ? `<div class="col-12"><hr class="my-1"><h6 class="fw-bold text-green">Analysis Result</h6><div class="row g-2 small"><div class="col-3">Classification: <span class="fw-bold">${p.analysis_result.classification||'-'}</span></div><div class="col-3">Recovery: <span class="fw-bold">${p.analysis_result.recovery_potential||0}%</span></div><div class="col-3">Revenue: <span class="fw-bold">\u20B9${(p.analysis_result.estimated_revenue||0).toLocaleString('en-IN')}</span></div><div class="col-3">Material: <span class="fw-bold">${p.analysis_result.material_recovery_percentage||0}%</span></div></div></div>` : ''}

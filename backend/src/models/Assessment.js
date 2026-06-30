@@ -49,6 +49,7 @@ const Assessment = sequelize.define('assessments', {
   approved_by: { type: DataTypes.INTEGER },
   hr_approved_value: { type: DataTypes.DECIMAL(12, 2) },
   hr_rejection_reason: { type: DataTypes.TEXT },
+  manager_remarks: { type: DataTypes.TEXT },
   // Hub and supply-chain assignment
   assigned_hub_id: { type: DataTypes.INTEGER },
   supply_chain_user_id: { type: DataTypes.INTEGER },

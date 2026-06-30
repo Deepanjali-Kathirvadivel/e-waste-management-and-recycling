@@ -1,5 +1,7 @@
 const { Notification, User, Assessment } = require('../models');
 
+const whatsappService = require('./whatsapp.service');
+
 let twilioClient = null;
 if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
   try {
@@ -8,6 +10,16 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
 }
 
 exports.sendOTP = async (phone, otp) => {
+  try {
+    const waSent = await whatsappService.sendOTP(phone, otp);
+    if (waSent) {
+      console.log('[WhatsApp] OTP successfully dispatched to ' + phone);
+      return true;
+    }
+  } catch (err) {
+    console.error('[WhatsApp] sendOTP error:', err.message);
+  }
+
   if (twilioClient && process.env.TWILIO_PHONE_NUMBER) {
     try {
       await twilioClient.messages.create({

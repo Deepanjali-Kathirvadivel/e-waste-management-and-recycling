@@ -1,10 +1,21 @@
 const { Op, fn, col } = require('sequelize');
 const { Assessment, AssessmentImage, AssessmentDetail, ProductCatalog, User, Facility, ActivityLog } = require('../models');
+const sequelize = require('../config/database');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
 const { log } = require('../services/activity.service');
 const notificationService = require('../services/notification.service');
 const pagination = require('../utils/pagination');
+
+// Database schema check/alter on file load
+(async () => {
+  try {
+    await sequelize.query("ALTER TABLE assessments ADD COLUMN manager_remarks TEXT;");
+    console.log("Added manager_remarks column to assessments table");
+  } catch (e) {
+    // Column might already exist
+  }
+})();
 
 const CATEGORY_LABELS = {
   IT: 'IT',
@@ -21,13 +32,15 @@ exports.dashboard = catchAsync(async (req, res) => {
   today.setHours(0, 0, 0, 0);
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
-  const [pending, approvedToday, rejectedToday, total, approvedTotal, rejectedTotal] = await Promise.all([
+  const [pending, approvedToday, rejectedToday, total, approvedTotal, rejectedTotal, todayAssessments, monthAssessments] = await Promise.all([
     Assessment.count({ where: { status: 'pending_manager_review' } }),
     Assessment.count({ where: { status: 'approved', hr_acted_at: { [Op.gte]: today } } }),
     Assessment.count({ where: { status: 'rejected', hr_acted_at: { [Op.gte]: today } } }),
     Assessment.count(),
     Assessment.count({ where: { status: 'approved' } }),
     Assessment.count({ where: { status: 'rejected' } }),
+    Assessment.count({ where: { created_at: { [Op.gte]: today } } }),
+    Assessment.count({ where: { created_at: { [Op.gte]: monthStart } } }),
   ]);
 
   const revenueSum = await Assessment.sum('hr_approved_value', {
@@ -100,21 +113,60 @@ exports.dashboard = catchAsync(async (req, res) => {
     raw: true,
   });
 
+  const monthlyCollections = await Assessment.findAll({
+    attributes: [
+      [fn('strftime', '%Y-%m', col('deal_closed_at')), 'month'],
+      [fn('SUM', col('hr_approved_value')), 'value']
+    ],
+    where: {
+      status: { [Op.in]: ['collected', 'delivered', 'delivered_to_hub', 'received', 'completed'] },
+      deal_closed_at: { [Op.gte]: trendStart }
+    },
+    group: [fn('strftime', '%Y-%m', col('deal_closed_at'))],
+    order: [[fn('strftime', '%Y-%m', col('deal_closed_at')), 'ASC']],
+    raw: true
+  });
+
   const monthLabels = [];
   const monthCounts = [];
+  const monthlyCollectionValues = [];
   for (let i = 0; i < 6; i++) {
     const d = new Date(trendStart.getFullYear(), trendStart.getMonth() + i, 1);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     const label = d.toLocaleDateString('en-US', { month: 'short' });
     const row = trendRows.find((r) => r.month === key);
+    const colRow = monthlyCollections.find((r) => r.month === key);
     monthLabels.push(label);
     monthCounts.push(Number(row?.count || 0));
+    monthlyCollectionValues.push(Number(colRow?.value || 0));
   }
 
   const totalDecided = approvedTotal + rejectedTotal;
   const approvalRate = totalDecided > 0 ? Math.round((approvedTotal / totalDecided) * 100) : 0;
   const rejectionRate = totalDecided > 0 ? Math.round((rejectedTotal / totalDecided) * 100) : 0;
   const avgDealValue = totalWithValue > 0 ? Math.round((totalValueSum || 0) / totalWithValue) : 0;
+
+  // Query recent logs for activities feed
+  const recentActivities = await ActivityLog.findAll({
+    where: {
+      action: {
+        [Op.in]: [
+          'assessment_created',
+          'assessment_submitted',
+          'quotation_approved',
+          'quotation_rejected',
+          'hub_assigned',
+          'supply_chain_assigned',
+          'pickup_completed',
+          'deal_confirmed',
+          'otp_verified'
+        ]
+      }
+    },
+    limit: 10,
+    order: [['created_at', 'DESC']],
+    include: [{ model: User, attributes: ['full_name', 'role'] }]
+  });
 
   res.json({
     pending_reviews: pending,
@@ -129,6 +181,8 @@ exports.dashboard = catchAsync(async (req, res) => {
     monthly_revenue: monthRevenue || 0,
     average_deal_value: avgDealValue,
     today_collections: todayCollections,
+    today_assessments: todayAssessments,
+    month_assessments: monthAssessments,
     receipt_count: receiptCount,
     active_employees: activeEmployees,
     branch_performance: branchRows.map((row) => ({
@@ -143,6 +197,8 @@ exports.dashboard = catchAsync(async (req, res) => {
       count: Number(row.count || 0),
     })),
     quotation_trends: { labels: monthLabels, counts: monthCounts },
+    monthly_collection_trends: { labels: monthLabels, values: monthlyCollectionValues },
+    recent_activities: recentActivities,
   });
 });
 
@@ -210,16 +266,17 @@ exports.approveQuotation = catchAsync(async (req, res) => {
   if (!assessment) throw new AppError('Quotation not found', 404);
   if (assessment.status !== 'pending_manager_review') throw new AppError('Quotation is not pending review', 400);
 
-  const { approved_value } = req.body;
+  const { approved_value, remarks } = req.body;
   await assessment.update({
     status: 'approved',
     hr_approved_value: approved_value || assessment.customer_expected_value || assessment.value_estimate,
     approved_by: req.user.id,
     hr_acted_at: new Date(),
+    manager_remarks: remarks || null,
   });
 
   await log({ userId: req.user.id, action: 'quotation_approved', entityType: 'assessment', entityId: assessment.id,
-    metadata: { customer: assessment.customer_name, value: approved_value } });
+    metadata: { customer: assessment.customer_name, value: approved_value, remarks } });
 
   try {
     await notificationService.notifyEmployee(assessment, 'approved', req.user.full_name);
@@ -233,17 +290,18 @@ exports.rejectQuotation = catchAsync(async (req, res) => {
   if (!assessment) throw new AppError('Quotation not found', 404);
   if (assessment.status !== 'pending_manager_review') throw new AppError('Quotation is not pending review', 400);
 
-  const { reason } = req.body;
+  const { reason, remarks } = req.body;
   await assessment.update({
     status: 'rejected',
     rejection_reason: reason || 'No reason provided',
     hr_rejection_reason: reason || 'No reason provided',
+    manager_remarks: remarks || reason || null,
     approved_by: req.user.id,
     hr_acted_at: new Date(),
   });
 
   await log({ userId: req.user.id, action: 'quotation_rejected', entityType: 'assessment', entityId: assessment.id,
-    metadata: { customer: assessment.customer_name, reason } });
+    metadata: { customer: assessment.customer_name, reason, remarks } });
 
   try {
     await notificationService.notifyEmployee(assessment, 'rejected', req.user.full_name);
@@ -397,7 +455,18 @@ exports.getReceipt = catchAsync(async (req, res) => {
       .label{font-weight:bold;color:#555;width:40%}
       .total{font-size:1.2em;font-weight:bold;color:#16A34A}
       .footer{margin-top:30px;font-size:0.85em;color:#999;text-align:center}
+      .no-print { text-align: center; margin-bottom: 20px; padding: 10px; background: #f4f4f4; border-bottom: 1px solid #ddd; }
+      .print-btn { padding: 8px 16px; background: #16A34A; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 10px; }
+      .close-btn { padding: 8px 16px; background: #64748B; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+      @media print {
+        .no-print { display: none; }
+        body { margin: 0; padding: 10px; }
+      }
     </style></head><body>
+    <div class="no-print">
+      <button class="print-btn" onclick="window.print()">Print Receipt</button>
+      <button class="close-btn" onclick="window.close()">Close</button>
+    </div>
     <h1>Green Era Recyclers - Receipt</h1>
     <table>
       <tr><td class="label">Receipt No</td><td>${assessment.receipt_number || 'N/A'}</td></tr>

@@ -8,7 +8,7 @@
 
   if (localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token')) {
     const user = JSON.parse(localStorage.getItem('greenera_user') || sessionStorage.getItem('greenera_user') || 'null');
-    if (user?.role === 'manager') window.location.href = 'hr/dashboard.html';
+    if (user?.role === 'manager') window.location.href = 'manager/dashboard.html';
     else if (user?.role === 'supply_chain') window.location.href = 'supply-chain/dashboard.html';
     else window.location.href = 'dashboard.html';
     return;

@@ -56,7 +56,7 @@
       const res = await fetch('/api/manager/approved?limit=100', { headers });
       const data = await res.json();
       const list = data.quotations || [];
-      let html = '<div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr><th>ID</th><th>Customer</th><th>Product</th><th>Approved Value</th><th>Approved By</th><th>Hub</th><th>Date</th><th>Action</th></tr></thead><tbody>';
+      let html = '<div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr><th>ID</th><th>Customer</th><th>Product</th><th>Approved Value</th><th>Supply Chain Executive</th><th>Assigned Hub</th><th>Date</th><th>Action</th></tr></thead><tbody>';
       list.forEach(q => {
         const date = q.hr_acted_at ? new Date(q.hr_acted_at).toLocaleDateString('en-IN') : '-';
         html += `<tr>
@@ -64,7 +64,7 @@
           <td>${q.customer_name || '-'}</td>
           <td>${q.product_catalog?.name || q.product_category || '-'}<br><small class="text-muted">${q.brand || ''} ${q.model || ''}</small></td>
           <td class="fw-bold text-success">\u20B9${(q.hr_approved_value || 0).toLocaleString('en-IN')}</td>
-          <td>${q.approver?.full_name || '-'}</td>
+          <td>${q.supply_chain_user?.full_name || '<span class="text-muted">Unassigned</span>'}</td>
           <td>${q.assigned_hub?.name || '-'}</td>
           <td>${date}</td>
           <td><a href="review.html?id=${q.id}" class="btn btn-sm btn-outline-primary-green"><i class="bi bi-eye me-1"></i>View</a></td>

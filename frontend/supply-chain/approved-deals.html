@@ -15,7 +15,7 @@
       <a class="navbar-brand" href="dashboard.html"><i class="bi bi-truck"></i> Green Era <span class="badge bg-warning ms-2">Supply Chain</span></a>
       <div class="d-flex align-items-center gap-3">
         <span class="text-muted d-none d-md-inline" id="dashboardDate"></span>
-        <a class="text-dark text-decoration-none position-relative" href="#" id="notifBellSC" title="Notifications">
+        <a class="text-dark text-decoration-none position-relative" href="../notifications.html" id="notifBellSC" title="Notifications">
           <i class="bi bi-bell fs-5 text-green"></i>
           <span id="scNotifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;font-size:9px">0</span>
         </a>
@@ -25,6 +25,9 @@
             <span id="userName">Staff</span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="../profile.html"><i class="bi bi-person me-2"></i>My Profile</a></li>
+            <li><a class="dropdown-item" href="../notifications.html"><i class="bi bi-bell me-2"></i>Notifications</a></li>
+            <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
           </ul>
         </div>
@@ -49,8 +52,15 @@
             </select>
             <select class="form-select form-select-sm" id="statusFilter" onchange="loadPickups(1)" style="width:auto">
               <option value="">All Active</option>
+              <option value="approved">Approved by Manager</option>
+              <option value="hub_assigned">Hub Assigned</option>
               <option value="ready_for_pickup">Ready for Pickup</option>
               <option value="supply_chain_assigned">Assigned</option>
+              <option value="pickup_scheduled">Pickup Scheduled</option>
+              <option value="out_for_pickup">Out for Pickup</option>
+              <option value="arrived_at_customer">Arrived at Customer</option>
+              <option value="customer_verified">Customer Verified</option>
+              <option value="deal_confirmed">Deal Confirmed</option>
             </select>
             <button class="btn btn-sm btn-outline-primary-green" onclick="loadPickups(currentPage)"><i class="bi bi-arrow-clockwise"></i></button>
           </div>
@@ -64,7 +74,14 @@
   <div class="modal fade" id="otpModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-shield-lock me-2"></i>OTP Verification</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
-      <p class="small text-muted">Enter the 6-digit OTP sent to customer's phone.</p>
+      <div class="mb-3">
+        <label class="form-label small">Send OTP to Mobile Number</label>
+        <div class="input-group input-group-sm">
+          <input type="text" class="form-control" id="otpTargetPhone" placeholder="Enter mobile number">
+          <button class="btn btn-outline-primary" type="button" onclick="resendOTPWithPhone()"><i class="bi bi-send"></i> Send</button>
+        </div>
+      </div>
+      <p class="small text-muted mb-2">Enter the 6-digit OTP sent to customer's WhatsApp/phone.</p>
       <div class="d-flex gap-2 justify-content-center mb-3" id="otpBoxes">
         <input type="text" class="form-control form-control-lg text-center otp-digit" maxlength="1" style="width:48px;font-size:1.5rem" inputmode="numeric">
         <input type="text" class="form-control form-control-lg text-center otp-digit" maxlength="1" style="width:48px;font-size:1.5rem" inputmode="numeric">
@@ -74,8 +91,33 @@
         <input type="text" class="form-control form-control-lg text-center otp-digit" maxlength="1" style="width:48px;font-size:1.5rem" inputmode="numeric">
       </div>
       <div id="otpError" class="text-danger small d-none">Invalid OTP.</div>
+      <div class="text-center mt-2">
+        <button class="btn btn-link btn-sm text-green text-decoration-none" onclick="sendOTP(currentPickupId)"><i class="bi bi-arrow-clockwise"></i> Resend OTP</button>
+      </div>
     </div>
     <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary btn-sm" onclick="verifyOTP()"><i class="bi bi-shield-check me-1"></i>Verify OTP</button></div>
+  </div></div></div>
+
+  <!-- Confirm Deal Modal -->
+  <div class="modal fade" id="confirmDealModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-hand-thumbs-up me-2"></i>Confirm Deal</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <p class="small">Customer agrees to the approved amount?</p>
+      <div id="confirmDealSummary" class="p-2 bg-light rounded small mb-2"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success btn-sm" onclick="confirmDeal()"><i class="bi bi-check-lg me-1"></i>Confirm Deal</button></div>
+  </div></div></div>
+
+  <!-- Collect Product Modal -->
+  <div class="modal fade" id="collectModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-box-seam me-2"></i>Collect Product</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <p class="small text-muted">Product will be collected and a digital receipt generated.</p>
+      <div class="mb-2"><label class="form-label small">Package Count</label><input type="number" class="form-control form-control-sm" id="collectPkgCount" min="1" value="1"></div>
+      <div class="mb-2"><label class="form-label small">Packaging Condition</label><select class="form-select form-select-sm" id="collectPkgCondition"><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option></select></div>
+      <div class="mb-2"><label class="form-label small">Notes</label><textarea class="form-control form-control-sm" id="collectNotes" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success btn-sm" onclick="confirmCollect()"><i class="bi bi-check-lg me-1"></i>Collect & Generate Receipt</button></div>
   </div></div></div>
 
   <!-- Exception Modal -->
@@ -118,7 +160,7 @@
   const token = localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token');
   if (!token) { window.location.href = '../login.html'; }
   const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
-  const STATUS_COLORS = { ready_for_pickup:'warning', supply_chain_assigned:'info', customer_unavailable:'danger', otp_failed:'danger', customer_cancelled:'danger', requires_manager_review:'warning', transport_delayed:'warning', delivery_exception:'danger', cancelled:'danger' };
+  const STATUS_COLORS = { approved:'info', hub_assigned:'info', ready_for_pickup:'warning', supply_chain_assigned:'info', customer_verified:'success', otp_verified:'success', deal_confirmed:'success', customer_unavailable:'danger', otp_failed:'danger', customer_cancelled:'danger', requires_manager_review:'warning', transport_delayed:'warning', delivery_exception:'danger', cancelled:'danger' };
 
   // OTP auto-tab
   document.addEventListener('input', function(e) {
@@ -147,25 +189,26 @@
       const status = document.getElementById('statusFilter').value;
       const region = document.getElementById('regionFilter').value;
       let url = API_BASE + '/supply-chain/pickups?page=' + (page || currentPage) + '&limit=20';
-      const activeStatuses = 'ready_for_pickup,supply_chain_assigned';
+      const activeStatuses = 'approved,hub_assigned,ready_for_pickup,supply_chain_assigned,pickup_scheduled,out_for_pickup,arrived_at_customer,customer_verified,deal_confirmed,otp_verified';
       url += '&status=' + (status || activeStatuses);
       if (region) url += '&region_id=' + region;
       const res = await fetch(url, { headers });
       const data = await res.json();
       currentPage = data.page || 1; totalPages = data.total_pages || 1;
-      let html = '<div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr><th>#</th><th>Customer</th><th>Product</th><th>Region</th><th>Approved</th><th>Status</th><th>Hub</th><th>Actions</th></tr></thead><tbody>';
+      let html = '<div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr><th>Deal ID</th><th>Customer Name</th><th>Mobile Number</th><th>Product Name</th><th>Product Category</th><th>Approved Amount</th><th>Collection Center</th><th>Pickup Date</th><th>Current Status</th><th>Actions</th></tr></thead><tbody>';
       (data.pickups || data.deals || []).forEach(d => {
         const color = STATUS_COLORS[d.status] || 'secondary';
         const actions = getActionButtons(d);
-        const regionName = d.region?.name || (d.region_id ? 'Region #'+d.region_id : '-');
         html += `<tr>
           <td>#${d.id}</td>
-          <td>${d.customer_name || '-'}<br><small class="text-muted">${d.customer_phone || ''}</small></td>
+          <td>${d.customer_name || '-'}</td>
+          <td>${d.customer_phone || '-'}</td>
           <td>${d.product_catalog?.name || d.brand || '-'}</td>
-          <td><small>${regionName}</small></td>
+          <td>${d.product_category || '-'}</td>
           <td class="fw-bold">\u20B9${(d.hr_approved_value||d.value_estimate||0).toLocaleString('en-IN')}</td>
-          <td><span class="badge bg-${color}">${(d.status||'').replace(/_/g,' ')}</span></td>
           <td>${d.assigned_hub?.name || '-'}</td>
+          <td>${d.scheduled_pickup_date || '-'}</td>
+          <td><span class="badge bg-${color}">${(d.status||'').replace(/_/g,' ')}</span></td>
           <td style="min-width:180px">${actions}</td>
         </tr>`;
       });
@@ -187,12 +230,21 @@
     const currentUserId = (JSON.parse(localStorage.getItem('greenera_user') || '{}')).id || 0;
     const isAssignedToMe = d.supply_chain_user_id === currentUserId;
 
-    if (!d.supply_chain_user_id && ['hub_assigned','ready_for_pickup'].includes(s)) push('Assign', 'btn-outline-info', 'assignSelf('+d.id+')');
+    if (!d.supply_chain_user_id && ['approved','hub_assigned','ready_for_pickup'].includes(s)) push('Assign', 'btn-outline-info', 'assignSelf('+d.id+')');
 
-    if (isAssignedToMe && (s === 'supply_chain_assigned' || s === 'ready_for_pickup')) push('Send OTP', 'btn-outline-warning', 'sendOTP('+d.id+')');
+    if (isAssignedToMe && ['supply_chain_assigned', 'ready_for_pickup', 'pickup_scheduled', 'out_for_pickup', 'arrived_at_customer'].includes(s)) {
+      push('Send OTP', 'btn-outline-warning', 'sendOTP('+d.id+')');
+    }
+
+    if (isAssignedToMe && ['customer_verified', 'otp_verified'].includes(s)) {
+      push('Confirm Deal', 'btn-success', 'openConfirmDeal('+d.id+')');
+    }
+
+    if (isAssignedToMe && s === 'deal_confirmed') {
+      push('Collect Product', 'btn-primary', 'openCollect('+d.id+')');
+    }
 
     push('Exception', 'btn-outline-danger', 'openException('+d.id+')');
-
     push('<i class="bi bi-eye"></i>', 'btn-outline-secondary', 'viewPickup('+d.id+')');
     return btns.join(' ');
   }
@@ -208,14 +260,42 @@
   window.sendOTP = async function(id) {
     currentPickupId = id;
     try {
-      const r = await fetch(API_BASE + '/supply-chain/pickups/'+id+'/generate-otp', { method:'POST', headers });
-      if (!r.ok) throw new Error((await r.json()).error);
+      const r = await fetch(API_BASE + '/supply-chain/pickups/' + id, { headers });
+      const data = await r.json();
+      const p = data.pickup || data.deal || data;
+      document.getElementById('otpTargetPhone').value = p.customer_phone || '';
+
+      await triggerOTPSend(p.customer_phone);
+
       document.querySelectorAll('.otp-digit').forEach(i=>i.value='');
       document.getElementById('otpError').classList.add('d-none');
-      new bootstrap.Modal(document.getElementById('otpModal')).show();
-      showToast('OTP sent to customer\'s phone');
+      
+      const openModal = bootstrap.Modal.getInstance(document.getElementById('otpModal'));
+      if (!openModal) {
+        new bootstrap.Modal(document.getElementById('otpModal')).show();
+      }
     } catch(e) { showToast(e.message, 'error'); }
   };
+
+  window.resendOTPWithPhone = async function() {
+    const phone = document.getElementById('otpTargetPhone').value.trim();
+    if (!phone) { showToast('Please enter a phone number', 'error'); return; }
+    await triggerOTPSend(phone);
+  };
+
+  async function triggerOTPSend(phone) {
+    try {
+      const r = await fetch(API_BASE + '/supply-chain/pickups/' + currentPickupId + '/generate-otp', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ phone })
+      });
+      if (!r.ok) throw new Error((await r.json()).error);
+      const data = await r.json();
+      showToast('OTP sent to ' + phone + (data.otp ? ' - Code: ' + data.otp : ''));
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
   window.verifyOTP = async function() {
     const otp = Array.from(document.querySelectorAll('.otp-digit')).map(i=>i.value).join('');
     if (otp.length !== 6) { showToast('Enter complete 6-digit OTP', 'error'); return; }
@@ -226,6 +306,55 @@
       showToast('Customer verified!');
       loadPickups(currentPage);
     } catch(e) {}
+  };
+
+  // ───── Close Deal ─────
+  window.openConfirmDeal = async function(id) {
+    currentPickupId = id;
+    try {
+      const r = await fetch(API_BASE + '/supply-chain/pickups/'+id, { headers });
+      const data = await r.json();
+      const p = data.pickup || data.deal || data;
+      document.getElementById('confirmDealSummary').innerHTML = `
+        <strong>${p.customer_name || '-'}</strong><br>
+        Product: ${p.product_catalog?.name || p.brand || '-'}<br>
+        Amount: \u20B9${(p.hr_approved_value||p.value_estimate||0).toLocaleString('en-IN')}
+      `;
+      new bootstrap.Modal(document.getElementById('confirmDealModal')).show();
+    } catch(e) { showToast('Failed to load pickup', 'error'); }
+  };
+
+  window.confirmDeal = async function() {
+    try {
+      const r = await fetch(API_BASE + '/supply-chain/pickups/'+currentPickupId+'/confirm-deal', { method:'POST', headers });
+      if (!r.ok) throw new Error((await r.json()).error);
+      bootstrap.Modal.getInstance(document.getElementById('confirmDealModal')).hide();
+      showToast('Deal confirmed! Now collect the product.');
+      loadPickups(currentPage);
+    } catch(e) { showToast(e.message, 'error'); }
+  };
+
+  // ───── Collect Product ─────
+  window.openCollect = function(id) {
+    currentPickupId = id;
+    document.getElementById('collectPkgCount').value = 1;
+    document.getElementById('collectPkgCondition').value = 'good';
+    document.getElementById('collectNotes').value = '';
+    new bootstrap.Modal(document.getElementById('collectModal')).show();
+  };
+
+  window.confirmCollect = async function() {
+    try {
+      const r = await fetch(API_BASE + '/supply-chain/pickups/'+currentPickupId+'/collect', { method:'POST', headers, body: JSON.stringify({
+        package_count: parseInt(document.getElementById('collectPkgCount').value),
+        packaging_condition: document.getElementById('collectPkgCondition').value,
+        collection_notes: document.getElementById('collectNotes').value,
+      })});
+      if (!r.ok) throw new Error((await r.json()).error);
+      bootstrap.Modal.getInstance(document.getElementById('collectModal')).hide();
+      showToast('Product collected! Receipt generated.');
+      loadPickups(currentPage);
+    } catch(e) { showToast(e.message, 'error'); }
   };
 
   // ───── Exceptions ─────
@@ -248,12 +377,6 @@
     } catch(e) { showToast(e.message, 'error'); }
   };
 
-  // ───── Download Receipt ─────
-  window.downloadReceipt = async function(id) {
-    try { const r = await fetch(API_BASE + '/supply-chain/pickups/'+id+'/receipt', { headers: { 'Authorization':'Bearer '+token } }); if (!r.ok) throw new Error((await r.json()).error); const blob = await r.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='receipt-'+id+'.pdf'; a.click(); URL.revokeObjectURL(url); }
-    catch(e) { showToast(e.message, 'error'); }
-  };
-
   // ───── View Detail ─────
   window.viewPickup = async function(id) {
     try {
@@ -271,6 +394,8 @@
         <div class="col-md-3"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Status</small><h5 class="mb-0"><span class="badge bg-${color} fs-6">${p.status.replace(/_/g,' ')}</span></h5></div></div>
         <div class="col-md-3"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Hub</small><h5 class="fw-bold mb-0 small">${p.assigned_hub?.name||'-'}</h5></div></div>
         <div class="col-md-3"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Executive</small><h5 class="fw-bold mb-0 small">${p.supply_chain_user?.full_name||p.supply_chain_user?.username||'-'}</h5></div></div>
+        <div class="col-md-6"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Assigned Manager</small><h6 class="fw-bold mb-0">${p.approver?.full_name || '-'}</h6></div></div>
+        <div class="col-md-6"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Approved Date</small><h6 class="fw-bold mb-0">${p.hr_acted_at ? new Date(p.hr_acted_at).toLocaleDateString('en-IN') : '-'}</h6></div></div>
         ${p.exception_reason ? `<div class="col-12"><div class="alert alert-danger py-2 mb-0 small"><strong>Exception:</strong> ${p.exception_reason}</div></div>` : ''}
         <div class="col-12"><hr class="my-1"><h6 class="fw-bold text-green">Movement History</h6><div class="timeline small" style="max-height:200px;overflow-y:auto">${
           moves.length ? moves.reverse().map(m => `<div class="d-flex gap-2 mb-1"><i class="bi bi-circle-fill text-green" style="font-size:8px;margin-top:6px"></i><div><span class="fw-bold">${(m.action||'').replace(/_/g,' ')}</span><br><span class="text-muted">${new Date(m.timestamp||Date.now()).toLocaleString()}</span></div></div>`).join('')
@@ -279,42 +404,6 @@
       document.getElementById('pickupDetailBody').innerHTML = html;
       new bootstrap.Modal(document.getElementById('pickupDetailModal')).show();
     } catch(e) { showToast('Failed to load pickup', 'error'); }
-  };
-
-  // ───── QR Scanner ─────
-  let scannerInstance = null;
-  window.showQRScanner = function() {
-    const modal = new bootstrap.Modal(document.getElementById('qrScannerModal'));
-    document.getElementById('qrScannerContainer').innerHTML = '<div id="reader" style="width:100%"></div><p class="text-center text-muted small mt-2">Point camera at QR code</p>';
-    document.getElementById('qrResult').innerHTML = '';
-    modal.show();
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-    script.onload = function() {
-      if (typeof Html5Qrcode === 'undefined') { document.getElementById('qrResult').innerHTML = '<span class="text-danger">QR library failed</span>'; return; }
-      scannerInstance = new Html5Qrcode('reader');
-      scannerInstance.start({ facingMode: 'environment' }, { fps: 10, qrbox: 250 },
-        function(qrText) {
-          scannerInstance.stop().catch(()=>{});
-          document.getElementById('qrResult').innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>QR scanned!</span>';
-          fetch(API_BASE + '/supply-chain/scan-qr', { method:'POST', headers, body: JSON.stringify({ qr_data: qrText }) })
-            .then(r => r.json()).then(data => {
-              const p = data.pickup || data.deal || data;
-              if (p && p.id) {
-                bootstrap.Modal.getInstance(document.getElementById('qrScannerModal')).hide();
-                viewPickup(p.id);
-                loadPickups(currentPage);
-              } else {
-                document.getElementById('qrResult').innerHTML = '<span class="text-danger">Pickup not found</span>';
-              }
-            }).catch(e => { document.getElementById('qrResult').innerHTML = '<span class="text-danger">Error: '+e.message+'</span>'; });
-        }, function(err) {}
-      ).catch(err => { document.getElementById('qrResult').innerHTML = '<span class="text-danger">Camera access denied</span>'; });
-    };
-    document.body.appendChild(script);
-    document.getElementById('qrScannerModal').addEventListener('hidden.bs.modal', function() {
-      if (scannerInstance) { scannerInstance.stop().catch(()=>{}); scannerInstance = null; }
-    }, { once: true });
   };
 
   // ───── Init ─────

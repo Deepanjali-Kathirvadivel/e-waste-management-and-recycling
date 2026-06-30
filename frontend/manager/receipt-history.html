@@ -62,7 +62,7 @@
           <td>${r.product_catalog?.name || r.brand || '-'}</td>
           <td>₹${(r.hr_approved_value || 0).toLocaleString('en-IN')}</td>
           <td>${r.deal_closed_at ? new Date(r.deal_closed_at).toLocaleDateString() : '-'}</td>
-          <td><a href="/api/manager/receipts/${r.id}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt"></i></a></td>
+          <td><a href="/api/manager/receipts/${r.id}?token=${token}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-receipt"></i></a></td>
         </tr>`;
       });
       html += '</tbody></table>';

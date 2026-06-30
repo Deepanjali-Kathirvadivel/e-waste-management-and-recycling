@@ -15,7 +15,7 @@
       <a class="navbar-brand" href="dashboard.html"><i class="bi bi-truck"></i> Green Era <span class="badge bg-warning ms-2">Supply Chain</span></a>
       <div class="d-flex align-items-center gap-3">
         <span class="text-muted d-none d-md-inline" id="dashboardDate"></span>
-        <a class="text-dark text-decoration-none position-relative" href="#" id="notifBellSC" title="Notifications">
+        <a class="text-dark text-decoration-none position-relative" href="../notifications.html" id="notifBellSC" title="Notifications">
           <i class="bi bi-bell fs-5 text-green"></i>
           <span id="scNotifCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display:none;font-size:9px">0</span>
         </a>
@@ -25,6 +25,9 @@
             <span id="userName">Staff</span>
           </a>
           <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="../profile.html"><i class="bi bi-person me-2"></i>My Profile</a></li>
+            <li><a class="dropdown-item" href="../notifications.html"><i class="bi bi-bell me-2"></i>Notifications</a></li>
+            <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
           </ul>
         </div>
@@ -49,10 +52,8 @@
             </select>
             <select class="form-select form-select-sm" id="statusFilter" onchange="loadPickups(1)" style="width:auto">
               <option value="">All Active</option>
-              <option value="customer_verified">Verified</option>
-              <option value="deal_confirmed">Deal Confirmed</option>
               <option value="collected">Collected</option>
-              <option value="delivered">Delivered</option>
+              <option value="in_transit">In Transit</option>
             </select>
             <button class="btn btn-sm btn-outline-primary-green" onclick="loadPickups(currentPage)"><i class="bi bi-arrow-clockwise"></i></button>
           </div>
@@ -61,29 +62,7 @@
       </main>
     </div>
   </div>
- 
-  <!-- Confirm Deal Modal -->
-  <div class="modal fade" id="confirmDealModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
-    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-hand-thumbs-up me-2"></i>Confirm Deal</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">
-      <p class="small">Customer agrees to the approved amount?</p>
-      <div id="confirmDealSummary" class="p-2 bg-light rounded small mb-2"></div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success btn-sm" onclick="confirmDeal()"><i class="bi bi-check-lg me-1"></i>Confirm Deal</button></div>
-  </div></div></div>
- 
-  <!-- Collect Product Modal -->
-  <div class="modal fade" id="collectModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
-    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-box-seam me-2"></i>Collect Product</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">
-      <p class="small text-muted">Product will be collected and a digital receipt generated.</p>
-      <div class="mb-2"><label class="form-label small">Package Count</label><input type="number" class="form-control form-control-sm" id="collectPkgCount" min="1" value="1"></div>
-      <div class="mb-2"><label class="form-label small">Packaging Condition</label><select class="form-select form-select-sm" id="collectPkgCondition"><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option></select></div>
-      <div class="mb-2"><label class="form-label small">Notes</label><textarea class="form-control form-control-sm" id="collectNotes" rows="2"></textarea></div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success btn-sm" onclick="confirmCollect()"><i class="bi bi-check-lg me-1"></i>Collect & Generate Receipt</button></div>
-  </div></div></div>
- 
+
   <!-- Deliver to Hub Modal (Product Delivered) -->
   <div class="modal fade" id="deliverModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-building me-2"></i>Product Delivered</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -98,26 +77,11 @@
     <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success btn-sm" onclick="confirmDeliver()"><i class="bi bi-check-lg me-1"></i>Deliver</button></div>
   </div></div></div>
 
-  <!-- Receive at Hub Modal -->
-  <div class="modal fade" id="receiveModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
-    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-box-seam me-2"></i>Receive at Hub</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">
-      <p class="small text-muted">Assign storage location</p>
-      <div class="mb-2"><label class="form-label small">Rack Number</label><input class="form-control form-control-sm" id="receiveRack" placeholder="R-A1-01"></div>
-      <div class="mb-2"><label class="form-label small">Storage Location</label><input class="form-control form-control-sm" id="receiveLocation" placeholder="Warehouse A, Section 1"></div>
-      <div class="mb-2"><label class="form-label small">Notes</label><textarea class="form-control form-control-sm" id="receiveNotes" rows="2"></textarea></div>
-    </div>
-    <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-success btn-sm" onclick="confirmReceive()"><i class="bi bi-check-lg me-1"></i>Receive</button></div>
-  </div></div></div>
-
   <!-- Exception Modal -->
   <div class="modal fade" id="exceptionModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2 text-danger"></i>Report Exception</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
     <div class="modal-body">
       <div class="mb-2"><label class="form-label small">Exception Type <span class="text-danger">*</span></label><select class="form-select form-select-sm" id="exceptionType">
-        <option value="customer_unavailable">Customer Not Available</option>
-        <option value="customer_cancelled">Customer Cancelled</option>
-        <option value="otp_failed">OTP Failed</option>
         <option value="requires_manager_review">Product Condition Changed</option>
         <option value="transport_delayed">Transport Delayed</option>
         <option value="delivery_exception">Delivery Exception</option>
@@ -127,15 +91,6 @@
     <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger btn-sm" onclick="confirmException()"><i class="bi bi-flag me-1"></i>Report Exception</button></div>
   </div></div></div>
 
-  <!-- QR Scanner Modal -->
-  <div class="modal fade" id="qrScannerModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
-    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-qr-code-scan me-2"></i>Scan QR Code</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">
-      <div id="qrScannerContainer"></div>
-      <div id="qrResult" class="mt-2 small"></div>
-    </div>
-  </div></div></div>
-
   <!-- Pickup Detail Modal -->
   <div class="modal fade" id="pickupDetailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
     <div class="modal-header"><h5 class="modal-title">Pickup <span id="pickupDetailTitle">#0</span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
@@ -143,15 +98,14 @@
   </div></div></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script src="../assets/js/main.js"></script>
   <script>
   let currentPickupId = null, currentPage = 1, totalPages = 1;
   const token = localStorage.getItem('greenera_token') || sessionStorage.getItem('greenera_token');
   if (!token) { window.location.href = '../login.html'; }
   const headers = { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' };
-  const STATUS_COLORS = { customer_verified:'success', deal_confirmed:'success', collected:'secondary', delivered:'success', received:'success', customer_unavailable:'danger', otp_failed:'danger', customer_cancelled:'danger', requires_manager_review:'warning', transport_delayed:'warning', delivery_exception:'danger', cancelled:'danger' };
-  const CLOSED_FLOW = ['customer_verified', 'deal_confirmed', 'collected', 'delivered'];
+  const STATUS_COLORS = { collected:'secondary', in_transit:'warning', delivered:'success', received:'success', customer_unavailable:'danger', otp_failed:'danger', customer_cancelled:'danger', requires_manager_review:'warning', transport_delayed:'warning', delivery_exception:'danger', cancelled:'danger' };
+  const CLOSED_FLOW = ['collected', 'in_transit'];
 
   // Load regions for filter dropdown
   (async function loadRegions() {
@@ -172,24 +126,23 @@
       const status = document.getElementById('statusFilter').value;
       const region = document.getElementById('regionFilter').value;
       let url = API_BASE + '/supply-chain/pickups?page=' + (page || currentPage) + '&limit=20';
-      const activeStatuses = 'customer_verified,deal_confirmed,collected,delivered';
+      const activeStatuses = 'collected,in_transit';
       url += '&status=' + (status || activeStatuses);
       if (region) url += '&region_id=' + region;
       const res = await fetch(url, { headers });
       const data = await res.json();
       currentPage = data.page || 1; totalPages = data.total_pages || 1;
-      let html = '<div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr><th>#</th><th>Customer</th><th>Product</th><th>Region</th><th>Approved</th><th>Status</th><th>Hub</th><th>Actions</th></tr></thead><tbody>';
+      let html = '<div class="table-responsive"><table class="table table-hover align-middle"><thead class="table-light"><tr><th>Deal ID</th><th>Customer Name</th><th>Product Name</th><th>Collection Date</th><th>Approved Amount</th><th>Collection Center</th><th>Actions</th></tr></thead><tbody>';
       (data.pickups || data.deals || []).forEach(d => {
         const color = STATUS_COLORS[d.status] || 'secondary';
         const actions = getActionButtons(d);
-        const regionName = d.region?.name || (d.region_id ? 'Region #'+d.region_id : '-');
+        const colDate = d.collection_time ? new Date(d.collection_time).toLocaleDateString('en-IN') : '-';
         html += `<tr>
           <td>#${d.id}</td>
-          <td>${d.customer_name || '-'}<br><small class="text-muted">${d.customer_phone || ''}</small></td>
+          <td>${d.customer_name || '-'}</td>
           <td>${d.product_catalog?.name || d.brand || '-'}</td>
-          <td><small>${regionName}</small></td>
+          <td>${colDate}</td>
           <td class="fw-bold">\u20B9${(d.hr_approved_value||d.value_estimate||0).toLocaleString('en-IN')}</td>
-          <td><span class="badge bg-${color}">${(d.status||'').replace(/_/g,' ')}</span></td>
           <td>${d.assigned_hub?.name || '-'}</td>
           <td style="min-width:180px">${actions}</td>
         </tr>`;
@@ -200,7 +153,7 @@
           <li class="page-item disabled"><span class="page-link">${currentPage}/${totalPages}</span></li>
           <li class="page-item ${currentPage>=totalPages?'disabled':''}"><a class="page-link" href="#" onclick="loadPickups(${currentPage+1});return false">Next</a></li></ul></nav>`;
       }
-      document.getElementById('pickupsContent').innerHTML = html || '<div class="alert alert-info mb-0"><i class="bi bi-info-circle me-2"></i>No closed deals available.</div>';
+      document.getElementById('pickupsContent').innerHTML = html || '<div class="alert alert-info mb-0"><i class="bi bi-info-circle me-2"></i>No closed deals waiting for delivery.</div>';
       try { const nr = await fetch(API_BASE + '/notifications/unread-count', { headers }); const nd = await nr.json(); const b = document.getElementById('scNotifCount'); if (nd.count>0) { b.textContent=nd.count; b.style.display=''; } else b.style.display='none'; } catch(e) {}
     } catch(e) { document.getElementById('pickupsContent').innerHTML = '<p class="text-danger">Failed: ' + e.message + '</p>'; }
   }
@@ -212,67 +165,26 @@
     const currentUserId = (JSON.parse(localStorage.getItem('greenera_user') || '{}')).id || 0;
     const isAssignedToMe = d.supply_chain_user_id === currentUserId;
 
-    if (isAssignedToMe && s === 'customer_verified') push('Close Deal', 'btn-outline-success', 'openConfirmDeal('+d.id+')');
+    if (isAssignedToMe && (s === 'collected' || s === 'in_transit')) {
+      push('Product Delivered', 'btn-outline-dark', 'openDeliver('+d.id+')');
+    }
 
-    if (isAssignedToMe && s === 'deal_confirmed') push('Collect', 'btn-outline-success', 'openCollect('+d.id+')');
+    if (['collected','delivered','received','completed'].includes(s)) {
+      push('<i class="bi bi-file-pdf"></i>', 'btn-outline-success', 'downloadReceipt('+d.id+')');
+    }
 
-    if (isAssignedToMe && (s === 'collected' || s === 'in_transit')) push('Product Delivered', 'btn-outline-dark', 'openDeliver('+d.id+')');
-
-    if (isAssignedToMe && s === 'delivered') push('Receive', 'btn-success', 'openReceive('+d.id+')');
-
-    if (['collected','delivered','received','completed'].includes(s)) push('<i class="bi bi-file-pdf"></i>', 'btn-outline-success', 'downloadReceipt('+d.id+')');
-
-    if (CLOSED_FLOW.includes(s) && !['received'].includes(s)) push('Exception', 'btn-outline-danger', 'openException('+d.id+')');
+    if (CLOSED_FLOW.includes(s)) {
+      push('Exception', 'btn-outline-danger', 'openException('+d.id+')');
+    }
 
     push('<i class="bi bi-eye"></i>', 'btn-outline-secondary', 'viewPickup('+d.id+')');
     return btns.join(' ');
   }
 
-  // ───── Close Deal ─────
-  window.openConfirmDeal = async function(id) {
-    currentPickupId = id;
-    try {
-      const r = await fetch(API_BASE + '/supply-chain/pickups/'+id, { headers });
-      const data = await r.json();
-      const p = data.pickup || data.deal || data;
-      document.getElementById('confirmDealSummary').innerHTML = `
-        <strong>${p.customer_name || '-'}</strong><br>
-        Product: ${p.product_catalog?.name || p.brand || '-'}<br>
-        Amount: \u20B9${(p.hr_approved_value||p.value_estimate||0).toLocaleString('en-IN')}
-      `;
-      new bootstrap.Modal(document.getElementById('confirmDealModal')).show();
-    } catch(e) { showToast('Failed to load pickup', 'error'); }
-  };
-  window.confirmDeal = async function() {
-    try {
-      const r = await fetch(API_BASE + '/supply-chain/pickups/'+currentPickupId+'/confirm-deal', { method:'POST', headers });
-      if (!r.ok) throw new Error((await r.json()).error);
-      bootstrap.Modal.getInstance(document.getElementById('confirmDealModal')).hide();
-      showToast('Deal confirmed! Now collect the product.');
-      loadPickups(currentPage);
-    } catch(e) { showToast(e.message, 'error'); }
-  };
-
-  // ───── Collect Product ─────
-  window.openCollect = function(id) {
-    currentPickupId = id;
-    document.getElementById('collectPkgCount').value = 1;
-    document.getElementById('collectPkgCondition').value = 'good';
-    document.getElementById('collectNotes').value = '';
-    new bootstrap.Modal(document.getElementById('collectModal')).show();
-  };
-  window.confirmCollect = async function() {
-    try {
-      const r = await fetch(API_BASE + '/supply-chain/pickups/'+currentPickupId+'/collect', { method:'POST', headers, body: JSON.stringify({
-        package_count: parseInt(document.getElementById('collectPkgCount').value),
-        packaging_condition: document.getElementById('collectPkgCondition').value,
-        collection_notes: document.getElementById('collectNotes').value,
-      })});
-      if (!r.ok) throw new Error((await r.json()).error);
-      bootstrap.Modal.getInstance(document.getElementById('collectModal')).hide();
-      showToast('Product collected! Receipt generated.');
-      loadPickups(currentPage);
-    } catch(e) { showToast(e.message, 'error'); }
+  // ───── Download Receipt ─────
+  window.downloadReceipt = async function(id) {
+    try { const r = await fetch(API_BASE + '/supply-chain/pickups/'+id+'/receipt', { headers: { 'Authorization':'Bearer '+token } }); if (!r.ok) throw new Error((await r.json()).error); const blob = await r.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='receipt-'+id+'.pdf'; a.click(); URL.revokeObjectURL(url); }
+    catch(e) { showToast(e.message, 'error'); }
   };
 
   // ───── Deliver to Hub ─────
@@ -285,6 +197,7 @@
     document.getElementById('deliverNotes').value = '';
     new bootstrap.Modal(document.getElementById('deliverModal')).show();
   };
+
   window.confirmDeliver = async function() {
     const productOk = document.getElementById('deliverProductOk').checked;
     const qtyOk = document.getElementById('deliverQtyOk').checked;
@@ -305,35 +218,14 @@
     } catch(e) { showToast(e.message, 'error'); }
   };
 
-  // ───── Receive at Hub ─────
-  window.openReceive = function(id) {
-    currentPickupId = id;
-    document.getElementById('receiveRack').value = '';
-    document.getElementById('receiveLocation').value = '';
-    document.getElementById('receiveNotes').value = '';
-    new bootstrap.Modal(document.getElementById('receiveModal')).show();
-  };
-  window.confirmReceive = async function() {
-    try {
-      const r = await fetch(API_BASE + '/supply-chain/pickups/'+currentPickupId+'/receive', { method:'POST', headers, body: JSON.stringify({
-        rack_number: document.getElementById('receiveRack').value,
-        storage_location: document.getElementById('receiveLocation').value,
-        notes: document.getElementById('receiveNotes').value,
-      })});
-      if (!r.ok) throw new Error((await r.json()).error);
-      bootstrap.Modal.getInstance(document.getElementById('receiveModal')).hide();
-      showToast('Product received at hub!');
-      loadPickups(currentPage);
-    } catch(e) { showToast(e.message, 'error'); }
-  };
-
   // ───── Exceptions ─────
   window.openException = function(id) {
     currentPickupId = id;
-    document.getElementById('exceptionType').value = 'customer_unavailable';
+    document.getElementById('exceptionType').value = 'requires_manager_review';
     document.getElementById('exceptionReason').value = '';
     new bootstrap.Modal(document.getElementById('exceptionModal')).show();
   };
+
   window.confirmException = async function() {
     const type = document.getElementById('exceptionType').value;
     const reason = document.getElementById('exceptionReason').value;
@@ -345,12 +237,6 @@
       showToast('Exception reported!');
       loadPickups(currentPage);
     } catch(e) { showToast(e.message, 'error'); }
-  };
-
-  // ───── Download Receipt ─────
-  window.downloadReceipt = async function(id) {
-    try { const r = await fetch(API_BASE + '/supply-chain/pickups/'+id+'/receipt', { headers: { 'Authorization':'Bearer '+token } }); if (!r.ok) throw new Error((await r.json()).error); const blob = await r.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download='receipt-'+id+'.pdf'; a.click(); URL.revokeObjectURL(url); }
-    catch(e) { showToast(e.message, 'error'); }
   };
 
   // ───── View Detail ─────
@@ -370,6 +256,8 @@
         <div class="col-md-3"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Status</small><h5 class="mb-0"><span class="badge bg-${color} fs-6">${p.status.replace(/_/g,' ')}</span></h5></div></div>
         <div class="col-md-3"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Hub</small><h5 class="fw-bold mb-0 small">${p.assigned_hub?.name||'-'}</h5></div></div>
         <div class="col-md-3"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Executive</small><h5 class="fw-bold mb-0 small">${p.supply_chain_user?.full_name||p.supply_chain_user?.username||'-'}</h5></div></div>
+        <div class="col-md-6"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Assigned Manager</small><h6 class="fw-bold mb-0">${p.approver?.full_name || '-'}</h6></div></div>
+        <div class="col-md-6"><div class="p-2 bg-light rounded text-center"><small class="text-muted">Approved Date</small><h6 class="fw-bold mb-0">${p.hr_acted_at ? new Date(p.hr_acted_at).toLocaleDateString('en-IN') : '-'}</h6></div></div>
         ${p.exception_reason ? `<div class="col-12"><div class="alert alert-danger py-2 mb-0 small"><strong>Exception:</strong> ${p.exception_reason}</div></div>` : ''}
         <div class="col-12"><hr class="my-1"><h6 class="fw-bold text-green">Movement History</h6><div class="timeline small" style="max-height:200px;overflow-y:auto">${
           moves.length ? moves.reverse().map(m => `<div class="d-flex gap-2 mb-1"><i class="bi bi-circle-fill text-green" style="font-size:8px;margin-top:6px"></i><div><span class="fw-bold">${(m.action||'').replace(/_/g,' ')}</span><br><span class="text-muted">${new Date(m.timestamp||Date.now()).toLocaleString()}</span></div></div>`).join('')
@@ -378,42 +266,6 @@
       document.getElementById('pickupDetailBody').innerHTML = html;
       new bootstrap.Modal(document.getElementById('pickupDetailModal')).show();
     } catch(e) { showToast('Failed to load pickup', 'error'); }
-  };
-
-  // ───── QR Scanner ─────
-  let scannerInstance = null;
-  window.showQRScanner = function() {
-    const modal = new bootstrap.Modal(document.getElementById('qrScannerModal'));
-    document.getElementById('qrScannerContainer').innerHTML = '<div id="reader" style="width:100%"></div><p class="text-center text-muted small mt-2">Point camera at QR code</p>';
-    document.getElementById('qrResult').innerHTML = '';
-    modal.show();
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-    script.onload = function() {
-      if (typeof Html5Qrcode === 'undefined') { document.getElementById('qrResult').innerHTML = '<span class="text-danger">QR library failed</span>'; return; }
-      scannerInstance = new Html5Qrcode('reader');
-      scannerInstance.start({ facingMode: 'environment' }, { fps: 10, qrbox: 250 },
-        function(qrText) {
-          scannerInstance.stop().catch(()=>{});
-          document.getElementById('qrResult').innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>QR scanned!</span>';
-          fetch(API_BASE + '/supply-chain/scan-qr', { method:'POST', headers, body: JSON.stringify({ qr_data: qrText }) })
-            .then(r => r.json()).then(data => {
-              const p = data.pickup || data.deal || data;
-              if (p && p.id) {
-                bootstrap.Modal.getInstance(document.getElementById('qrScannerModal')).hide();
-                viewPickup(p.id);
-                loadPickups(currentPage);
-              } else {
-                document.getElementById('qrResult').innerHTML = '<span class="text-danger">Pickup not found</span>';
-              }
-            }).catch(e => { document.getElementById('qrResult').innerHTML = '<span class="text-danger">Error: '+e.message+'</span>'; });
-        }, function(err) {}
-      ).catch(err => { document.getElementById('qrResult').innerHTML = '<span class="text-danger">Camera access denied</span>'; });
-    };
-    document.body.appendChild(script);
-    document.getElementById('qrScannerModal').addEventListener('hidden.bs.modal', function() {
-      if (scannerInstance) { scannerInstance.stop().catch(()=>{}); scannerInstance = null; }
-    }, { once: true });
   };
 
   // ───── Init ─────

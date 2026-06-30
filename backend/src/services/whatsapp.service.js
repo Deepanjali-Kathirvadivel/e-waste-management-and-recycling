@@ -76,6 +76,94 @@ function init() {
 }
 
 async function sendOTP(phone, otp) {
+  const token = process.env.WHATSAPP_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+
+  if (token && phoneNumberId) {
+    const formattedNumber = phone.replace(/[^0-9]/g, '');
+    const to = (formattedNumber.length === 10 ? '91' : '') + formattedNumber;
+    const templateName = process.env.WHATSAPP_TEMPLATE_NAME || 'otp';
+    const languageCode = process.env.WHATSAPP_TEMPLATE_LANG || 'en';
+
+    console.log(`[Meta WhatsApp Cloud API] Attempting to send OTP to ${to} via template "${templateName}"`);
+
+    const payload = {
+      messaging_product: 'whatsapp',
+      to: to,
+      type: 'template',
+      template: {
+        name: templateName,
+        language: {
+          code: languageCode
+        },
+        components: [
+          {
+            type: 'body',
+            parameters: [
+              {
+                type: 'text',
+                text: otp
+              }
+            ]
+          }
+        ]
+      }
+    };
+
+    try {
+      const response = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const responseText = await response.text();
+      let responseData = {};
+      try { responseData = JSON.parse(responseText); } catch(e) {}
+
+      if (response.ok) {
+        console.log(`[Meta WhatsApp Cloud API] OTP successfully sent to ${to}. Message ID: ${responseData.messages?.[0]?.id}`);
+        return true;
+      } else {
+        console.error(`[Meta WhatsApp Cloud API] Template failed, trying text fallback. Details:`, responseText);
+        
+        const textPayload = {
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: to,
+          type: 'text',
+          text: {
+            preview_url: false,
+            body: `Green Era Recyclers\n\nYour OTP for deal verification is:\n\n${otp}\n\nPlease share this OTP with the staff member to complete your deal.\n\nThank you for recycling with Green Era!`
+          }
+        };
+
+        const textResponse = await fetch(`https://graph.facebook.com/v18.0/${phoneNumberId}/messages`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(textPayload)
+        });
+
+        const textResponseText = await textResponse.text();
+        if (textResponse.ok) {
+          console.log(`[Meta WhatsApp Cloud API] OTP successfully sent to ${to} via text message fallback.`);
+          return true;
+        } else {
+          console.error(`[Meta WhatsApp Cloud API] Text message fallback also failed:`, textResponseText);
+        }
+      }
+    } catch (err) {
+      console.error(`[Meta WhatsApp Cloud API] Connection error:`, err.message);
+    }
+  }
+
+  // Fallback to whatsapp-web.js
   if (isReady && client) {
     const formattedNumber = phone.replace(/[^0-9]/g, '');
     const chatId = (formattedNumber.startsWith('91') ? '' : '91') + formattedNumber + '@c.us';
@@ -84,13 +172,15 @@ async function sendOTP(phone, otp) {
 
     try {
       await client.sendMessage(chatId, message);
-      console.log('[WhatsApp] OTP sent to ' + phone);
+      console.log('[WhatsApp Web] OTP sent to ' + phone);
       return true;
     } catch (err) {
-      console.log('[WhatsApp] Failed to send OTP to ' + phone + ': ' + err.message);
+      console.log('[WhatsApp Web] Failed to send OTP to ' + phone + ': ' + err.message);
     }
   } else {
-    init(); // fire background init for QR setup, don't await
+    if (!token || !phoneNumberId) {
+      init(); // fire background init for QR setup, don't await
+    }
   }
 
   return false;

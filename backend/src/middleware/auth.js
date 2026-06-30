@@ -5,11 +5,17 @@ const { User } = require('../models');
 
 const auth = async (req, res, next) => {
   try {
+    let token;
     const header = req.headers.authorization;
-    if (!header || !header.startsWith('Bearer ')) {
+    if (header && header.startsWith('Bearer ')) {
+      token = header.split(' ')[1];
+    } else if (req.query.token) {
+      token = req.query.token;
+    }
+
+    if (!token) {
       return next(new AppError('No token provided', 401));
     }
-    const token = header.split(' ')[1];
     const decoded = jwt.verify(token, jwtSecret);
     const user = await User.findByPk(decoded.id, {
       attributes: { exclude: ['password_hash'] },

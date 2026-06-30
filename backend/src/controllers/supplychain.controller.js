@@ -123,26 +123,50 @@ exports.dashboard = catchAsync(async (req, res) => {
     MD: 'MD – Medical Devices',
   };
 
-  const [approvedDeals, closedDeals, historyDeals, todayPickups, pendingPickups, rawTrend, rawCat, rawBranch] = await Promise.all([
-    // Approved Deals: Count of assessments in status 'approved'/'hub_assigned'/'ready_for_pickup'/'supply_chain_assigned'
-    Assessment.count({ where: { status: { [Op.in]: ['approved', 'hub_assigned', 'ready_for_pickup', 'supply_chain_assigned'] } } }),
-    // Closed Deals: Count of assessments in closed flow
-    Assessment.count({ where: { supply_chain_user_id: userId, status: { [Op.in]: ['customer_verified', 'deal_confirmed', 'collected', 'in_transit'] } } }),
-    // History: Count of history assessments
-    Assessment.count({ where: { supply_chain_user_id: userId, status: { [Op.in]: ['delivered', 'delivered_to_hub', 'received', 'completed', 'cancelled', ...EXCEPTION_STATUSES] } } }),
-    // Today's Pickups: Count of today's pickups
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+  sixMonthsAgo.setDate(1);
+  sixMonthsAgo.setHours(0, 0, 0, 0);
+
+  const { ActivityLog } = require('../models');
+
+  const [approvedDeals, closedDeals, historyDeals, todayCollections, productsInTransit, rawTrend, rawCat, rawBranch, monthlyCollections, recentActivities] = await Promise.all([
+    // Approved Deals: Count of assessments in active/assigned statuses before collection
     Assessment.count({
       where: {
         supply_chain_user_id: userId,
-        [Op.or]: [
-          { scheduled_pickup_date: todayStr },
-          { collection_time: { [Op.gte]: today } },
-          { updatedAt: { [Op.gte]: today }, status: { [Op.in]: ['collected', 'delivered_to_hub', 'delivered', 'received'] } }
-        ]
+        status: { [Op.in]: ['approved', 'hub_assigned', 'ready_for_pickup', 'supply_chain_assigned', 'pickup_scheduled', 'out_for_pickup', 'arrived_at_customer', 'customer_verified', 'otp_verified', 'deal_confirmed'] }
       }
     }),
-    // Pending Pickups: Count of pending pickups assigned to the user
-    Assessment.count({ where: { supply_chain_user_id: userId, status: { [Op.in]: ['supply_chain_assigned', 'pickup_scheduled', 'out_for_pickup', 'arrived_at_customer'] } } }),
+    // Closed Deals: Count of assessments collected but not yet delivered
+    Assessment.count({
+      where: {
+        supply_chain_user_id: userId,
+        status: { [Op.in]: ['collected', 'in_transit'] }
+      }
+    }),
+    // History: Count of history assessments (delivered/completed)
+    Assessment.count({
+      where: {
+        supply_chain_user_id: userId,
+        status: { [Op.in]: ['delivered', 'delivered_to_hub', 'received', 'completed'] }
+      }
+    }),
+    // Today's Collections: Count of deals collected today
+    Assessment.count({
+      where: {
+        supply_chain_user_id: userId,
+        status: { [Op.in]: ['collected', 'in_transit', 'delivered', 'delivered_to_hub', 'received', 'completed'] },
+        collection_time: { [Op.gte]: today }
+      }
+    }),
+    // Products In Transit: Count of deals in transit
+    Assessment.count({
+      where: {
+        supply_chain_user_id: userId,
+        status: 'in_transit'
+      }
+    }),
     // daily pickup trend
     sequelize.query(`SELECT strftime('%Y-%m-%d', created_at) as date, COUNT(*) as count FROM assessments WHERE supply_chain_user_id = ? AND created_at >= date('now', '-30 days') GROUP BY date ORDER BY date ASC`, { replacements: [userId], type: sequelize.QueryTypes.SELECT }),
     // category distribution grouped by 7 e-waste categories
@@ -156,6 +180,28 @@ exports.dashboard = catchAsync(async (req, res) => {
     `, { replacements: [userId], type: sequelize.QueryTypes.SELECT }),
     // branch-wise pickup count
     sequelize.query(`SELECT COALESCE(f.name,'Unassigned') as branch, COUNT(*) as count FROM assessments a LEFT JOIN facilities f ON f.id = a.assigned_hub_id WHERE a.supply_chain_user_id = ? GROUP BY a.assigned_hub_id`, { replacements: [userId], type: sequelize.QueryTypes.SELECT }),
+    // monthly collections counts
+    Assessment.findAll({
+      attributes: [
+        [fn('strftime', '%Y-%m', col('collection_time')), 'month'],
+        [fn('COUNT', col('id')), 'count']
+      ],
+      where: {
+        supply_chain_user_id: userId,
+        status: { [Op.in]: ['collected', 'in_transit', 'delivered', 'delivered_to_hub', 'received', 'completed'] },
+        collection_time: { [Op.gte]: sixMonthsAgo }
+      },
+      group: [fn('strftime', '%Y-%m', col('collection_time'))],
+      order: [[fn('strftime', '%Y-%m', col('collection_time')), 'ASC']],
+      raw: true
+    }),
+    // recent activities
+    ActivityLog.findAll({
+      where: { user_id: userId },
+      limit: 5,
+      order: [['created_at', 'DESC']],
+      raw: true
+    })
   ]);
 
   const mappedCat = rawCat.map(c => ({
@@ -163,15 +209,27 @@ exports.dashboard = catchAsync(async (req, res) => {
     count: Number(c.count || 0)
   }));
 
+  const mappedMonthly = monthlyCollections.map(m => {
+    if (!m.month) return { month: 'N/A', count: m.count };
+    const [year, month] = m.month.split('-');
+    const date = new Date(year, month - 1);
+    return {
+      month: date.toLocaleString('default', { month: 'short' }),
+      count: m.count
+    };
+  });
+
   res.json({
     approved_deals: approvedDeals,
     closed_deals: closedDeals,
     history_deals: historyDeals,
-    today_pickups: todayPickups,
-    pending_pickups: pendingPickups,
+    today_collections: todayCollections,
+    products_in_transit: productsInTransit,
     daily_trend: rawTrend,
     category_distribution: mappedCat,
     branch_pickups: rawBranch,
+    monthly_collections: mappedMonthly,
+    recent_activities: recentActivities,
   });
 });
 
@@ -184,16 +242,11 @@ exports.pickupList = catchAsync(async (req, res) => {
   const where = {};
   const isSupplyChain = req.user.role === 'supply_chain';
 
-  const activeStatuses = [...PICKUP_WORKFLOW.filter(s => s !== 'ready_for_processing' && s !== 'completed'), ...EXCEPTION_STATUSES];
+  const activeStatuses = ['approved', 'ready_for_pickup', 'hub_assigned', 'supply_chain_assigned', 'pickup_scheduled', 'out_for_pickup', 'arrived_at_customer', 'customer_verified', 'otp_verified', 'deal_confirmed', ...EXCEPTION_STATUSES];
 
   if (status) {
     const statuses = status.split(',').map(s => s.trim()).filter(Boolean);
     where.status = statuses.length === 1 ? statuses[0] : { [Op.in]: statuses };
-  } else if (isSupplyChain) {
-    where[Op.or] = [
-      { supply_chain_user_id: req.user.id, status: { [Op.in]: activeStatuses } },
-      { supply_chain_user_id: null, status: ['hub_assigned', 'ready_for_pickup'] },
-    ];
   } else {
     where.status = { [Op.in]: activeStatuses };
   }
@@ -247,6 +300,7 @@ exports.pickupDetail = catchAsync(async (req, res) => {
       { model: ProductCatalog, attributes: ['name', 'icon'] },
       { model: User, attributes: ['full_name', 'username', 'phone'] },
       { model: User, as: 'supply_chain_user', attributes: ['full_name', 'username', 'phone'] },
+      { model: User, as: 'approver', attributes: ['full_name'] },
       { model: Facility, as: 'assigned_hub', attributes: ['name', 'type', 'location'] },
       { model: AnalysisResult },
     ],
@@ -335,15 +389,23 @@ exports.arriveAtCustomer = catchAsync(async (req, res) => {
 exports.generateOTP = catchAsync(async (req, res) => {
   const assessment = await Assessment.findByPk(req.params.id);
   if (!assessment) throw new AppError('Pickup not found', 404);
-  if (!['arrived_at_customer', 'supply_chain_assigned', 'pickup_scheduled', 'out_for_pickup'].includes(assessment.status)) throw new AppError('Cannot generate OTP at this stage', 400);
+  if (!['approved', 'hub_assigned', 'ready_for_pickup', 'arrived_at_customer', 'supply_chain_assigned', 'pickup_scheduled', 'out_for_pickup'].includes(assessment.status)) throw new AppError('Cannot generate OTP at this stage', 400);
+  const { phone } = req.body;
+  const targetPhone = phone || assessment.customer_phone;
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  await assessment.update({
+  
+  const updateData = {
     otp_code: otp, otp, otp_verified: false, otp_generated_at: new Date(),
     otp_retry_count: 0,
-    movement_history: pushMovement(assessment, MOVEMENT_ACTION.OTP_GENERATED, req.user.id),
-  });
-  await notificationService.sendOTP(assessment.customer_phone, otp, assessment.customer_name);
-  await log({ userId: req.user.id, action: 'otp_generated', entityType: 'assessment', entityId: assessment.id, metadata: { customer: assessment.customer_phone } });
+    movement_history: pushMovement(assessment, MOVEMENT_ACTION.OTP_GENERATED, req.user.id, { sent_to: targetPhone }),
+  };
+  if (phone) {
+    updateData.customer_phone = phone;
+  }
+  await assessment.update(updateData);
+
+  await notificationService.sendOTP(targetPhone, otp, assessment.customer_name);
+  await log({ userId: req.user.id, action: 'otp_generated', entityType: 'assessment', entityId: assessment.id, metadata: { customer: targetPhone } });
   res.json({ message: 'OTP sent to customer', otp });
 });
 

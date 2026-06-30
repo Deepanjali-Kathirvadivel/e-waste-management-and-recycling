@@ -13,6 +13,8 @@ router.post('/quotations/:id/approve', auth, rbac('manager', 'admin'), ctrl.appr
 router.post('/quotations/:id/reject', auth, rbac('manager', 'admin'), ctrl.rejectQuotation);
 router.post('/quotations/:id/modify', auth, rbac('manager', 'admin'), ctrl.modifyQuotation);
 router.post('/quotations/:id/assign-hub', auth, rbac('manager', 'admin'), ctrl.assignHub);
+router.post('/quotations/:id/assign-supply-chain', auth, rbac('manager', 'admin'), ctrl.assignSupplyChain);
+router.get('/supply-chain-users', auth, rbac('manager', 'admin'), ctrl.getSupplyChainUsers);
 router.get('/facilities', auth, rbac('manager', 'admin'), ctrl.getFacilities);
 router.get('/employee-kpi', auth, rbac('manager', 'admin'), ctrl.employeeKPIs);
 router.get('/history/:id', auth, rbac('manager', 'admin'), ctrl.getHistory);
